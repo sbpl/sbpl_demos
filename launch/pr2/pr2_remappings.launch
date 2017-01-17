@@ -3,7 +3,7 @@
 	<arg name="robot_prefix" default="pr2/"/>
 
 	<arg name="topic" value="wide_stereo/right/image_raw"/>
-	<node pkg="topic_tools" type="relay" name="relay_$(arg topic)" args="$(arg topic) $(arg robot_prefix)$(arg topic)">
+	<node pkg="topic_tools" type="relay" name="relay_wide_stereo" args="$(arg topic) $(arg robot_prefix)$(arg topic)">
 	  <param name="lazy" value="true"/>
 	</node>
 
