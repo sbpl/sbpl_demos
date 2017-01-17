@@ -1,0 +1,7 @@
+<launch>
+
+	<node pkg="topic_tools" type="relay" name="relay" args="wide_stereo/right/image_raw pr2/wide_stereo/right/image_raw">
+	  <param name="lazy" value="true"/>
+	</node>
+
+</launch>
