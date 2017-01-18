@@ -22,8 +22,10 @@
 	  <param name="lazy" value="true"/>
 	</node>
 
+  <!-- Subscribers -->
+
 	<arg name="topic5" value="torso_controller/position_joint_action/goal"/>
-	<node name="relay_torso_goal" pkg="topic_tools" type="relay"  args="$(arg topic5) $(arg robot_prefix)$(arg topic5)">
+  <node name="relay_torso_goal" pkg="topic_tools" type="relay"  args="$(arg robot_prefix)$(arg topic5) $(arg topic5)" output="screen">
 	  <param name="lazy" value="true"/>
 	</node>
 
