@@ -61,7 +61,7 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 add_service_files(
     FILES
-    tf_lookup_server.srv
+    TfLookup.srv
 )
 
 ## Generate actions in the 'action' folder
