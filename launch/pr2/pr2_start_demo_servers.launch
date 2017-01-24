@@ -1,0 +1,10 @@
+<launch>
+
+	<node pkg="sbpl_demos" type="tf_server_lookup.py" name="pr2_tf_server_lookup" output="screen">
+	  <arg name="robot" value="pr2"/>
+	</node>
+
+	<node pkg="pr2_move_base" type="pr2_move_base.py" name="pr2_move_base.py" output="screen"/>
+
+
+</launch>
