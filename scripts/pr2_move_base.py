@@ -13,7 +13,7 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 if __name__ == '__main__':
     rospy.init_node('client')
 
-    client = actionlib.SimpleActionClient('pr2_move_base', MoveBaseAction)
+    client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
     print("waiting for server...")
 
     client.wait_for_server()
