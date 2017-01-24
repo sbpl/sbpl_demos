@@ -13,7 +13,7 @@ def handle_tf_lookup_server(req):
 
 if __name__ == '__main__':
     rospy.init_node('tf_lookup_server')
-    robot = rospy.get_param("robot", "default_robot")
+    robot = rospy.get_param("~robot", "default_robot")
 
     service = rospy.Service(robot+'/tf_lookup_server', TfLookup, handle_tf_lookup_server)
     # service = rospy.Service('tf_lookup_server', parent_frame, handle_tf_lookup_server)
