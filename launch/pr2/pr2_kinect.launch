@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find openni_launch)/launch/openni.launch" />
+  <node pkg="tf" type="static_transform_publisher" name="pr2_kinect_tf_static_pub" args="0 0 0 0 0 0 1 /head_mount_kinect_ir_link /camera_link 10" />
+
+</launch>
