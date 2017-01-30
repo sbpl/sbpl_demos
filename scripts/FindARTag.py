@@ -20,8 +20,12 @@ class FindARTag:
 		self.setup(img)
 
 	def getMarker(self):
-		return self.data.pose
+		if self.data == None:
+			return None
+		else:
+			return self.data.pose
 	
 	def callback_get_pose(self,data):
+		self.data=None
 		if len(data.markers) != 0:
 			self.data=data.markers[0]
