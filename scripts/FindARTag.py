@@ -7,8 +7,9 @@ import tf
 from geometry_msgs.msg import *
 from ar_track_alvar_msgs.msg import AlvarMarkers
 
-# Precondition: The routine invoking FindARTag should initialize node.
-# 				rospy.init_node()
+# Precondition: 1. The routine invoking FindARTag should initialize node.
+# 				   rospy.init_node()
+#				2. In Allen PR2: roslaunch /etc/ros/groovy/openni_head.launch
 class FindARTag:
 	def setup(self,img):
 		cam_image_topic=img
