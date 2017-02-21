@@ -1,5 +1,0 @@
-string parent_frame
-string child_frame
-float64 max_timeout
----
-geometry_msgs/Pose pose
