@@ -1,0 +1,4 @@
+<launch>
+
+	<node pkg="tf" type="static_transform_publisher" name="ar_grasp_static_tf" args="0 -0.3 0 1.57 0 3.14 ar_marker roman_ar_grasp 5" />
+</launch>
