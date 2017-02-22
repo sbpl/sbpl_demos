@@ -1,4 +1,5 @@
 source screenrc.common
+pr2master
 
 screen -t bash
 #stuff "roscore^M"
