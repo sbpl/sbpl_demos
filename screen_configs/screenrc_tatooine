@@ -1,0 +1,16 @@
+source screenrc.common
+
+screen -t bash
+#stuff "roscore^M"
+
+screen -t teleop
+stuff "roslaunch pr2_teleop teleop_keyboard.launch"
+
+screen -t moveit
+stuff "roslaunch sbpl_demos tatooine_moveit_setup.launch"
+
+screen -t AR
+stuff "roslaunch sbpl_demos tatooine_ar_setup.launch"
+
+screen -t PR_demo
+stuff "rosrun sbpl_demos pr2_simple_grasp_task.py"
