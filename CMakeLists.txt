@@ -59,10 +59,6 @@ catkin_python_setup()
 #   Service1.srv
 #   Service2.srv
 # )
-add_service_files(
-    FILES
-    TfLookup.srv
-)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
