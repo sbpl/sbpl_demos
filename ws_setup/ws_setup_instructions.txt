@@ -1,0 +1,46 @@
+
+### Roman Commander Workspace
+
+The most likely locations to setup the commander are roman-am3, dagobah, or your personal machine
+
+To setup follow these recommended instructions:
+
+1) create a new catkin workspace (assumed to be at /home/<user>/ros/roman_demos_ws)
+
+2) add sbpl_demos for setup scripts
+	$ cd <roman_demos_ws>/src
+	$ git clone https://github.com/sbpl/sbpl_demos.git
+
+3) copy the rosinstall roman_commander.rosinstall to your <roman_demos_ws>/src directory
+	$ cd <roman_demos_ws>/src
+	$ cp sbpl_demos/ws_setup/roman_commander.rosinstall ./.rosinstall
+
+4) use the rosinstall to fetch all required packages and dependencies
+	$ cd <roman_demos_ws>/src
+	$ wstool update .
+
+To resolve workspace package dependencies use this command
+	$ for d in $(find . -name package.xml); do PKG=$(basename $(dirname $d)); rosdep install -i -y $PKG; done
+
+5) add JPL rs_limb packages
+	before you can successfully build the workspace you will need to install some JPL/ROS interface drivers used by the robotsimian limb.
+	For reference, here's a URL to the most recent packaged up code I have from Sisir: 
+
+	https://dl.dropboxusercontent.com/u/20528683/Sep30th_GD/rs_limb_dist_clientsrc_catkinws_Sep30.tar.gz
+
+	Some of the configuration for the actual platform might be outdated in that archive.
+	You don't need to build roman_client_ros_utils separately. Instead, create a symlink
+
+	$ ln -s  __path_to_roman_client_ros_utils_from_sisirs_code__ <roman_demos_ws>/src/roman_client_ros_utils
+
+6) Install SBPL
+SBPL is not a ROS package so should be installed outside your ros workspace
+Do NOT install this via apt-get (if you have tried this remove it with apt-get purge)
+
+$ git clone https://github.com/sbpl/sbpl.git
+$ cd sbpl && mkdir build && cd build && cmake .. && make && sudo make install
+
+7) Catkin make
+
+$ cd <roman_demos_ws>
+$ catkin_make
