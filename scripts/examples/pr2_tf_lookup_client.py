@@ -7,7 +7,6 @@ import rospy
 import actionlib
 import math
 
-import IPython
 from tf2_msgs.msg import LookupTransformAction, LookupTransformGoal
 
 if __name__ == '__main__':

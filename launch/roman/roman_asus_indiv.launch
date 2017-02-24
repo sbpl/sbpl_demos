@@ -17,6 +17,6 @@
 		<remap from="camera_info"   to="$(arg cam_info_topic)" />
 	</node>
 
-	<include file="$(find ar_track_alvar)/launch/roman_grasp_offset.launch"/>
+	<include file="$(find sbpl_demos)/launch/roman/roman_grasp_offset.launch"/>
 
 </launch>

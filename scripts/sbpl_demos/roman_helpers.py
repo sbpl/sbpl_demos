@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 import sys
 import rospy
+import roslib
+
 import actionlib
 import tf
 from rcta.msg import MoveArmGoal, MoveArmAction
@@ -10,6 +12,10 @@ from sensor_msgs.msg import JointState
 from control_msgs.msg import GripperCommandAction, GripperCommandGoal
 from roman_client_ros_utils.msg import RobotiqSimpleCmd, RobotiqActivate
 
+import copy
+import moveit_commander
+import moveit_msgs.msg
+
 
 class RomanMoveArm(object):
 	def __init__(self):
@@ -17,6 +23,31 @@ class RomanMoveArm(object):
 		rospy.loginfo("Waiting for action /move_arm...")
 		self.client.wait_for_server()
 		rospy.loginfo("Connected to action /move_arm!")
+
+	def MoveToHome(self):
+		pose = Pose()
+		pose.position.x = -1.311
+		pose.position.y = 0.365
+		pose.position.z = 1.076
+
+		pose.orientation.x = -0.5
+		pose.orientation.y = -0.5
+		pose.orientation.z = 0.5
+		pose.orientation.w = 0.5
+		self.MoveToPose(pose)
+
+	def MoveToHandoff(self):
+		pose = Pose()
+		pose.position.x = -1.467
+		pose.position.y = 0.673
+		pose.position.z = 0.922
+
+		pose.orientation.x = 0.003
+		pose.orientation.y = -0.01
+		pose.orientation.z = 0.655
+		pose.orientation.w = 0.7552
+		self.MoveToPose(pose)
+
 
 	def MoveToPose(self, desired_pose):
 		goal=MoveArmGoal()
@@ -59,20 +90,126 @@ class RomanCommandGripper(object):
 		self.open_pub = rospy.Publisher("roman_hand_open", RobotiqSimpleCmd, queue_size=1)
 		self.close_pub = rospy.Publisher("roman_hand_close", RobotiqSimpleCmd, queue_size=1)
 		
+		
+
+	def Activate(self):
 		activate_msg = RobotiqActivate()
+		activate_msg.mech = 0 # right
 		activate_msg.activate = True
 		self.activate_pub.publish(activate_msg)
+		print "Commanding Robotiq Active, only need to do this once"
+		rospy.sleep(1.0) 
+
+	def Deactivate(self):
+		activate_msg = RobotiqActivate()
+		activate_msg.mech = 0 # right
+		activate_msg.activate = False
+		activate_pub.publish(activate_msg)
+		print "Commanding Robotiq Deactivate"
+		rospy.sleep(1.0) 
 
 	def Close(self):
+		#self.activate_pub.publish(self.activate_msg)
 		goal=RobotiqSimpleCmd()
+		goal.mech = 0 # right
 		goal.close = True
 		self.close_pub.publish(goal)
 		print "Commanding Robotiq Close"
 		rospy.sleep(3.0) 
 
-	def Open(self):
+	def Pinch(self):
+		#self.activate_pub.publish(self.activate_msg)
 		goal=RobotiqSimpleCmd()
+		goal.mech = 0 # right
+		goal.close = True
+		goal.mode = 2
+		self.close_pub.publish(goal)
+		print "Commanding Robotiq Pinch"
+		rospy.sleep(4.0) 
+
+	def Wide(self):
+		#self.activate_pub.publish(self.activate_msg)
+		goal=RobotiqSimpleCmd()
+		goal.mech = 0 # right
+		goal.close = True
+		goal.mode = 1
+		self.close_pub.publish(goal)
+		print "Commanding Robotiq Wide"
+		rospy.sleep(3.0)
+
+	def Open(self):
+		#self.activate_pub.publish(self.activate_msg)
+		goal=RobotiqSimpleCmd()
+		goal.mech = 0 #right
 		goal.close = False
+		self.open_pub.publish(goal)
+		self.open_pub.publish(goal)
 		self.open_pub.publish(goal)
 		print "Commanding Robotiq Open"
 		rospy.sleep(3.0) 
+
+
+class RomanMoveitCommander(object):
+	def __init__(self):
+		# Initialize MoveIt.
+		moveit_commander.roscpp_initialize("")
+		self.moveit_robot_commander = moveit_commander.RobotCommander()
+		self.moveit_planning_scene = moveit_commander.PlanningSceneInterface()
+		self.moveit_planning_group = moveit_commander.MoveGroupCommander("right_arm")
+		self.moveit_planning_group.set_planner_id("right_arm_and_torso[right_arm_and_torso_ARA_BFS_ML]")
+		self.moveit_planning_group.set_planning_time(20.0)
+		self.moveit_planning_group.allow_replanning(True)
+		minx = -4
+		maxx = -2.0
+		miny = -2
+		maxy = 2
+		minz = 0
+		maxz = 1.5
+		self.moveit_planning_group.set_pose_reference_frame("base_footprint")
+		self.moveit_planning_group.set_workspace([minx, miny, minz, maxx, maxy, maxz])
+
+	def Cleanup(self):
+		self.moveit_commander.roscpp_shutdown()
+
+	def MoveToHome(self):
+		pose = Pose()
+		pose.position.x = -1.311
+		pose.position.y = 0.365
+		pose.position.z = 1.076
+
+		pose.orientation.x = -0.5
+		pose.orientation.y = -0.5
+		pose.orientation.z = 0.5
+		pose.orientation.w = 0.5
+		self.MoveToPose(pose)
+
+	def MoveToHandoff(self):
+		pose = Pose()
+		pose.position.x = -1.467
+		pose.position.y = 0.673
+		pose.position.z = 0.922
+
+		pose.orientation.x = 0.003
+		pose.orientation.y = -0.01
+		pose.orientation.z = 0.655
+		pose.orientation.w = 0.7552
+		self.MoveToPose(pose)
+
+	def MoveToPose(self, pose):
+
+		display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path', moveit_msgs.msg.DisplayTrajectory, queue_size=1)
+
+		self.moveit_planning_group.set_pose_target(pose)
+		plan = self.moveit_planning_group.plan()
+		
+		# If plan is not found
+		if not plan.joint_trajectory.points:
+			rospy.logwarn("No Motion Plan Found.")
+			return
+		
+		display_trajectory = moveit_msgs.msg.DisplayTrajectory()
+		display_trajectory.trajectory_start = moveit_robot_commander.get_current_state()
+		display_trajectory.trajectory.append(plan)
+		display_trajectory_publisher.publish(display_trajectory);
+
+		self.moveit_planning_group.go()	

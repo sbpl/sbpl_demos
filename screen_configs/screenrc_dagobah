@@ -4,6 +4,7 @@ screen -t rHub
 stuff "roslaunch sbpl_multimaster sbpl_hub.launch ^M"
 
 screen -t rocon
+stuff "sleep 5^M"
 stuff "roslaunch sbpl_multimaster dagobah_gateway.launch ^M"
 
 screen -t bash

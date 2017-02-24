@@ -105,3 +105,18 @@ class MoveBase:
             return True
         else:
             return False
+
+class RoconMoveArm:
+    def __init__(self):
+        self.client = actionlib.SimpleActionClient('rocon_move_arm', RoconMoveArmAction)
+        self.client.wait_for_server()
+        print "RoconMoveArm online"
+
+    def MoveToPose(self, pose):
+        goal = RoconMoveArmGoal()
+        goal.pose = pose
+        self.client.send_goal(goal)
+        if self.client.wait_for_result():
+            result = self.client.get_result()
+            return result.success
+        return False

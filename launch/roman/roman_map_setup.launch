@@ -1,5 +1,5 @@
 <launch>
-	<node pkg="map_server" type="map_server" name="map_server" args="$(find sbpl_demos)/data/sbpl_lab.yaml"/>
+	<node pkg="map_server" type="map_server" name="map_server" args="$(find sbpl_demos)/data/sbpl_full_lab.yaml"/>
 
-	<node pkg="tf" type="static_transform_publisher" name="roman_basefootprint_pub" args="0 0 0 0 0 0 1 map base_footprint 5"/>
+	<node pkg="tf" type="static_transform_publisher" name="roman_basefootprint_pub" args="-1.9 -1.2 0 1.5708 0 0 map base_footprint 5"/>
 </launch>

@@ -6,9 +6,6 @@
     local-name: andalite_description
     uri: https://github.com/aurone/andalite_description.git
 - git:
-    local-name: gazebo_ros_pkgs
-    uri: https://github.com/ros-simulation/gazebo_ros_pkgs.git
-- git:
     local-name: leatherman
     uri: https://github.com/aurone/leatherman.git
 - git:
@@ -32,10 +29,6 @@
 - git:
     local-name: spellbook_ros
     uri: https://github.com/aurone/spellbook_ros.git
-- git:
-    local-name: robotiq
-    uri: https://github.com/ros-industrial/robotiq.git
-    version: indigo-devel
 - git:
     local-name: ar_track_alvar
     uri: https://github.com/abrinkmacmu/ar_track_alvar.git
