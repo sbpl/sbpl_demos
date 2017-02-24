@@ -20,8 +20,9 @@ if __name__ == "__main__":
 
 	RCG.Activate()
 	RCG.Open()
-	pr2_GripperCommand.GripperCommand.Command('r', 1)
+	pr2_GripperCommand.Command('r', 1)
 
+	print "moving roman to home"
 	RMAC.MoveToHome()
 
 	if listener.frameExists("roman_ar_pregrasp"):
@@ -58,20 +59,22 @@ if __name__ == "__main__":
 	grasp_pose.orientation.w = grasp_tf[1][3]
 
 	RMAC.MoveToPose(pregrasp_pose)
-
+	print "moving roman to final grasp"
 	RMAC.MoveToPose(grasp_pose)
 
 	RCG.Pinch()
-
+	print "moving roman to handoff"
 	RMAC.MoveToHandoff()
 
+	print "moving pr2 to handoff"
 	pr2_RoconMoveArm.MoveToHandoff()
 	pr2_GripperCommand.Command('r', 0)
 
 	RCG.Open()
-
+	print "moving roman to home"
 	RMAC.MoveToHome()
 
+	print "moving pr2 to home"
 	pr2_RoconMoveArm.MoveToHome()
 
 	pr2_GripperCommand.Command('r', 1)
