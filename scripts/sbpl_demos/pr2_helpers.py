@@ -5,13 +5,18 @@ import rospy
 import actionlib
 import math
 
-import IPython
 from control_msgs.msg import GripperCommandAction, GripperCommandGoal
 from tf2_msgs.msg import LookupTransformAction, LookupTransformGoal
 from pr2_controllers_msgs.msg import PointHeadGoal, PointHeadAction
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-
 from geometry_msgs.msg import PointStamped
+
+## for moveit commander
+import copy
+import moveit_commander
+import moveit_msgs.msg
+import geometry_msgs.msg
+from tf.transformations import quaternion_from_euler
 
 
 class TFLookup:
@@ -106,11 +111,79 @@ class MoveBase:
         else:
             return False
 
+class MoveitMoveArm:
+    def __init__(self):
+        moveit_commander.roscpp_initialize(sys.argv)
+        self.moveit_robot_commander = moveit_commander.RobotCommander()
+        self.moveit_planning_scene = moveit_commander.PlanningSceneInterface()
+        
+        self.moveit_planning_group = moveit_commander.MoveGroupCommander("right_arm")
+        self.moveit_planning_group.set_planner_id("RRTkConfigDefault")
+        self.moveit_planning_group.set_planning_time(10.0)
+        self.moveit_planning_group.allow_replanning(True)
+    def Cleanup(self):
+        moveit_commander.roscpp_shutdown()
+
+    def MoveToPose(self, pose):
+        self.moveit_planning_group.set_pose_target(pose)
+        plan=moveit_planning_group.plan()
+        if not plan.joint_trajectory.points:
+            return False
+        return True
+
+    def MoveToHandoff(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0.62
+        pose.position.y = 0
+        pose.position.z = 0.93
+        quat = quaternion_from_euler(math.pi/2,0,0)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        self.MoveToPose(pose)
+
+    def MoveToHome(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0.09
+        pose.position.y = -0.94
+        pose.position.z = 0.89
+        quat = quaternion_from_euler(0,0,0)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        self.MoveToPose(pose)
+
 class RoconMoveArm:
     def __init__(self):
         self.client = actionlib.SimpleActionClient('rocon_move_arm', RoconMoveArmAction)
         self.client.wait_for_server()
         print "RoconMoveArm online"
+
+    def MoveToHandoff(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0.62
+        pose.position.y = 0
+        pose.position.z = 0.93
+        quat = quaternion_from_euler(math.pi/2,0,0)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        self.MoveToPose(pose)
+
+    def MoveToHome(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0.09
+        pose.position.y = -0.94
+        pose.position.z = 0.89
+        quat = quaternion_from_euler(0,0,0)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        self.MoveToPose(pose)
 
     def MoveToPose(self, pose):
         goal = RoconMoveArmGoal()

@@ -29,8 +29,8 @@ int main( int argc, char** argv )
     marker.action = visualization_msgs::Marker::ADD;
 
     tf2_msgs::LookupTransformGoal tf_goal;
-    tf_goal.target_frame = "odom_combined";
-    tf_goal.source_frame = "map";
+    tf_goal.target_frame = "map";
+    tf_goal.source_frame = "odom_combined";
     tf_goal.timeout = ros::Duration(5.0);
     tf_client.sendGoal(tf_goal);
     tf_client.waitForResult();
@@ -53,7 +53,7 @@ int main( int argc, char** argv )
     marker.color.r = 0.0f;
     marker.color.g = 1.0f;
     marker.color.b = 0.0f;
-    marker.color.a = 1.0;
+    marker.color.a = 0.33;
 
     marker.lifetime = ros::Duration();
 
