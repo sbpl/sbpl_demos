@@ -10,7 +10,7 @@ from tf2_msgs.msg import LookupTransformAction, LookupTransformGoal
 from pr2_controllers_msgs.msg import PointHeadGoal, PointHeadAction
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from geometry_msgs.msg import PointStamped
-
+from sbpl_demos.msg import RoconMoveArmAction, RoconMoveArmGoal, RoconMoveArmResult
 ## for moveit commander
 import copy
 import moveit_commander
@@ -125,10 +125,13 @@ class MoveitMoveArm:
         moveit_commander.roscpp_shutdown()
 
     def MoveToPose(self, pose):
+        print "MoveitMoveArm is moving to pose"
         self.moveit_planning_group.set_pose_target(pose)
-        plan=moveit_planning_group.plan()
+        plan=self.moveit_planning_group.plan()
         if not plan.joint_trajectory.points:
             return False
+        self.moveit_planning_group.go(wait=True)
+        
         return True
 
     def MoveToHandoff(self):
@@ -186,8 +189,9 @@ class RoconMoveArm:
         self.MoveToPose(pose)
 
     def MoveToPose(self, pose):
+        print "RoconMoveArm is moving to Pose"
         goal = RoconMoveArmGoal()
-        goal.pose = pose
+        goal.target_pose = pose
         self.client.send_goal(goal)
         if self.client.wait_for_result():
             result = self.client.get_result()

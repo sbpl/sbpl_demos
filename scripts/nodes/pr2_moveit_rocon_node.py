@@ -14,7 +14,7 @@ class PR2MoveitRocon(object):
 		self.server.start()
 
 	def execute(self, goal):
-		success = self.MoveitMoveArm.MoveToPose(goal.pose)
+		success = self.MoveitMoveArm.MoveToPose(goal.target_pose)
 		result = RoconMoveArmResult()
 		result.success = success
 		self.server.set_succeeded(result)
