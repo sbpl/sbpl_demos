@@ -26,14 +26,14 @@ if __name__ == "__main__":
 	orientation_x=float(sys.argv[4])
 	orientation_y=float(sys.argv[5])
 	orientation_z=float(sys.argv[6])
-	
+
 	rospy.init_node("pr2_move_r_arm_to_target")
 	
 	# Initialize MoveIt.
 	moveit_commander.roscpp_initialize(sys.argv)
 	moveit_robot_commander = moveit_commander.RobotCommander()
 	moveit_planning_scene = moveit_commander.PlanningSceneInterface()
-	moveit_planning_group = moveit_commander.MoveGroupCommander("right_arm")
+	moveit_planning_group = moveit_commander.MoveGroupCommander("left_arm")
 	moveit_planning_group.set_planner_id("RRTkConfigDefault")
 	moveit_planning_group.set_planning_time(10.0)
 	moveit_planning_group.allow_replanning(True)
