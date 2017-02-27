@@ -1,0 +1,82 @@
+### PR2 Commander Workspace (machine name:tattoine)
+
+1) create a new catkin workspace (asummed to be at /home/<user>/catkin_ws)
+	$ mkdir -p ~/catkin_ws/src
+	$ cd ~/catkin_ws/src
+	$ catkin_init_workspace
+
+2) download the sbpl_demos package.
+	$ git clone https://github.com/sbpl/sbpl_demos.git
+
+3) download the sbpl_multimaster package.
+	$ git clone https://github.com/sbpl/sbpl_multimaster.git
+
+4) modify avahi-daemon setup.
+	$ vim /etc/default/avahi-daemon
+	Change the line: AVAHI_DAEMON_START=1
+	to: AVAHI_DAEMON_START=0
+
+5) install rocon-gateway.
+	$ apt-get install ros-indigo-rocon-gateway
+
+6) install rocon-hub.
+	$ apt-get install ros-indigo-rocon-hub
+
+7) modify and run the gateway_topics.yaml for generating sbpl_multimater launch file.
+	$ vim <sbpl_multimaster>/config/gateway_topics.yaml
+	$ roslaunch sbpl_multimaster generate_multimaster_configs.launch 
+
+8) run sbpl_multimaster launch file.
+	$ roslaunch sbpl_multimaster <hostname>_gateway.launch
+
+9) run the screen for sbpl_demos workspace windows
+	$ roscd sbpl_demos
+	$ screen -c screen_configs/screenrc_tatooine
+
+10) on the screen tab, run moveit setup launch.
+	$ pr2master;roslaunch sbpl_demos tatooine_moveit_setup.launch
+
+11) on the screen tab, run ar setup launch.
+	$ pr2master;roslaunch sbpl_demos tatooine_ar_setup.launch
+
+12) on the screen tab, run teleop setup launch.
+	$ pr2master;roslaunch pr2_teleop teleop_keyboard.launch
+
+13) on the screen tab, run pr2_demo code.
+	$ rosrun sbpl_demos pr2_r_arm_single_grasp_task.py
+
+### PR2 Commander Workspace (machine name:tattoine)
+
+1) create a new catkin workspace (asummed to be at /home/<user>/catkin_ws)
+	$ mkdir -p ~/catkin_ws/src
+	$ cd ~/catkin_ws/src
+	$ catkin_init_workspace
+
+2) download the sbpl_demos package.
+	$ git clone https://github.com/sbpl/sbpl_demos.git
+
+3) download the sbpl_multimaster package.
+	$ git clone https://github.com/sbpl/sbpl_multimaster.git
+
+4) modify and run the gateway_topics.yaml for generating sbpl_multimater launch file.
+	$ vim <sbpl_multimaster>/config/gateway_topics.yaml
+	$ roslaunch sbpl_multimaster generate_multimaster_configs.launch 
+
+5) run sbpl_multimaster launch file.
+	$ roslaunch sbpl_multimaster alan1_gateway.launch
+
+6) run the screen for sbpl_demos workspace windows
+	$ roscd sbpl_demos
+	$ screen -c screen_configs/screenrc_alan1
+
+7) on the screen tab, run pr2_dashboard. 
+	$ rosrun pr2_dashboard pr2_dashboard (Don't forget that ssh must have -X parameter for remote X window.)
+
+8) on the screen tab, run kinect.
+	$ roslaunch sbpl_demos alan1_kinect_setup.launch
+
+9) on the screen tab, run pr2 2d nav. 
+	$ roslaunch sbpl_demos alan1_2dnav_setup.launch
+
+10) on the screen tabk, run pr2 2d map.
+	$ roslaunch sbpl_demos alan1_2dmap_setup.launch
