@@ -7,8 +7,6 @@ import rospy
 import actionlib
 import math
 
-import IPython
-#IPython.embed()
 from pr2_controllers_msgs.msg import *
 
 def state_cb(msg):
@@ -26,7 +24,7 @@ if __name__ == '__main__':
     #rospy.sleep(1)
 
     goal = SingleJointPositionGoal()
-    goal.position = int(sys.argv[1]) 
+    goal.position = float(sys.argv[1]) 
     client.send_goal(goal)
     #pub.publish(goal)
     rospy.sleep(2.0)

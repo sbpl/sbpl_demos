@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="tf" type="static_transform_publisher" name="ar_grasp_static_tf" args="0 -0.3 0 1.57 0 3.14 ar_marker pr2_ar_grasp 5" />
+	<node pkg="tf" type="static_transform_publisher" name="ar_pregrasp_static_tf" args="0 -0.4 0 1.57 0 3.14 ar_marker pr2_ar_pregrasp 5" />
+</launch>

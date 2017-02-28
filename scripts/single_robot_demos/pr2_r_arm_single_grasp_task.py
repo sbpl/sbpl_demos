@@ -1,87 +1,52 @@
 #! /usr/bin/env python
-import math
 import sys
-import roslib
 import rospy
-import sbpl_demos.pr2_helpers as pr2
-import sbpl_demos.FindARTag as FindARTag
-
-## for moveit commander
-import copy
-import moveit_commander
-import moveit_msgs.msg
-import geometry_msgs.msg
-
+import actionlib
 import tf
-from ar_track_alvar_msgs.msg import AlvarMarkers
-from geometry_msgs.msg import *
-from tf.transformations import quaternion_from_euler
+from geometry_msgs.msg import Pose, PoseStamped
+import sbpl_demos.pr2_helpers as pr2
 
-# Demo code.
+def lookupPoseFromTransform(source_frame, target_frame):
+	if listener.frameExists("target_frame"):
+		grasp_tf = listener.lookupTransform(source_frame, target_frame,  rospy.Time())
+		print grasp_tf
+	else:
+		print "could not find grasp frame"
+		return False
+	pose = Pose()
+	pose.position.x = grasp_tf[0][0]
+	pose.position.y = grasp_tf[0][1]
+	pose.position.z = grasp_tf[0][2]
+
+	pose.orientation.x = grasp_tf[1][0]
+	pose.orientation.y = grasp_tf[1][1]
+	pose.orientation.z = grasp_tf[1][2]
+	pose.orientation.w = grasp_tf[1][3]
+
+	return pose
+
 if __name__ == "__main__":
-	rospy.init_node("simple_grasping_demo")
-	
-	PointHead = pr2.PointHead()
-	GripperCommand = pr2.GripperCommand()
-	MoveBase = pr2.MoveBase()
-	# Initialize MoveIt.
-	moveit_commander.roscpp_initialize(sys.argv)
-	moveit_robot_commander = moveit_commander.RobotCommander()
-	moveit_planning_scene = moveit_commander.PlanningSceneInterface()
-	
-	moveit_planning_group = moveit_commander.MoveGroupCommander("right_arm")
-	moveit_planning_group.set_planner_id("RRTkConfigDefault")
-	moveit_planning_group.set_planning_time(10.0)
-	moveit_planning_group.allow_replanning(True)
 
-	pose1 = geometry_msgs.msg.Pose()
-	pose1.position.x = 0.09
-	pose1.position.y = -0.94
-	pose1.position.z = 0.89
-	quat = quaternion_from_euler(0,0,0)
-	pose1.orientation.x = quat[0]
-	pose1.orientation.y = quat[1]
-	pose1.orientation.z = quat[2]
-	pose1.orientation.w = quat[3]
-	
-	moveit_planning_group.set_pose_target(pose1)
-	plan=moveit_planning_group.plan()
-	if not plan.joint_trajectory.points:
-		sys.exit("No Motion Plan Found.")
-	
-	moveit_planning_group.go(wait=True)
+	rospy.init_node('pr2_grasp_test')
+	listener = tf.TransformListener()
+	pr2_GripperCommand = pr2.GripperCommand()
+	pr2_MoveitMoveArm = pr2.MoveitMoveArm()
+	pr2_TorsoCommand = pr2.TorsoCommand()
+	pr2_TuckArms = pr2.TuckArms()
+	pr2_MoveBase = pr2.MoveBase()
+	rospy.loginfo('All Action clients connected!')
 
-	GripperCommand.Command('r', 1)
+	pr2_TorsoCommand.MoveTorso(0.15)
+	pr2_GripperCommand.Command('r', 1)	
 
-	pose2 = geometry_msgs.msg.Pose()
-	pose2.position.x = 0.62
-	pose2.position.y = 0
-	pose2.position.z = 0.93
-	quat = quaternion_from_euler(math.pi/2,0,0)
-	pose2.orientation.x = quat[0]
-	pose2.orientation.y = quat[1]
-	pose2.orientation.z = quat[2]
-	pose2.orientation.w = quat[3]
+	print "moving pr2 to handoff"
+	pr2_MoveitMoveArm.MoveToHandoff()
+	pr2_GripperCommand.Command('r', 0)
 
-	moveit_planning_group.set_pose_target(pose2)
-	plan=moveit_planning_group.plan()
-	if not plan.joint_trajectory.points:
-		sys.exit("No Motion Plan Found.")
-	
-	moveit_planning_group.go(wait=True)
-	
-	GripperCommand.Command('r', 0)
+	print "moving pr2 to home"
+	pr2_MoveitMoveArm.MoveToHome()
 
-	# Press anykey after Roman releases the object.
-	a=raw_input()
+	pr2_GripperCommand.Command('r', 1)
 
-	moveit_planning_group.set_pose_target(pose1)
-	plan=moveit_planning_group.plan()
-	if not plan.joint_trajectory.points:
-		sys.exit("No Motion Plan Found.")
-	
-	moveit_planning_group.go(wait=True)
-
-	GripperCommand.Command('r', 1)
-
-	moveit_commander.roscpp_shutdown()
+	pr2_MoveitMoveArm.Cleanup()
+	print('shutting down...')	
