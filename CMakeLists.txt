@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(sbpl_demos)
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+set(CMAKE_BUILD_TYPE Release) 
+
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
@@ -11,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   message_generation
+  tf
 )
 
 catkin_python_setup()
@@ -40,6 +45,7 @@ catkin_package()
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  /usr/include/eigen3
 )
 
 
@@ -52,3 +58,7 @@ include_directories(
 add_executable(pr2_rocon_marker_publisher src/pr2_rocon_marker_publisher.cpp)
 add_dependencies(pr2_rocon_marker_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pr2_rocon_marker_publisher ${catkin_LIBRARIES} )
+
+add_executable(pose_upsample_node src/pose_upsample_node.cpp)
+add_dependencies(pose_upsample_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pose_upsample_node ${catkin_LIBRARIES} )

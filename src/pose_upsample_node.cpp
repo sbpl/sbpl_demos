@@ -1,23 +1,21 @@
 #include <ros/ros.h>
 #include <iostream>
 #include <vector>
-#include <harp_arm/kinematic_utils.h>
-#include <harp_arm/harp_arm_tools.h>
-#include <moveit_msgs/GetPositionIK.h>
-#include <moveit_msgs/PositionIKRequest.h>
 #include <Eigen/Geometry>
 #include <tf/transform_datatypes.h>
 #include <tf_conversions/tf_eigen.h>
 #include <sensor_msgs/JointState.h>
 #include <visualization_msgs/Marker.h>
+#include <tf/transform_broadcaster.h>
+#include <ar_track_alvar_msgs/AlvarMarkers.h>
 
 
 
 namespace util{
-tf::Transform geoPose2Transform(geometry_msgs::Pose p)
+tf::Transform transformFromPose(geometry_msgs::Pose p)
 {
-    tf::Transform tf1;
-    tf1.setOrigin( tf::Vector3(
+    tf::Transform tf;
+    tf.setOrigin( tf::Vector3(
         p.position.x, 
         p.position.y, 
         p.position.z) );
@@ -26,16 +24,16 @@ tf::Transform geoPose2Transform(geometry_msgs::Pose p)
         p.orientation.y, 
         p.orientation.z, 
         p.orientation.w); 
-    tf1.setRotation(q);
-    return tf1;
+    tf.setRotation(q);
+    return tf;
 }
 
-Eigen::Affine3d affineFromXYZRPY(double x, double y, double z, double roll, double pitch, double yaw)
+Eigen::Affine3d affineFromXYZRPY(double x, double y, double z, double roll_rad, double pitch_rad, double yaw_rad)
 {
     Eigen::AngleAxisd roll, pitch, yaw;
-    roll = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX());
-    pitch = Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY());
-    yaw = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+    roll = Eigen::AngleAxisd(roll_rad, Eigen::Vector3d::UnitX());
+    pitch = Eigen::AngleAxisd(pitch_rad, Eigen::Vector3d::UnitY());
+    yaw = Eigen::AngleAxisd(yaw_rad, Eigen::Vector3d::UnitZ());
 
     Eigen::Quaterniond Qoffset;
     Qoffset = roll * pitch * yaw ;
@@ -45,114 +43,161 @@ Eigen::Affine3d affineFromXYZRPY(double x, double y, double z, double roll, doub
     A_output = Toffset * Qoffset;
     return A_output;
 }
+
+Eigen::Affine3d affineFromPose(const geometry_msgs::Pose &p){
+    Eigen::Translation3d T(
+        p.position.x,
+        p.position.y,
+        p.position.z);
+
+    Eigen::Quaterniond Q(
+        p.orientation.w,
+        p.orientation.x,
+        p.orientation.y,
+        p.orientation.z);
+
+    Eigen::Affine3d A;
+    A = T * Q;
+    return A;
+}
+
+geometry_msgs::Pose poseFromAffine(const Eigen::Affine3d &A){
+    geometry_msgs::Pose P;
+    P.position.x = A.translation()[0];
+    P.position.y = A.translation()[1];
+    P.position.z = A.translation()[2];
+
+    Eigen::Quaterniond Q(A.linear());
+    P.orientation.x = Q.x();
+    P.orientation.y = Q.y();
+    P.orientation.z = Q.z();
+    P.orientation.w = Q.w();
+    return P;
+}
 } // util ns
 
 
 class PoseUpsampler{
 
 public: 
-    PoseUpsampler();
-    void setRobotEEOffset(double x, double y, double x, double roll, double pitch, double yaw);
-    void setRobotEEoffset(const Eigen::Affine3d& Arobot);
+    PoseUpsampler(bool enableTFVisualization);
+    void setRobotEEOffset(double x, double y, double z, double roll, double pitch, double yaw);
     void setPerturbationIntervals(
         std::vector<double> x_interval,
         std::vector<double> y_interval,
         std::vector<double> z_interval,
-        double roll_interval,
-        double pitch_interval,
-        double yaw_interval);
-    void setPercentofVisualizedPoses(double pct);
-    void generatePoses(const geometry_msgs::Pose& Pinput, std::vector<geometery_msgs::Pose>& vPout);
+        std::vector<double> roll_interval,
+        std::vector<double> pitch_interval,
+        std::vector<double> yaw_interval);
+    void generatePoses(const geometry_msgs::Pose& Pinput, std::vector<geometry_msgs::Pose>& vPout);
 
 private:
     void generatePerturbationSet();
+
     Eigen::Affine3d Arobot_;
     double pct_; // between 0 and 1
+    bool robot_transform_set_;
+    bool enable_TF_visualization_;
     std::vector<double> perturb_x_interval_ ; // meters
     std::vector<double> perturb_y_interval_ ; // meters
     std::vector<double> perturb_z_interval_ ; // meters
-    double perturb_roll_interval_ ; // rad
-    double perturb_pitch_interval_ ; // rad
-    double perturb_yaw_interval_ ; // rad
+    std::vector<double> perturb_roll_interval_ ; // rad
+    std::vector<double> perturb_pitch_interval_ ; // rad
+    std::vector<double> perturb_yaw_interval_ ; // rad
     std::vector<Eigen::Affine3d> APerturbations_;
+    tf::TransformBroadcaster tf_broadcaster_;
+    ros::NodeHandle nh_;
 
 }; // class
 
-PoseUpsampler::PoseUpsampler():
+PoseUpsampler::PoseUpsampler(bool enableTFVisualization=true):
+    nh_(),
+    tf_broadcaster_(),
     pct_(0.1),
-    perturbation_x_interval_(1,0),
-    perturbation_y_interval_(1,0),
-    perturbation_z_interval_(1,0),
-    perturbation_roll_interval_(0),
-    perturbation_pitch_interval_(0),
-    perturbation_yaw_interval_(0)
+    perturb_x_interval_(1,0),
+    perturb_y_interval_(1,0),
+    perturb_z_interval_(1,0),
+    perturb_roll_interval_(1,0),
+    perturb_pitch_interval_(1,0),
+    perturb_yaw_interval_(1,0),
+    robot_transform_set_(false),
+    enable_TF_visualization_(enableTFVisualization)
 {
-
+    std::cout << "here\n";
+    generatePerturbationSet();
 }
 
-void setRobotEEOffset(double x, double y, double x, double roll, double pitch, double yaw)
+void PoseUpsampler::setRobotEEOffset(double x, double y, double z, double roll, double pitch, double yaw)
 {
-    Arobot_ = util::affineFromXYZRPY(double x, double y, double z, double roll, double pitch, double yaw)
+    Arobot_ = util::affineFromXYZRPY(x, y, z, roll, pitch, yaw);
+    robot_transform_set_ = true;
 }
 
-void setRobotEEoffset(const Eigen::Affine3d& Arobot)
-{
-    Arobot_ = Arobot;
-}
-
-void setPercentofVisualizedPoses(double pct)
-{ 
-    pct_ = pct;
-    if(pct_ > 1.0) { 
-        pct_ = 1.0; 
-        std::cout << "Warning: visualization percent set greater than one, saturating value\n";
+void PoseUpsampler::generatePoses(const geometry_msgs::Pose& Pobject, std::vector<geometry_msgs::Pose>& vecPout){
+    if(not robot_transform_set_){
+        std::cout << "Warning: you have to set the robot end-effector offset first, not executing pose generation\n";
+        return;
     }
-    if(pct_ < 0.0){
-        pct_ = 0.0;
-        std::cout << "Warning: visualization percent set less than 0, saturating value\n";   
+
+    if(enable_TF_visualization_){
+        std::string frame("object_pose");
+        tf::Transform tf = util::transformFromPose(Pobject);
+        tf_broadcaster_.sendTransform(tf::StampedTransform(tf, ros::Time::now(), "map", frame.c_str()));
     }
+
+    int count = 0;
+    vecPout.clear();
+    Eigen::Affine3d Aobject;
+    Eigen::Affine3d Apertubation;
+    Eigen::Affine3d Aoutput;
+    Aobject = util::affineFromPose(Pobject);
+    geometry_msgs::Pose Pout;
+
+    for(auto it = APerturbations_.begin(); it != APerturbations_.end(); it++){
+        Apertubation = *it;
+        Aoutput = Aobject * Apertubation * Arobot_;
+        Pout = util::poseFromAffine(Aoutput);
+        vecPout.push_back(Pout);
+
+        if(enable_TF_visualization_){
+            std::string frame("grasp_pose_");
+            frame.append(std::to_string(count));
+            count++;
+            tf::Transform tf = util::transformFromPose(Pout);
+            tf_broadcaster_.sendTransform(tf::StampedTransform(tf, ros::Time::now(), "map", frame.c_str()));
+
+        }
+    }
+    return;    
 }
 
-
-void generatePoses(const geometry_msgs::Pose& Pinput, std::vector<geometery_msgs::Pose>& vPout){
-    tf::Transform input_tf;
-    input_tf = geoPose2Transform(Pinput);
-
-    Eigen::Affine3d A_input;
-    tf::transformTFToEigen(input_tf, A_input);
-
-    Eigen::AngleAxisd roll, pitch, yaw;
-    roll = Eigen::AngleAxisd(req.roll, Eigen::Vector3d::UnitX());
-    pitch = Eigen::AngleAxisd(req.pitch, Eigen::Vector3d::UnitY());
-    yaw = Eigen::AngleAxisd(req.yaw, Eigen::Vector3d::UnitZ());
-
-    Eigen::Quaterniond Qoffset;
-    Qoffset = roll * pitch * yaw ;
-    Eigen::Translation3d Toffset(req.x, req.y, req.z);
-
-    Eigen::Affine3d A_output;
-    A_output = A_input * A_perturbation * Toffset * Qoffset;
-
-    geometry_msgs::Pose pout;
-    pout.position.x = A_output.translation()[0];
-    pout.position.y = A_output.translation()[1];
-    pout.position.z = A_output.translation()[2];
-
-    Eigen::Quaterniond Qfinal(A_output.linear() );
-    pout.orientation.x = Qfinal.x();
-    pout.orientation.y = Qfinal.y();
-    pout.orientation.z = Qfinal.z();
-    pout.orientation.w = Qfinal.w();
+void PoseUpsampler::generatePerturbationSet()
+{
+    std::cout << "generating pertubation set...\n";
+    APerturbations_.clear();
+    Eigen::Affine3d A;
+    for(auto x = perturb_x_interval_.begin(); x != perturb_x_interval_.end(); x++){
+    for(auto y = perturb_y_interval_.begin(); y != perturb_y_interval_.end(); y++){
+    for(auto z = perturb_z_interval_.begin(); z != perturb_z_interval_.end(); z++){
+    for(auto roll = perturb_roll_interval_.begin(); roll != perturb_roll_interval_.end(); roll++){
+    for(auto pitch = perturb_pitch_interval_.begin(); pitch != perturb_pitch_interval_.end(); pitch++){
+    for(auto yaw = perturb_yaw_interval_.begin(); yaw != perturb_yaw_interval_.end(); yaw++){
+        std::cout <<" xyzrpy" << *x << ", " << *y << ", " << *z << "\n";
+        A = util::affineFromXYZRPY(*x,*y,*z,*roll,*pitch,*yaw);
+        APerturbations_.push_back(A);
+    }}}}}}
+    std::cout << "Info: Generated " << APerturbations_.size() << " perturbation transforms\n";
 }
 
-int main(int argc, char *argv[]){
-
-    ros::init(argc, argv, "pose_upsample");
-    ros::NodeHandle nh;
-    ros::Rate r(5);
-
-    ros::ServiceServer service = nh.advertiseService("pose_upsample", &serviceCB);
-
-    
-
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "pose_upsample_node");
+    PoseUpsampler PU;
+    PU.setRobotEEOffset(1.0,0.0,0.0, 0.0,0.0,1.57);
+    ros::Duration(1.0).sleep();
+    geometry_msgs::Pose p;
+    p.orientation.w = 1;
+    std::vector<geometry_msgs::Pose> vPoses;
+    PU.generatePoses(p, vPoses);
+    return 0;
 }
