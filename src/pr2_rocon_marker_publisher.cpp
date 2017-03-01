@@ -30,7 +30,7 @@ int main( int argc, char** argv )
 
     tf2_msgs::LookupTransformGoal tf_goal;
     tf_goal.target_frame = "map";
-    tf_goal.source_frame = "odom_combined";
+    tf_goal.source_frame = "base_footprint";
     tf_goal.timeout = ros::Duration(5.0);
     tf_client.sendGoal(tf_goal);
     tf_client.waitForResult();
