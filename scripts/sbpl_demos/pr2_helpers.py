@@ -9,10 +9,12 @@ from control_msgs.msg import GripperCommandAction, GripperCommandGoal
 from tf2_msgs.msg import LookupTransformAction, LookupTransformGoal
 from pr2_controllers_msgs.msg import PointHeadGoal, PointHeadAction
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import PointStamped, PoseStamped
 from sbpl_demos.msg import RoconMoveArmAction, RoconMoveArmGoal, RoconMoveArmResult
 from pr2_controllers_msgs.msg import SingleJointPositionAction, SingleJointPositionGoal
 from pr2_common_action_msgs.msg import TuckArmsAction, TuckArmsGoal
+from sbpl_demos.srv import PoseUpsampleRequest, PoseUpsample
+from sbpl_demos.msg import XYZRPY
 
 ## for moveit commander
 import copy
@@ -20,13 +22,15 @@ import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
 from tf.transformations import quaternion_from_euler
+import tf
 
 
 class TFLookup:
     def __init__(self):
         self.client = actionlib.SimpleActionClient('tf2_buffer_server', LookupTransformAction)
+        print ("waiting for tf2_buffer_server...")
         self.client.wait_for_server()
-        print("TFLookup Action online")
+        print ("Connected.")
 
     def getTransform(self, source_frame, target_frame):
         goal = LookupTransformGoal()
@@ -44,8 +48,9 @@ class TFLookup:
 class PointHead:
     def __init__(self):
         self.client = actionlib.SimpleActionClient('/head_traj_controller/point_head_action', PointHeadAction)
+        print ("Waiting for point_head_action...")
         self.client.wait_for_server()
-        print("PointHead online")
+        print ("Connected.")
 
     def LookAt(self, frame, x, y, z):
         goal=PointHeadGoal()
@@ -71,7 +76,7 @@ class TorsoCommand:
         self.client = actionlib.SimpleActionClient('/torso_controller/position_joint_action', SingleJointPositionAction)
         print("waiting for server...")
         self.client.wait_for_server()
-
+        print ("Connected.")
     def MoveTorso(self, height):
         goal = SingleJointPositionGoal()
         goal.position = height 
@@ -86,33 +91,34 @@ class TuckArms:
         self.client = actionlib.SimpleActionClient("/tuck_arms", TuckArmsAction)
         print ("Waiting for tuck arms server...")
         self.client.wait_for_server()
+        print ("Connected.")
     def TuckArms(self):
         goal = TuckArmsGoal()
         goal.tuck_left = True
         goal.tuck_right = True
         self.client.send_goal(goal)
-        rospy.sleep(5.0)
+        self.client.wait_for_result(rospy.Duration(30.0))
 
     def TuckLeftArm(self):
         goal = TuckArmsGoal()
         goal.tuck_left = True
         goal.tuck_right = False
         self.client.send_goal(goal)
-        rospy.sleep(5.0)
+        self.client.wait_for_result(rospy.Duration(30.0))
 
     def TuckRightArm(self):
         goal = TuckArmsGoal()
         goal.tuck_left = False
         goal.tuck_right = True
         self.client.send_goal(goal)
-        rospy.sleep(5.0)
+        self.client.wait_for_result(rospy.Duration(30.0))
 
     def UntuckArms(self):
         goal = TuckArmsGoal()
         goal.tuck_left = False
         goal.tuck_right = False
         self.client.send_goal(goal)
-        rospy.sleep(5.0)
+        self.client.wait_for_result(rospy.Duration(30.0))
 
 
 
@@ -120,9 +126,10 @@ class GripperCommand:
     def __init__(self):
         self.left_client = actionlib.SimpleActionClient('l_gripper_controller/gripper_action', GripperCommandAction)
         self.right_client = actionlib.SimpleActionClient('r_gripper_controller/gripper_action', GripperCommandAction)
+        print ("waiting for gripper actions...")
         self.left_client.wait_for_server()
         self.right_client.wait_for_server()
-        print("GripperCommand online")
+        print ("Connected.")
 
     def Command(self, gripper, open):
 
@@ -149,8 +156,9 @@ class GripperCommand:
 class MoveBase:
     def __init__(self):
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        print("waiting for move_base action...")
         self.client.wait_for_server()
-        print "MoveBase online"
+        print ("Connected.")
 
     def MoveToPose(self, frame, input_pose):
         goal = MoveBaseGoal()
@@ -159,9 +167,10 @@ class MoveBase:
         goal.target_pose.pose = input_pose
 
         self.client.send_goal(goal)
-        if self.client.wait_for_result(rospy.Duration(15.0)):
+        if self.client.wait_for_result(rospy.Duration(30.0)):
             return True
         else:
+            self.client.cancel_all_goals()
             return False
 
     def MoveToInternDesk(self):
@@ -190,6 +199,7 @@ class MoveBase:
 
 class MoveitMoveArm:
     def __init__(self):
+        print "bringing up move_arm..."
         moveit_commander.roscpp_initialize(sys.argv)
         self.moveit_robot_commander = moveit_commander.RobotCommander()
         self.moveit_planning_scene = moveit_commander.PlanningSceneInterface()
@@ -198,14 +208,26 @@ class MoveitMoveArm:
         self.moveit_planning_group.set_planner_id("RRTkConfigDefault")
         self.moveit_planning_group.set_planning_time(10.0)
         self.moveit_planning_group.allow_replanning(True)
+        self.tflistener = tf.TransformListener()
+        print ("Connected.")
+        rospy.sleep(0.5);
 
     def Cleanup(self):
         moveit_commander.roscpp_shutdown()
 
     def MoveToPose(self, pose, reference_frame):
-        print "MoveitMoveArm is moving to pose"
-        self.moveit_planning_group.set_pose_target(pose)
-        self.moveit_planning_group.set_pose_reference_frame(reference_frame)
+        # need to manually convert to odom_combined frame
+        if(not self.tflistener.frameExists(reference_frame) or 
+           not self.tflistener.frameExists("odom_combined")):
+            print "Warning: could not look up provided reference frame"
+            return False
+        input_ps = PoseStamped()
+        input_ps.pose = pose
+        input_ps.header.frame_id = reference_frame
+        correct_ps = self.tflistener.transformPose("odom_combined", input_ps )
+
+        self.moveit_planning_group.set_pose_target(correct_ps.pose)
+        #self.moveit_planning_group.set_pose_reference_frame(reference_frame) # DOES NOT WORK
         plan=self.moveit_planning_group.plan()
         if not plan.joint_trajectory.points:
             return False
@@ -319,3 +341,44 @@ class RoconMoveArm:
             result = self.client.get_result()
             return result.success
         return False
+
+def frange(x, y, jump):
+  while x < y:
+    yield x
+    x += jump
+    
+
+class UpsampleGraspPoses:
+    def __init__(self):
+        print "waiting for pose_upsampling action..."
+        rospy.wait_for_service('pose_upsampling')
+        print ("Connected.")
+        self.client = rospy.ServiceProxy('pose_upsampling', PoseUpsample)
+        self.request = PoseUpsampleRequest()
+        self.request.check_against_ik = True
+        self.request.visualize_poses_with_tf = False
+        self.request.planning_group = "right_arm"
+        self.request.reference_frame = "map"
+        self.request.joint_names = ["r_elbow_flex_joint",
+                               "r_forearm_roll_joint",
+                               "r_shoulder_lift_joint", 
+                               "r_shoulder_pan_joint",
+                               "r_upper_arm_roll_joint",
+                               "r_wrist_flex_joint",
+                               "r_wrist_roll_joint"]
+        xyzrpy = XYZRPY()
+        xyzrpy.x = -0.18
+        xyzrpy.roll = 0.0
+        xyzrpy.pitch = 0.0
+        xyzrpy.yaw = 0
+        self.request.robot_transform_to_object = xyzrpy
+
+    def getValidPosesForCylinder(self, input_pose):
+        self.request.object_pose = input_pose
+        self.request.z_interval = [-0.1, -0.05]
+        yaw_angles = list(frange(-math.pi, math.pi, math.pi/10))
+        #print yaw_angles
+        #self.request.pitch_interval = [-math.pi/2, 0, math.pi/2.0]
+        self.request.yaw_interval = yaw_angles
+        res = self.client(self.request)
+        return res.valid_poses

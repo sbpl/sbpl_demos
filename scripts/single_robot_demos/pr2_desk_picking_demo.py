@@ -4,26 +4,9 @@ import rospy
 import actionlib
 import tf
 from geometry_msgs.msg import Pose, PoseStamped
+from sbpl_demos import perception_helpers
 import sbpl_demos.pr2_helpers as pr2
 
-def lookupPoseFromTransform(source_frame, target_frame):
-	if listener.frameExists("target_frame"):
-		grasp_tf = listener.lookupTransform(source_frame, target_frame,  rospy.Time())
-		print grasp_tf
-	else:
-		print "could not find grasp frame"
-		return False
-	pose = Pose()
-	pose.position.x = grasp_tf[0][0]
-	pose.position.y = grasp_tf[0][1]
-	pose.position.z = grasp_tf[0][2]
-
-	pose.orientation.x = grasp_tf[1][0]
-	pose.orientation.y = grasp_tf[1][1]
-	pose.orientation.z = grasp_tf[1][2]
-	pose.orientation.w = grasp_tf[1][3]
-
-	return pose
 
 if __name__ == "__main__":
 
@@ -35,13 +18,17 @@ if __name__ == "__main__":
 	pr2_TuckArms = pr2.TuckArms()
 	pr2_MoveBase = pr2.MoveBase()
 	pr2_PointHead = pr2.PointHead()
+	AR_listener = perception_helpers.ARTagListener()
+	UpsampleGraspPoses = pr2.UpsampleGraspPoses()
 	rospy.loginfo('All Action clients connected!')
 	rospy.loginfo('Commanding Untucking')
+	print "reference frame: ", pr2_MoveitMoveArm.moveit_planning_group.get_planning_frame()
+	print "end effector: ", pr2_MoveitMoveArm.moveit_planning_group.get_end_effector_link()
 	print "joints: ", pr2_MoveitMoveArm.moveit_planning_group.get_joints()
 	print "current joint values: ", pr2_MoveitMoveArm.moveit_planning_group.get_current_joint_values()
 	pr2_TuckArms.UntuckArms()
-	pr2_MoveitMoveArm.MoveToWide()
-	sys.exit(0)
+	#pr2_MoveitMoveArm.MoveToWide()
+	#sys.exit(0)
 
 	pr2_PointHead.LookAt("base_footprint", 1.25, 0, 0)
 	rospy.loginfo('Commanding torso')
@@ -62,10 +49,15 @@ if __name__ == "__main__":
 	# add collision objects
 	rospy.loginfo('Updating Collision Objects')
 	pr2_MoveitMoveArm.AddDeskCollisionObjects()
-	print pr2_MoveitMoveArm.moveit_planning_scene.get_objects()
+	#print pr2_MoveitMoveArm.moveit_planning_scene.get_objects()
 
 	## AR TAG PICKING HERE
-	pr2_GripperCommand.Command('r', 0) #Close gripper
+	valid_poses = UpsampleGraspPoses.getValidPosesForCylinder(AR_listener.latest_pose.pose)
+	if(len(valid_poses) > 0):
+		pr2_MoveitMoveArm.AddCylinder(valid_poses[0])
+
+		pr2_MoveitMoveArm.MoveToPose(valid_poses[0], "map")
+		pr2_GripperCommand.Command('r', 0) #Close gripper
 
 	rospy.loginfo('Tucking arms')
 	pr2_TuckArms.TuckLeftArm()
@@ -78,17 +70,6 @@ if __name__ == "__main__":
 	# add collision objects
 	rospy.loginfo('Updating Collision Objects')
 	pr2_MoveitMoveArm.AddDeskCollisionObjects()
-
-	pregrasp_pose = lookupPoseFromTransform("map", "pr2_ar_pregrasp")
-	grasp_pose = lookupPoseFromTransform("map", "pr2_ar_grasp")
-
-	if(pregrasp_pose and grasp_pose):
-		print "found grasp poses, moving to object now"
-		#pr2_MoveitMoveArm.MoveToPose(pregrasp_pose)
-		#pr2_MoveitMoveArm.MoveToPose(grasp_pose)
-
-	else:
-		print "could not move to grasp poses"
 
 	rospy.loginfo("Commanding right gripper Closed")
 	pr2_GripperCommand.Command('r', 1) #open gripper

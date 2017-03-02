@@ -6,7 +6,7 @@
 
 	<arg name="cam_image_topic" default="/kinect_head/depth_registered/points" />
 	<arg name="cam_info_topic" default="/kinect_head/rgb/camera_info" />		
-	<arg name="output_frame" default="/torso_lift_link" />
+	<arg name="output_frame" default="/map" />
 
 	
 	<node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkers" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame)" />
@@ -24,5 +24,4 @@
 	<node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame)" />
 	-->
 
-	<include file="$(find sbpl_demos)/launch/pr2/pr2_grasp_offset.launch"/>
 </launch>

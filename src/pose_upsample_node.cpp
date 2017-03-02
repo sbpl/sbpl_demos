@@ -183,6 +183,7 @@ void PoseUpsampler::setPerturbationIntervals(
 
 void PoseUpsampler::generatePoseswIKChecking(const geometry_msgs::Pose& Pobject, std::vector<geometry_msgs::Pose>& vecPout)
 {
+    int count = 0;
     if(not ikService_.exists())
     {
         std::cout << "Warning: ik service not connected, returning early\n";
@@ -198,6 +199,18 @@ void PoseUpsampler::generatePoseswIKChecking(const geometry_msgs::Pose& Pobject,
         }
     }
     std::cout << "Info: found " << vecPout.size() << " valid poses\n";
+
+    for(auto pit = vecPout.begin(); pit != vecPout.end(); pit++){
+        std::string frame("grasp_pose_");
+        frame.append(std::to_string(count));
+        count++;
+        tf::Transform tf = util::transformFromPose(*pit);
+        tf_broadcaster_.sendTransform(tf::StampedTransform(tf, ros::Time::now(), reference_frame_, frame.c_str()));
+        ros::Duration(0.001).sleep();
+
+    }
+
+
     return;
 }
 
