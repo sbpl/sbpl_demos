@@ -1,0 +1,18 @@
+bool check_against_ik
+bool visualize_poses_with_tf
+string planning_group
+string reference_frame
+string[] joint_names
+sbpl_demos/XYZRPY robot_transform_to_object
+geometry_msgs/Pose object_pose
+
+float64[] x_interval      #optional
+float64[] y_interval      #optional
+float64[] z_interval      #optional
+float64[] roll_interval   #optional
+float64[] pitch_interval  #optional
+float64[] yaw_interval    #optional
+
+---
+
+geometry_msgs/Pose[] valid_poses
