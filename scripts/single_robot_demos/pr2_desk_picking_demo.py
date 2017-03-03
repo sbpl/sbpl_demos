@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 import sys
+import math
+import copy
 import rospy
 import actionlib
 import tf
@@ -12,6 +14,7 @@ if __name__ == "__main__":
 
 	rospy.init_node('pr2_grasp_test')
 	listener = tf.TransformListener()
+	tfbroadcaster = tf.TransformBroadcaster()
 	pr2_GripperCommand = pr2.GripperCommand()
 	pr2_MoveitMoveArm = pr2.MoveitMoveArm()
 	pr2_TorsoCommand = pr2.TorsoCommand()
@@ -54,14 +57,47 @@ if __name__ == "__main__":
 	## AR TAG PICKING HERE
 	valid_poses = UpsampleGraspPoses.getValidPosesForCylinder(AR_listener.latest_pose.pose)
 	if(len(valid_poses) > 0):
-		pr2_MoveitMoveArm.AddCylinder(valid_poses[0])
-
-		pr2_MoveitMoveArm.MoveToPose(valid_poses[0], "map")
-		pr2_GripperCommand.Command('r', 0) #Close gripper
+		 (ee_position, ee_quat) = listener.lookupTransform("map", "r_wrist_roll_link",rospy.Time())
+        #print "ee_positions ", ee_position
+        best_distance = 999999
+        best_index = 0
+        for i in range(0,len(valid_poses)):
+            dx = ee_position[0] - valid_poses[i].position.x
+            dy = ee_position[1] - valid_poses[i].position.y
+            dz = ee_position[2] - valid_poses[i].position.z
+            dist = math.sqrt(dx**2 + dy**2 + dz**2)
+            if(dist < best_distance):
+                best_index = i
+                best_distance = dist
+            
+        box_pose = AR_listener.latest_pose
+        box_pose.pose.position.z -= .15
+        pr2_MoveitMoveArm.moveit_planning_scene.add_box("cylinder", box_pose, size=(0.02, 0.02, 0.3) )
+        i = best_index
+        success = False
+        dx = valid_poses[i].position.x - box_pose.pose.position.x
+        dy = valid_poses[i].position.y - box_pose.pose.position.y
+        dz = valid_poses[i].position.z - box_pose.pose.position.z
+        mag = math.sqrt(dx**2 + dy**2 + dz**2)
+        dist = 0.10
+        interp_pose = copy.deepcopy(valid_poses[i])
+        interp_pose.position.x += dx * dist / mag
+        interp_pose.position.y += dy * dist / mag
+        interp_pose.position.z += dz * dist / mag
+        tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
+            (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
+            rospy.Time.now(), "desired_grasp", "map")
+        print "Moving to interpolated pose"
+        pr2_MoveitMoveArm.MoveToPose(interp_pose, "map")
+        print "trying pose: " , i
+        pr2_MoveitMoveArm.moveit_planning_scene.remove_world_object("cylinder")
+        print "Moving to final pose"
+        success = pr2_MoveitMoveArm.MoveToPose(valid_poses[i], "map")
+        pr2_GripperCommand.Command('r', 0) #Close Gripper
 
 	rospy.loginfo('Tucking arms')
 	pr2_TuckArms.TuckLeftArm()
-	pr2_MoveitMoveArm.MoveToHome()
+	pr2_MoveitMoveArm.MoveRightToWide()
 	rospy.loginfo('Commanding base to Workstation')
 	pr2_MoveBase.MoveToWorkstation()
 	rospy.loginfo('Untucking arms')
@@ -71,11 +107,13 @@ if __name__ == "__main__":
 	rospy.loginfo('Updating Collision Objects')
 	pr2_MoveitMoveArm.AddDeskCollisionObjects()
 
+	pr2_MoveitMoveArm.MoveRightToExtend()
+
 	rospy.loginfo("Commanding right gripper Closed")
 	pr2_GripperCommand.Command('r', 1) #open gripper
 	rospy.loginfo('Commanding Tuckarms')
 	
-	pr2_GripperCommand.Command('r', 1) #Close Gripper
+	pr2_GripperCommand.Command('r', 0) #Close Gripper
 	pr2_TuckArms.TuckArms()
 
 	#pr2_MoveitMoveArm.moveit_planning_scene.remove_world_object("intern_sphere")

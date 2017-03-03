@@ -15,10 +15,14 @@ if __name__ == "__main__":
     MoveitMoveArm = pr2_helpers.MoveitMoveArm()
     pr2_GripperCommand = pr2_helpers.GripperCommand()
     TuckArms = pr2_helpers.TuckArms()
+    pr2_TorsoCommand = pr2_helpers.TorsoCommand()
     tfbroadcaster = tf.TransformBroadcaster()
     tflistener = tf.TransformListener()
+    pr2_PointHead = pr2_helpers.PointHead()
+    pr2_PointHead.LookAt("base_footprint", 1.33, 0, 0)
+    pr2_TorsoCommand.MoveTorso(0.0)
+    pr2_GripperCommand.Command('r', 1) #open gripper
     while(True):
-        pr2_GripperCommand.Command('r', 1) #open gripper
         #while (2.0 < (rospy.Time.now() - AR_listener.last_reading).secs):
         #    #waiting for updated pose detection
         #    rospy.sleep(0.01)
@@ -65,6 +69,10 @@ if __name__ == "__main__":
         success = MoveitMoveArm.MoveToPose(valid_poses[i], "map")
         
         pr2_GripperCommand.Command('r', 0) #Close gripper
+        TuckArms.TuckLeftArm()
+        MoveitMoveArm.MoveRightToWide()
+        MoveitMoveArm.MoveRightToExtend()
+        pr2_GripperCommand.Command('r', 1) #open gripper
         TuckArms.TuckLeftArm()
         
         print len(valid_poses), " valid poses found!"

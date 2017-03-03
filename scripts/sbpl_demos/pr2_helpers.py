@@ -245,7 +245,7 @@ class MoveitMoveArm:
         pose.orientation.y = quat[1]
         pose.orientation.z = quat[2]
         pose.orientation.w = quat[3]
-        self.MoveToPose(pose, "base_footprint")
+        return self.MoveToPose(pose, "base_footprint")
 
     def MoveToHome(self):
         pose = geometry_msgs.msg.Pose()
@@ -257,22 +257,31 @@ class MoveitMoveArm:
         pose.orientation.y = quat[1]
         pose.orientation.z = quat[2]
         pose.orientation.w = quat[3]
-        self.MoveToPose(pose, "base_footprint")
+        return self.MoveToPose(pose, "base_footprint")
 
-    def MoveToWide(self):
-        jointvals = [-0.40000593078694135, 
-        0.9999434123395927, 
-        -0.00011982897502016421, 
-        -2.0499264800290113, 
-        6.283186160291728, 
-        -0.1000014256823869, 
-        6.283201089884446]
-        self.moveit_planning_group.set_joint_value_target(jointvals)
-        plan=self.moveit_planning_group.plan()
-        if not plan.joint_trajectory.points:
-            return False
-        self.moveit_planning_group.go(wait=True)
-        return True
+    def MoveRightToWide(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0
+        pose.position.y = -0.64
+        pose.position.z = 1.05
+        quat = quaternion_from_euler(-3.002, 0.117, 0.130)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        return self.MoveToPose(pose, "base_footprint")
+
+    def MoveRightToExtend(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0.58
+        pose.position.y = -0.11
+        pose.position.z = 0.975
+        quat = quaternion_from_euler(-math.pi,0,0)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        return self.MoveToPose(pose, "base_footprint")
 
     def AddDeskCollisionObjects(self):
         intern_desk_pose = geometry_msgs.msg.PoseStamped()
@@ -356,7 +365,7 @@ class UpsampleGraspPoses:
         self.client = rospy.ServiceProxy('pose_upsampling', PoseUpsample)
         self.request = PoseUpsampleRequest()
         self.request.check_against_ik = True
-        self.request.visualize_poses_with_tf = False
+        self.request.visualize_poses_with_tf = True
         self.request.planning_group = "right_arm"
         self.request.reference_frame = "map"
         self.request.joint_names = ["r_elbow_flex_joint",
