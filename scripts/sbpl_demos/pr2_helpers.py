@@ -28,9 +28,9 @@ import tf
 class TFLookup:
     def __init__(self):
         self.client = actionlib.SimpleActionClient('tf2_buffer_server', LookupTransformAction)
-        print ("waiting for tf2_buffer_server...")
+        rospy.loginfo("waiting for tf2_buffer_server...")
         self.client.wait_for_server()
-        print ("Connected.")
+        rospy.loginfo("Connected.")
 
     def getTransform(self, source_frame, target_frame):
         goal = LookupTransformGoal()
@@ -48,9 +48,9 @@ class TFLookup:
 class PointHead:
     def __init__(self):
         self.client = actionlib.SimpleActionClient('/head_traj_controller/point_head_action', PointHeadAction)
-        print ("Waiting for point_head_action...")
+        rospy.loginfo("Waiting for point_head_action...")
         self.client.wait_for_server()
-        print ("Connected.")
+        rospy.loginfo("Connected.")
 
     def LookAt(self, frame, x, y, z):
         goal=PointHeadGoal()
@@ -74,9 +74,9 @@ class PointHead:
 class TorsoCommand:
     def __init__(self):
         self.client = actionlib.SimpleActionClient('/torso_controller/position_joint_action', SingleJointPositionAction)
-        print("waiting for server...")
+        rospy.loginfo("waiting for server...")
         self.client.wait_for_server()
-        print ("Connected.")
+        rospy.loginfo("Connected.")
     def MoveTorso(self, height):
         goal = SingleJointPositionGoal()
         goal.position = height 
@@ -89,9 +89,9 @@ class TorsoCommand:
 class TuckArms:
     def __init__(self):
         self.client = actionlib.SimpleActionClient("/tuck_arms", TuckArmsAction)
-        print ("Waiting for tuck arms server...")
+        rospy.loginfo("Waiting for tuck arms server...")
         self.client.wait_for_server()
-        print ("Connected.")
+        rospy.loginfo("Connected.")
     def TuckArms(self):
         goal = TuckArmsGoal()
         goal.tuck_left = True
@@ -126,10 +126,10 @@ class GripperCommand:
     def __init__(self):
         self.left_client = actionlib.SimpleActionClient('l_gripper_controller/gripper_action', GripperCommandAction)
         self.right_client = actionlib.SimpleActionClient('r_gripper_controller/gripper_action', GripperCommandAction)
-        print ("waiting for gripper actions...")
+        rospy.loginfo("waiting for gripper actions...")
         self.left_client.wait_for_server()
         self.right_client.wait_for_server()
-        print ("Connected.")
+        rospy.loginfo("Connected.")
 
     def Command(self, gripper, open):
 
@@ -156,9 +156,9 @@ class GripperCommand:
 class MoveBase:
     def __init__(self):
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        print("waiting for move_base action...")
+        rospy.loginfo("waiting for move_base action...")
         self.client.wait_for_server()
-        print ("Connected.")
+        rospy.loginfo("Connected.")
 
     def MoveToPose(self, frame, input_pose):
         goal = MoveBaseGoal()
@@ -199,7 +199,7 @@ class MoveBase:
 
 class MoveitMoveArm:
     def __init__(self):
-        print "bringing up move_arm..."
+        rospy.loginfo("bringing up move_arm...")
         moveit_commander.roscpp_initialize(sys.argv)
         self.moveit_robot_commander = moveit_commander.RobotCommander()
         self.moveit_planning_scene = moveit_commander.PlanningSceneInterface()
@@ -209,7 +209,9 @@ class MoveitMoveArm:
         self.moveit_planning_group.set_planning_time(10.0)
         self.moveit_planning_group.allow_replanning(True)
         self.tflistener = tf.TransformListener()
-        print ("Connected.")
+        self.inserted_desks = []
+        self.inserted_objects = []
+        rospy.loginfo("Connected.")
         rospy.sleep(0.5);
 
     def Cleanup(self):
@@ -219,7 +221,7 @@ class MoveitMoveArm:
         # need to manually convert to odom_combined frame
         if(not self.tflistener.frameExists(reference_frame) or 
            not self.tflistener.frameExists("odom_combined")):
-            print "Warning: could not look up provided reference frame"
+            rospy.logwarn("Warning: could not look up provided reference frame")
             return False
         input_ps = PoseStamped()
         input_ps.pose = pose
@@ -283,39 +285,42 @@ class MoveitMoveArm:
         pose.orientation.w = quat[3]
         return self.MoveToPose(pose, "base_footprint")
 
-    def AddDeskCollisionObjects(self):
-        intern_desk_pose = geometry_msgs.msg.PoseStamped()
-        intern_desk_pose.pose.position.x = -0.75
-        intern_desk_pose.pose.position.y = -3.05
-        intern_desk_pose.pose.position.z = 0.35
-        intern_desk_pose.pose.orientation.x = 0
-        intern_desk_pose.pose.orientation.y = 0
-        intern_desk_pose.pose.orientation.z = 0
-        intern_desk_pose.pose.orientation.w = 1
-        intern_desk_pose.header.stamp = rospy.Time.now()
-        intern_desk_pose.header.frame_id = "/map"
+    def AddCollisionObject(self, name, posestamped, input_size):
+        self.moveit_planning_scene.add_box(name, posestamped, size=input_size)
+        self.inserted_objects.append(name)
 
-        self.moveit_planning_scene.add_box("intern_desk", intern_desk_pose, size=(1.52, .67, .7) )
+    def AddDeskCollisionObject(self, name, posestamped):
+        posestamped.pose.position.y -= 0.35
+        posestamped.pose.position.z = 0.35
+        self.moveit_planning_scene.add_box(name, posestamped, size=(.67,1.52, .7) )
+        rospy.loginfo("Added desk object %s", name)
+        self.inserted_desks.append(name)
 
-        workstation_desk_pose = geometry_msgs.msg.PoseStamped()
-        workstation_desk_pose.pose.position.x = 1.65
-        workstation_desk_pose.pose.position.y = -1.75
-        workstation_desk_pose.pose.position.z = 0.35
-        workstation_desk_pose.pose.orientation.x = 0
-        workstation_desk_pose.pose.orientation.y = 0
-        workstation_desk_pose.pose.orientation.z = 0
-        workstation_desk_pose.pose.orientation.w = 1
-        workstation_desk_pose.header.stamp = rospy.Time.now()
-        workstation_desk_pose.header.frame_id = "/map"
+    def removeDeskObjects(self):
+        for desk in self.inserted_desks:
+            self.moveit_planning_scene.remove_world_object(desk)
+        self.inserted_desks = []
 
-        self.moveit_planning_scene.add_box("workstation_desk", workstation_desk_pose, size=(1.52, .67, .7) )
+    def removeAllObjects(self):
+        for obj in self.inserted_objects:
+            self.moveit_planning_scene.remove_world_object(obj)
+        self.inserted_objects = []
+
+    def removeObject(self, name):
+        rospy.logwarn("method removeObject not implemented")
+
+    def removeAllObjectsAndDesks(self):
+        self.removeAllObjects()
+        self.removeDeskObjects()
+
+
 
 
 class RoconMoveArm:
     def __init__(self):
         self.client = actionlib.SimpleActionClient('rocon_move_arm', RoconMoveArmAction)
         self.client.wait_for_server()
-        print "RoconMoveArm online"
+        rospy.loginfo("RoconMoveArm online")
 
     def MoveToHandoff(self):
         pose = geometry_msgs.msg.Pose()
@@ -342,7 +347,7 @@ class RoconMoveArm:
         self.MoveToPose(pose)
 
     def MoveToPose(self, pose):
-        print "RoconMoveArm is moving to Pose"
+        rospy.loginfo("RoconMoveArm is moving to Pose")
         goal = RoconMoveArmGoal()
         goal.target_pose = pose
         self.client.send_goal(goal)
@@ -350,44 +355,3 @@ class RoconMoveArm:
             result = self.client.get_result()
             return result.success
         return False
-
-def frange(x, y, jump):
-  while x < y:
-    yield x
-    x += jump
-    
-
-class UpsampleGraspPoses:
-    def __init__(self):
-        print "waiting for pose_upsampling action..."
-        rospy.wait_for_service('pose_upsampling')
-        print ("Connected.")
-        self.client = rospy.ServiceProxy('pose_upsampling', PoseUpsample)
-        self.request = PoseUpsampleRequest()
-        self.request.check_against_ik = True
-        self.request.visualize_poses_with_tf = True
-        self.request.planning_group = "right_arm"
-        self.request.reference_frame = "map"
-        self.request.joint_names = ["r_elbow_flex_joint",
-                               "r_forearm_roll_joint",
-                               "r_shoulder_lift_joint", 
-                               "r_shoulder_pan_joint",
-                               "r_upper_arm_roll_joint",
-                               "r_wrist_flex_joint",
-                               "r_wrist_roll_joint"]
-        xyzrpy = XYZRPY()
-        xyzrpy.x = -0.18
-        xyzrpy.roll = 0.0
-        xyzrpy.pitch = 0.0
-        xyzrpy.yaw = 0
-        self.request.robot_transform_to_object = xyzrpy
-
-    def getValidPosesForCylinder(self, input_pose):
-        self.request.object_pose = input_pose
-        self.request.z_interval = [-0.1, -0.05]
-        yaw_angles = list(frange(-math.pi, math.pi, math.pi/10))
-        #print yaw_angles
-        #self.request.pitch_interval = [-math.pi/2, 0, math.pi/2.0]
-        self.request.yaw_interval = yaw_angles
-        res = self.client(self.request)
-        return res.valid_poses
