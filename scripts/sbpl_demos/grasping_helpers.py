@@ -61,12 +61,12 @@ class ARGrasping:
             self.request.pitch_interval = [0]
             self.request.yaw_interval = [0]
         if(artype == AR_TYPES.CUBOID_EDGE):
-            self.request.x_interval = list(frange(-0.075, 0.075, 0.025))
+            self.request.x_interval = [-0.02, 0, 0.02]
             self.request.y_interval = [0]
             self.request.z_interval = [-0.05]
-            self.request.roll_interval = [0]
-            self.request.pitch_interval = [0]
-            self.request.yaw_interval = [0]
+            self.request.roll_interval = [math.pi/2.0]
+            self.request.pitch_interval = [-math.pi/2.0, math.pi/2.0]
+            self.request.yaw_interval = [-math.pi/2.0]
 
         res = self.client(self.request)
         return res.valid_poses
@@ -93,7 +93,7 @@ class ARGrasping:
         dy = grasp_pose.position.y - object_pose.position.y
         dz = grasp_pose.position.z - object_pose.position.z
         mag = math.sqrt(dx**2 + dy**2 + dz**2)
-        dist = 0.10 # offset distance meters
+        dist = 0.1 # offset distance meters
         interp_pose = copy.deepcopy(grasp_pose)
         interp_pose.position.x += dx * dist / mag
         interp_pose.position.y += dy * dist / mag
@@ -101,20 +101,27 @@ class ARGrasping:
         return interp_pose
 
 
-'''
-TODO
 class RomanARGrasping(ARGrasping):
     def __init__(self):
         planning_group = "right_arm_and_torso"
         reference_frame = "map"
-        joint_names = []
+        joint_names = ["torso_joint1",
+                       "limb_right_joint1",
+                       "limb_right_joint2",
+                       "limb_right_joint3",
+                       "limb_right_joint4",
+                       "limb_right_joint5",
+                       "limb_right_joint6",
+                       "limb_right_joint7"]
         robot_transform = XYZRPY()
-        robot_transform.x = 
-        robot_transform.roll = 
-        robot_transform.pitch =
-        robot_transform.yaw = 
+        robot_transform.x = -0.3
+        robot_transform.y = 0.0
+        robot_transform.z = 0
+        robot_transform.roll = math.pi/2.0
+        robot_transform.pitch = 0.0
+        robot_transform.yaw = 0
         ARGrasping.__init__(self, planning_group, reference_frame, joint_names, robot_transform)
-'''
+
 
 class PR2ARGrasping(ARGrasping):
     def __init__(self):

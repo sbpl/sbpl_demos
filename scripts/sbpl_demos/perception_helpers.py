@@ -34,7 +34,6 @@ class ARTagListener:
 
 	def callback_get_pose(self,data):
 		if len(data.markers) > 0:
-			print "Got new Markers!"
 			self.latest_markers = data
 			self.last_reading = rospy.Time.now()
 

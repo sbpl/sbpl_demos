@@ -5,7 +5,7 @@
 
 	<arg name="cam_image_topic" default="/asus/depth/points_xyzrgb" />
 	<arg name="cam_info_topic" default="/asus/rgb/camera_info" />
-	<arg name="output_frame" default="/asus_rgb_optical_frame" />
+	<arg name="output_frame" default="/map" />
 
 	<node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkers" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
@@ -17,6 +17,6 @@
 		<remap from="camera_info"   to="$(arg cam_info_topic)" />
 	</node>
 
-	<include file="$(find sbpl_demos)/launch/roman/roman_grasp_offset.launch"/>
+	<!--<include file="$(find sbpl_demos)/launch/roman/roman_grasp_offset.launch"/>-->
 
 </launch>

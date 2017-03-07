@@ -206,7 +206,7 @@ void PoseUpsampler::generatePoseswIKChecking(const geometry_msgs::Pose& Pobject,
         count++;
         tf::Transform tf = util::transformFromPose(*pit);
         tf_broadcaster_.sendTransform(tf::StampedTransform(tf, ros::Time::now(), reference_frame_, frame.c_str()));
-        ros::Duration(0.001).sleep();
+        ros::Duration(0.01).sleep();
 
     }
 
@@ -224,7 +224,7 @@ void PoseUpsampler::generatePoses(const geometry_msgs::Pose& Pobject, std::vecto
         std::string frame("object_pose");
         tf::Transform tf = util::transformFromPose(Pobject);
         tf_broadcaster_.sendTransform(tf::StampedTransform(tf, ros::Time::now(), reference_frame_, frame.c_str()));
-        ros::Duration(0.001).sleep();
+        ros::Duration(0.01).sleep();
     }
 
     int count = 0;

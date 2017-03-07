@@ -175,8 +175,8 @@ class MoveBase:
 
     def MoveToInternDesk(self):
         pose = geometry_msgs.msg.Pose()
-        pose.position.x = -0.5
-        pose.position.y = -1.8
+        pose.position.x = -0.29
+        pose.position.y = -2.0
         pose.position.z = 0.0
         quat = quaternion_from_euler(0,0,-math.pi/2.0)
         pose.orientation.x = quat[0]
@@ -187,8 +187,8 @@ class MoveBase:
 
     def MoveToWorkstation(self):
         pose = geometry_msgs.msg.Pose()
-        pose.position.x = 0.9
-        pose.position.y = -0.9
+        pose.position.x = 1.1
+        pose.position.y = -1.0
         pose.position.z = 0.0
         quat = quaternion_from_euler(0,0,-math.pi/2.0)
         pose.orientation.x = quat[0]
@@ -273,9 +273,33 @@ class MoveitMoveArm:
         pose.orientation.w = quat[3]
         return self.MoveToPose(pose, "base_footprint")
 
+    def MoveRightToCarry(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = -0.32
+        pose.position.y = -0.608
+        pose.position.z = 1.244
+        quat = quaternion_from_euler(-1.679, -1.479, 1.154)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        return self.MoveToPose(pose, "base_footprint")
+
     def MoveRightToExtend(self):
         pose = geometry_msgs.msg.Pose()
         pose.position.x = 0.58
+        pose.position.y = -0.11
+        pose.position.z = 0.975
+        quat = quaternion_from_euler(-math.pi,0,0)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        return self.MoveToPose(pose, "base_footprint")
+
+    def MoveRightToShortExtend(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0.5
         pose.position.y = -0.11
         pose.position.z = 0.975
         quat = quaternion_from_euler(-math.pi,0,0)
