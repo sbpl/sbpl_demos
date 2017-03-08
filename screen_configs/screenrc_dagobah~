@@ -38,4 +38,4 @@ stuff "^M"
 stuff "rostopic pub -1 pan_tilt_0/command std_msgs/Float64 -- 1.2"
 
 screen -t demo
-stuff "rosrun sbpl_demos roman_grasp_test.py"
+stuff "rosrun sbpl_demos roman_grasp_demo.py"

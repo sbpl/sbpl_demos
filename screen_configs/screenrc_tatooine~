@@ -1,0 +1,22 @@
+source screenrc.common
+
+screen -t bash
+#stuff "roscore^M"
+stuff "pr2master"
+
+screen -t moveit
+stuff "pr2master^M"
+stuff "roslaunch sbpl_demos tatooine_moveit_setup.launch"
+
+screen -t AR
+stuff "pr2master^M"
+stuff "roslaunch sbpl_demos tatooine_ar_setup.launch"
+
+screen -t PR_demo
+stuff "pr2master^M"
+stuff "rosrun sbpl_demos pr2_simple_grasp_task.py"
+
+screen -t pose_node
+stuff "pr2master^M"
+stuff "rosrun sbpl_demos pose_upsample_node"
+

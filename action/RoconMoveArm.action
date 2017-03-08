@@ -1,4 +1,10 @@
 # goal
+
+int8 goal_type
+int8 HOME=1
+int8 HANDOFF=2
+int8 POSE=3
+
 geometry_msgs/Pose target_pose
 ---
 #result

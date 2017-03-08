@@ -3,9 +3,6 @@ source screenrc.common
 screen -t bash
 #stuff "roscore^M"
 
-screen -t teleop
-stuff "roslaunch pr2_teleop teleop_keyboard.launch"
-
 screen -t dash
 stuff "rosrun pr2_dashboard pr2_dashboard"
 

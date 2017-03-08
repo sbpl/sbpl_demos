@@ -1,0 +1,11 @@
+# goal
+int8 grasp_type
+int8 OPEN = 1
+int8 CLOSE = 2
+int8 PINCH = 3
+int8 WIDE = 4
+---
+#result
+bool success
+---
+#feedback

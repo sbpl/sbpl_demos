@@ -35,6 +35,8 @@ add_service_files(
 add_action_files(
   FILES
   RoconMoveArm.action
+  RoconPick.action
+  RoconRobotiq.action
 )
 
 generate_messages(
