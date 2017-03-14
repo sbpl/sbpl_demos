@@ -46,20 +46,22 @@ class ARTagListener:
 		n_rod_ends = 0
 		n_cuboid_flats = 0
 		n_cuboid_edges = 0
-		for marker in self.latest_markers.markers:
-			print marker.id
-			if marker.id == AR_TYPES.DESK.value:
-				n_desks += 1
-			elif marker.id == AR_TYPES.CYLINDER.value:
-				n_cylinders += 1
-			elif marker.id == AR_TYPES.CUBE.value:
-				n_cubes += 1
-			elif marker.id == AR_TYPES.ROD_END.value:
-				n_rod_ends += 1
-			elif marker.id == AR_TYPES.CUBOID_FLAT.value:
-				n_cuboid_flats += 1
-			elif marker.id == AR_TYPES.CUBOID_EDGE.value:
-				n_cuboid_edges += 1
+
+		if rospy.Time.now().to_sec() - self.last_reading.to_sec() < 2:		# self.latest_markers expires after 2 sec
+			for marker in self.latest_markers.markers:
+				print marker.id
+				if marker.id == AR_TYPES.DESK.value:
+					n_desks += 1
+				elif marker.id == AR_TYPES.CYLINDER.value:
+					n_cylinders += 1
+				elif marker.id == AR_TYPES.CUBE.value:
+					n_cubes += 1
+				elif marker.id == AR_TYPES.ROD_END.value:
+					n_rod_ends += 1
+				elif marker.id == AR_TYPES.CUBOID_FLAT.value:
+					n_cuboid_flats += 1
+				elif marker.id == AR_TYPES.CUBOID_EDGE.value:
+					n_cuboid_edges += 1
 
 		return self.latest_markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges
 

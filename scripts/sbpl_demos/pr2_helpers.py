@@ -319,28 +319,18 @@ class MoveitMoveArm:
         pose.orientation.w = quat[3]
         return self.MoveToPose(pose, "base_footprint")
 
-    def MoveRightToExtend(self):
-        pose = geometry_msgs.msg.Pose()
+    def MoveRightToExtend(self, release_pose):
+        pose = copy.deepcopy(release_pose)
         pose.position.x = 0.58
         pose.position.y = -0.11
-        pose.position.z = 0.975
-        quat = quaternion_from_euler(-math.pi,0,0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+        pose.position.z += 0.01
         return self.MoveToPose(pose, "base_footprint")
 
-    def MoveRightToShortExtend(self):
-        pose = geometry_msgs.msg.Pose()
+    def MoveRightToShortExtend(self, release_pose):
+        pose = copy.deepcopy(release_pose)
         pose.position.x = 0.5
         pose.position.y = -0.11
-        pose.position.z = 0.975
-        quat = quaternion_from_euler(-math.pi,0,0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+        pose.position.z += 0.01
         return self.MoveToPose(pose, "base_footprint")
 
     def AddCollisionObject(self, name, posestamped, input_size):

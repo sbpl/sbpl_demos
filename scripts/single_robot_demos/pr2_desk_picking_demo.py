@@ -5,12 +5,12 @@ import copy
 import rospy
 import actionlib
 import tf
+import numpy
 from geometry_msgs.msg import Pose, PoseStamped
 from sbpl_demos import perception_helpers
 from sbpl_demos import grasping_helpers
 from sbpl_demos import pr2_helpers
 from sbpl_demos.perception_helpers import AR_TYPES
-
 
 class Demo:
 	def __init__(self):
@@ -150,12 +150,12 @@ class Demo:
 			rospy.loginfo("Computing poses for ROD_END")
 			self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
 
-	def dropOffObjectRoutine(self):
+	def dropOffObjectRoutine(self, release_pose):
 		rospy.loginfo("Moving to extend pose")
-		self.MoveitMoveArm.MoveRightToExtend()
+		self.MoveitMoveArm.MoveRightToExtend(release_pose)
 		rospy.loginfo("Commanding right gripper Closed")
 		self.GripperCommand.Command('r', 1) #open gripper
-		self.MoveitMoveArm.MoveRightToShortExtend()
+		self.MoveitMoveArm.MoveRightToShortExtend(release_pose)
 		rospy.loginfo('Commanding Tuckarms')
 		self.TuckArms.TuckLeftArm()
 
@@ -235,8 +235,15 @@ class Demo:
 			self.moveToWorkstationRoutine()
 			#TODO clear desks, get AR poses for desk, and insert new Desk collision object
 
-			self.dropOffObjectRoutine()
-			
+			# compute release pose in base_footprint frame
+			grasp_pose_stamped = PoseStamped()
+			grasp_pose_stamped.header.frame_id = "map"
+			grasp_pose_stamped.pose = grasp_pose
+			release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
+			release_pose = release_pose_stamped.pose
+
+			self.dropOffObjectRoutine(release_pose)
+
 			self.GripperCommand.Command('r', 0) #Close Gripper
 			self.MoveitMoveArm.removeAllObjectsAndDesks()
 
