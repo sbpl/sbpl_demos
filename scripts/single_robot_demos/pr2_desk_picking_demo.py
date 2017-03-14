@@ -41,12 +41,11 @@ class Demo:
 			valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(obj.pose.pose, artype)
 			if(valid_poses_candidates):
 				self.valid_poses.append(valid_poses_candidates)
-			## or ##
-			best_candidate, best_distance = self.PR2ARGrasping.getBestPoseByType(obj.pose.pose, artype, ee_position)
-			if(best_candidate):
-				self.best_poses.append(best_candidate)
-				self.best_distances.append(best_distance)
-				self.best_poses_object.append(obj.pose.pose)
+				(best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
+				if(best_candidate):
+					self.best_poses.append(best_candidate)
+					self.best_distances.append(best_distance)
+					self.best_poses_object.append(obj.pose.pose)
 			
 			# place a collision object at the marker
 			obj.pose.header.stamp = rospy.Time.now()
@@ -107,23 +106,21 @@ class Demo:
 			# self.TuckArms.UntuckRightArms()
 
 	def pickingRoutine(self):
+		self.valid_poses = [] # all IK-valid poses
+		self.best_poses = [] # the best poses, one per item
+		self.best_distances = [] # the best distances, one per item corresponding to best_poses
+		self.best_poses_object = [] #TODO should be a map between pose -> object (AR) pose
+
 		rospy.loginfo('Commanding right gripper open')
 		self.GripperCommand.Command('r', 1) #open grigger
 		## AR TAG PICKING
 		# get current EE position
-		(ee_position, ee_quat) = self.tflistener.lookupTransform("map", "r_wrist_roll_link",rospy.Time())
-		print ee_position
-		print ee_quat
+		(ee_position, ee_quat) = self.tflistener.lookupTransform("map", "r_wrist_roll_link", rospy.Time())
 
 		#want to latch it at this time
 		(markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
 		rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
 			n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
-
-		self.valid_poses = [] # all IK-valid poses
-		self.best_poses = [] # the best poses, one per item
-		self.best_distances = [] # the best distances, one per item corresponding to best_poses
-		self.best_poses_object = [] #TODO should be a map between pose -> object (AR) pose
 
 		if(n_desks > 0):
 			rospy.loginfo("Inserting Desk Collision objects")
@@ -162,7 +159,10 @@ class Demo:
 		self.TuckArms.TuckLeftArm()
 
 	def runDemo(self):
+		rospy.loginfo('Untucking arms')
+		self.TuckArms.UntuckRightArms()
 		self.moveToInternDeskRoutine()
+
 		while not rospy.is_shutdown():
 
 			self.pickingRoutine()
@@ -180,30 +180,30 @@ class Demo:
 			interp_pose = self.PR2ARGrasping.getInterpolatedPose(grasp_pose, object_pose)
 
 			# correction for offset of interp_pose
-			factor_x = -0.04
-			factor_y = -0.01
-			(base_trans, base_quat) = self.tflistener.lookupTransform("map", "base_footprint", rospy.Time())
-			base_matrix=self.tflistener.fromTranslationRotation(base_trans, base_quat)
+			factor_arm_x = -0.04
+			factor_arm_y = -0.01
+			(arm_trans, arm_quat) = self.tflistener.lookupTransform("map", "base_footprint", rospy.Time())
+			arm_matrix = self.tflistener.fromTranslationRotation(arm_trans, arm_quat)
 
-			base_offset_matrix_x=base_matrix[:3,0] * factor_x
-			base_offset_matrix_y = base_matrix[:3, 1] * factor_y
-			interp_pose.position.x += base_offset_matrix_x[0] + base_offset_matrix_y[0]
-			interp_pose.position.y += base_offset_matrix_x[1] + base_offset_matrix_y[1]
-			interp_pose.position.z += base_offset_matrix_x[2] + base_offset_matrix_y[2]
+			arm_offset_x = arm_matrix[:3,0] * factor_arm_x
+			arm_offset_y = arm_matrix[:3,1] * factor_arm_y
+			interp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
+			interp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
+			interp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
 
 			# correction for offset of grasp_pose
-			grasp_pose.position.x += base_offset_matrix_x[0] + base_offset_matrix_y[0]
-			grasp_pose.position.y += base_offset_matrix_x[1] + base_offset_matrix_y[1]
-			grasp_pose.position.z += base_offset_matrix_x[2] + base_offset_matrix_y[2]
+			grasp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
+			grasp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
+			grasp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
 
 			factor_wrist_x = 0.02
 			(wrist_trans, wrist_quat) = self.tflistener.lookupTransform("map", "r_wrist_roll_link", rospy.Time())
-			wrist_matrix=self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
+			wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
 
-			wrist_offset_matrix_x=wrist_matrix[:3,0] * factor_wrist_x
-			grasp_pose.position.x += wrist_offset_matrix_x[0]
-			grasp_pose.position.y += wrist_offset_matrix_x[1]
-			grasp_pose.position.z += wrist_offset_matrix_x[2]
+			wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
+			grasp_pose.position.x += wrist_offset_x[0]
+			grasp_pose.position.y += wrist_offset_x[1]
+			grasp_pose.position.z += wrist_offset_x[2]
 
 			#just for visualization
 			self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
@@ -213,7 +213,6 @@ class Demo:
 			# Execute grasp plan
 			rospy.loginfo("Moving to interpolated pose")
 			success = self.MoveitMoveArm.MoveToPose(interp_pose, "map")
-
 			if not success:
 				rospy.logwarn("could not move to interpolated pose, retrying")
 				self.MoveitMoveArm.MoveRightToWide()
@@ -224,14 +223,30 @@ class Demo:
 			rospy.loginfo("Removing collision objects and moving to final grasp pose")
 			self.MoveitMoveArm.removeAllObjects()
 			success = self.MoveitMoveArm.MoveToPose(grasp_pose, "map")
-			grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
 
-			# success to grasp: False, fail to grasp: True
+			# grip_success: True when completely closed, False when grasped something
+			grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
 			if grip_success:
 				rospy.loginfo("Failed to grasp. Going back to identifying object location.")
 				self.MoveitMoveArm.MoveRightToWide()
 				continue
 			rospy.loginfo("Succeeded to grasp.")
+
+			# retract to interpolate pose
+			rospy.loginfo("Moving back to interpolated pose")
+			interp_pose.position.z += 0.15
+			success = self.MoveitMoveArm.MoveToPose(interp_pose, "map")
+			if not success:
+				rospy.logwarn("could not move to interpolated pose, retrying")
+				interp_pose.position.z -= 0.12
+				success = self.MoveitMoveArm.MoveToPose(interp_pose, "map")
+				if not success:
+					rospy.logwarn("could not move to interpolated pose, aborted")
+					self.MoveitMoveArm.MoveRightToWide()
+					self.MoveitMoveArm.removeAllObjectsAndDesks()
+					rospy.sleep(1)
+					continue
+
 			rospy.loginfo("Moving to carry pose")
 			self.MoveitMoveArm.MoveRightToWide()
 

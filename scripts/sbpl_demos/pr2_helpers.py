@@ -240,7 +240,7 @@ class MoveitMoveArm:
         
         self.moveit_planning_group = moveit_commander.MoveGroupCommander("right_arm")
         self.moveit_planning_group.set_planner_id("RRTkConfigDefault")
-        self.moveit_planning_group.set_planning_time(10.0)
+        self.moveit_planning_group.set_planning_time(5.0)
         self.moveit_planning_group.allow_replanning(True)
         self.tflistener = tf.TransformListener()
         self.inserted_desks = []
@@ -321,16 +321,25 @@ class MoveitMoveArm:
 
     def MoveRightToExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
-        pose.position.x = 0.58
-        pose.position.y = -0.11
-        pose.position.z += 0.01
+        #pose.position.x = 0.58
+        #pose.position.y = -0.11
+        pose.position.z += 0.005
         return self.MoveToPose(pose, "base_footprint")
 
     def MoveRightToShortExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
-        pose.position.x = 0.5
-        pose.position.y = -0.11
-        pose.position.z += 0.01
+        #pose.position.x = 0.58
+        #pose.position.y = -0.11
+        pose.position.z += 0.005
+
+        # retract along the x-axis of the r_wrist_roll_link frame
+        factor_wrist_x = -0.15
+        (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time())
+        wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
+        wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
+        pose.position.x += wrist_offset_x[0]
+        pose.position.y += wrist_offset_x[1]
+        pose.position.z += wrist_offset_x[2]
         return self.MoveToPose(pose, "base_footprint")
 
     def AddCollisionObject(self, name, posestamped, input_size):
