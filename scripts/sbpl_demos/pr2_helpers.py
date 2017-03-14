@@ -198,10 +198,15 @@ class MoveBase:
 
     def MoveToWorkstation(self):
         pose = geometry_msgs.msg.Pose()
-        pose.position.x = 1.1
-        pose.position.y = -1.0
-        pose.position.z = 0.0
-        quat = quaternion_from_euler(0,0,-math.pi/2.0)
+        # pose.position.x = 0.440
+        # pose.position.y = -1.540
+        # pose.position.z = 0.0
+        # quat = quaternion_from_euler(0,0,-0.004)
+        pose.position.x=-0.234
+        pose.position.y=-1.541
+        pose.position.z=0.0
+        quat = quaternion_from_euler(0,0,0.027)
+
         pose.orientation.x = quat[0]
         pose.orientation.y = quat[1]
         pose.orientation.z = quat[2]

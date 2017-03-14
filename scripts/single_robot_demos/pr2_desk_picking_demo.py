@@ -14,7 +14,7 @@ from sbpl_demos.perception_helpers import AR_TYPES
 
 class Demo:
 	def __init__(self):
-		self.STATIONARY = False
+		self.STATIONARY = True
 		self.tflistener = tf.TransformListener()
 		self.tfbroadcaster = tf.TransformBroadcaster()
 		self.GripperCommand = pr2_helpers.GripperCommand()
@@ -66,11 +66,12 @@ class Demo:
 	def moveToWorkstationRoutine(self):
 		if(not self.STATIONARY):
 				#optionally move to alternate location
-				# rospy.loginfo('Tucking arms')
-				# self.TuckArms.TuckLeftArm()
+				rospy.loginfo('Tucking arms')
+				self.TuckArms.TuckLeftArm()
 
-				# rospy.loginfo("Moving to wide pose")
-				# self.MoveitMoveArm.MoveRightToCarry()
+				rospy.loginfo("Moving to wide pose")
+				self.MoveitMoveArm.MoveRightToCarry()
+
 				rospy.loginfo('Commanding base to Workstation')
 				self.MoveBase.MoveToWorkstation()
 				rospy.loginfo('Untucking arms')
@@ -88,6 +89,7 @@ class Demo:
 			rospy.loginfo('Commanding Untucking')
 			self.TuckArms.UntuckRightArms()
 
+	# Supposed to be removed soon.
 	def moveToWayPointRoutine(self):
 		if (not self.STATIONARY):
 			rospy.loginfo('Commanding Tuckarms')
@@ -190,6 +192,15 @@ class Demo:
 			grasp_pose.position.y += base_offset_matrix_x[1] + base_offset_matrix_y[1]
 			grasp_pose.position.z += base_offset_matrix_x[2] + base_offset_matrix_y[2]
 
+			factor_wrist_x = 0.02
+			(wrist_trans, wrist_quat) = self.tflistener.lookupTransform("map", "r_wrist_roll_link", rospy.Time())
+			wrist_matrix=self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
+
+			wrist_offset_matrix_x=wrist_matrix[:3,0] * factor_wrist_x
+			grasp_pose.position.x += wrist_offset_matrix_x[0]
+			grasp_pose.position.y += wrist_offset_matrix_x[1]
+			grasp_pose.position.z += wrist_offset_matrix_x[2]
+
 			#just for visualization
 			self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
 				(interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
@@ -201,6 +212,7 @@ class Demo:
 
 			if not success:
 				rospy.logwarn("could not move to interpolated pose, retrying")
+				self.MoveitMoveArm.MoveRightToWide()
 				self.MoveitMoveArm.removeAllObjectsAndDesks()
 				rospy.sleep(1)
 				continue
@@ -213,12 +225,13 @@ class Demo:
 			# success to grasp: False, fail to grasp: True
 			if grip_success:
 				rospy.loginfo("Failed to grasp. Going back to identifying object location.")
+				self.MoveitMoveArm.MoveRightToWide()
 				continue
 			rospy.loginfo("Succeeded to grasp.")
 			rospy.loginfo("Moving to carry pose")
 			self.MoveitMoveArm.MoveRightToWide()
 
-			self.moveToWayPointRoutine()
+			# self.moveToWayPointRoutine()
 			self.moveToWorkstationRoutine()
 			#TODO clear desks, get AR poses for desk, and insert new Desk collision object
 
