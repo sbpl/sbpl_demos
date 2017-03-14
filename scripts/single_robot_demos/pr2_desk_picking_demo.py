@@ -42,9 +42,10 @@ class Demo:
 			if(valid_poses_candidates):
 				self.valid_poses.append(valid_poses_candidates)
 			## or ##
-			best_candidate = self.PR2ARGrasping.getBestPoseByType(obj.pose.pose, artype, ee_position)
+			best_candidate, best_distance = self.PR2ARGrasping.getBestPoseByType(obj.pose.pose, artype, ee_position)
 			if(best_candidate):
 				self.best_poses.append(best_candidate)
+				self.best_distances.append(best_distance)
 				self.best_poses_object.append(obj.pose.pose)
 			
 			# place a collision object at the marker
@@ -121,6 +122,7 @@ class Demo:
 
 		self.valid_poses = [] # all IK-valid poses
 		self.best_poses = [] # the best poses, one per item
+		self.best_distances = [] # the best distances, one per item corresponding to best_poses
 		self.best_poses_object = [] #TODO should be a map between pose -> object (AR) pose
 
 		if(n_desks > 0):
@@ -170,9 +172,11 @@ class Demo:
 				self.MoveitMoveArm.removeAllObjectsAndDesks()
 				rospy.sleep(1)
 				continue
-			#somehow select desired grasp
-			grasp_pose = self.best_poses[0] # simply pick first for now
-			object_pose = self.best_poses_object[0]
+
+			# select the best desired grasp among the candidates
+			best_index = min(xrange(len(self.best_distances)), key=self.best_distances.__getitem__)
+			grasp_pose = self.best_poses[best_index]
+			object_pose = self.best_poses_object[best_index]
 			interp_pose = self.PR2ARGrasping.getInterpolatedPose(grasp_pose, object_pose)
 
 			# correction for offset of interp_pose

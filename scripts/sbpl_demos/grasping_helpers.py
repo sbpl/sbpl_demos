@@ -84,7 +84,7 @@ class ARGrasping:
                 if(dist < best_distance):
                     best_index = i
                     best_distance = dist
-            return valid_poses[best_index]
+            return valid_poses[best_index], best_distance
         else:
             return False
 
@@ -140,4 +140,4 @@ class PR2ARGrasping(ARGrasping):
         robot_transform.pitch = 0.0
         robot_transform.yaw = 0
         ARGrasping.__init__(self, planning_group, reference_frame, joint_names, robot_transform)
-    
+
