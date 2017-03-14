@@ -66,14 +66,15 @@ class Demo:
 	def moveToWorkstationRoutine(self):
 		if(not self.STATIONARY):
 				#optionally move to alternate location
-				rospy.loginfo('Tucking arms')
-				self.TuckArms.TuckLeftArm()
-				rospy.loginfo("Moving to wide pose")
-				self.MoveitMoveArm.MoveRightToCarry()
+				# rospy.loginfo('Tucking arms')
+				# self.TuckArms.TuckLeftArm()
+
+				# rospy.loginfo("Moving to wide pose")
+				# self.MoveitMoveArm.MoveRightToCarry()
 				rospy.loginfo('Commanding base to Workstation')
-				# self.MoveBase.MoveToWorkstation()
+				self.MoveBase.MoveToWorkstation()
 				rospy.loginfo('Untucking arms')
-				self.TuckArms.UntuckArms()
+				self.TuckArms.UntuckRightArms()
 
 	def moveToInternDeskRoutine(self):
 		if(not self.STATIONARY):
@@ -82,10 +83,25 @@ class Demo:
 			self.TuckArms.TuckArms()
 
 			rospy.loginfo('Commanding base to intern desk...')
-			# self.MoveBase.MoveToInternDesk()
+			self.MoveBase.MoveToInternDesk()
 
 			rospy.loginfo('Commanding Untucking')
-			self.TuckArms.UntuckArms()
+			self.TuckArms.UntuckRightArms()
+
+	def moveToWayPointRoutine(self):
+		if (not self.STATIONARY):
+			rospy.loginfo('Commanding Tuckarms')
+			self.GripperCommand.Command('l', 0)  # Close gripper
+			self.TuckArms.TuckLeftArm()
+
+			rospy.loginfo("Moving to wide pose")
+			self.MoveitMoveArm.MoveRightToCarry()
+
+			rospy.loginfo('Commanding base to intern desk...')
+			self.MoveBase.MoveToWayPoint()
+
+			# rospy.loginfo('Commanding Untucking')
+			# self.TuckArms.UntuckRightArms()
 
 	def pickingRoutine(self):
 		rospy.loginfo('Commanding right gripper open')
@@ -142,9 +158,8 @@ class Demo:
 		self.TuckArms.TuckLeftArm()
 
 	def runDemo(self):
+		self.moveToInternDeskRoutine()
 		while not rospy.is_shutdown():
-			
-			# self.moveToInternDeskRoutine()
 
 			self.pickingRoutine()
 
@@ -182,7 +197,6 @@ class Demo:
 
 			# Execute grasp plan
 			rospy.loginfo("Moving to interpolated pose")
-			# interp_pose.position.x -= 0.02
 			success = self.MoveitMoveArm.MoveToPose(interp_pose, "map")
 
 			if not success:
@@ -194,18 +208,26 @@ class Demo:
 			rospy.loginfo("Removing collision objects and moving to final grasp pose")
 			self.MoveitMoveArm.removeAllObjects()
 			success = self.MoveitMoveArm.MoveToPose(grasp_pose, "map")
-			self.GripperCommand.Command('r', 0) #Close Gripper
-			
+			grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
+
+			# success to grasp: False, fail to grasp: True
+			if grip_success:
+				rospy.loginfo("Failed to grasp. Going back to identifying object location.")
+				continue
+			rospy.loginfo("Succeeded to grasp.")
 			rospy.loginfo("Moving to carry pose")
 			self.MoveitMoveArm.MoveRightToWide()
 
-			# self.moveToWorkstationRoutine()
+			self.moveToWayPointRoutine()
+			self.moveToWorkstationRoutine()
 			#TODO clear desks, get AR poses for desk, and insert new Desk collision object
 
 			self.dropOffObjectRoutine()
 			
 			self.GripperCommand.Command('r', 0) #Close Gripper
 			self.MoveitMoveArm.removeAllObjectsAndDesks()
+
+			self.moveToInternDeskRoutine()
 
 		self.MoveitMoveArm.Cleanup()
 		print('shutting down...')	

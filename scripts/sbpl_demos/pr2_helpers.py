@@ -120,7 +120,12 @@ class TuckArms:
         self.client.send_goal(goal)
         self.client.wait_for_result(rospy.Duration(30.0))
 
-
+    def UntuckRightArms(self):
+        goal = TuckArmsGoal()
+        goal.tuck_left = True
+        goal.tuck_right = False
+        self.client.send_goal(goal)
+        self.client.wait_for_result(rospy.Duration(30.0))
 
 class GripperCommand:
     def __init__(self):
@@ -143,13 +148,19 @@ class GripperCommand:
         if gripper == 'l':
             self.left_client.send_goal(goal)
             if self.left_client.wait_for_result(rospy.Duration(3.0)):
-                return True
+                res = self.left_client.get_result()
+                if res.reached_goal:
+                    return True
+                return False
             else:
                 return False
         else:
             self.right_client.send_goal(goal)
             if self.right_client.wait_for_result(rospy.Duration(3.0)):
-                return True
+                res = self.right_client.get_result()
+                if res.reached_goal:
+                    return True
+                return False
             else:
                 return False
 
@@ -167,7 +178,7 @@ class MoveBase:
         goal.target_pose.pose = input_pose
 
         self.client.send_goal(goal)
-        if self.client.wait_for_result(rospy.Duration(30.0)):
+        if self.client.wait_for_result(rospy.Duration(120.0)):
             return True
         else:
             self.client.cancel_all_goals()
@@ -191,6 +202,24 @@ class MoveBase:
         pose.position.y = -1.0
         pose.position.z = 0.0
         quat = quaternion_from_euler(0,0,-math.pi/2.0)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        self.MoveToPose("map", pose)
+
+    def MoveToWayPoint(self):
+        # pose = geometry_msgs.msg.Pose()
+        # pose.position.x = 0.005
+        # pose.position.y = -0.257
+        # pose.position.z = 0
+        # quat = quaternion_from_euler(0,0,-1.104)
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0.106
+        pose.position.y = -1.161
+        pose.position.z = 0
+        quat = quaternion_from_euler(0, 0, -0.025)
+
         pose.orientation.x = quat[0]
         pose.orientation.y = quat[1]
         pose.orientation.z = quat[2]
