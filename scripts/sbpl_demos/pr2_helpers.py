@@ -120,7 +120,12 @@ class TuckArms:
         self.client.send_goal(goal)
         self.client.wait_for_result(rospy.Duration(30.0))
 
-
+    def UntuckRightArms(self):
+        goal = TuckArmsGoal()
+        goal.tuck_left = True
+        goal.tuck_right = False
+        self.client.send_goal(goal)
+        self.client.wait_for_result(rospy.Duration(30.0))
 
 class GripperCommand:
     def __init__(self):
@@ -143,13 +148,19 @@ class GripperCommand:
         if gripper == 'l':
             self.left_client.send_goal(goal)
             if self.left_client.wait_for_result(rospy.Duration(3.0)):
-                return True
+                res = self.left_client.get_result()
+                if res.reached_goal:
+                    return True
+                return False
             else:
                 return False
         else:
             self.right_client.send_goal(goal)
             if self.right_client.wait_for_result(rospy.Duration(3.0)):
-                return True
+                res = self.right_client.get_result()
+                if res.reached_goal:
+                    return True
+                return False
             else:
                 return False
 
@@ -167,7 +178,7 @@ class MoveBase:
         goal.target_pose.pose = input_pose
 
         self.client.send_goal(goal)
-        if self.client.wait_for_result(rospy.Duration(30.0)):
+        if self.client.wait_for_result(rospy.Duration(120.0)):
             return True
         else:
             self.client.cancel_all_goals()
@@ -187,10 +198,33 @@ class MoveBase:
 
     def MoveToWorkstation(self):
         pose = geometry_msgs.msg.Pose()
-        pose.position.x = 1.1
-        pose.position.y = -1.0
-        pose.position.z = 0.0
-        quat = quaternion_from_euler(0,0,-math.pi/2.0)
+        # pose.position.x = 0.440
+        # pose.position.y = -1.540
+        # pose.position.z = 0.0
+        # quat = quaternion_from_euler(0,0,-0.004)
+        pose.position.x=-0.234
+        pose.position.y=-1.541
+        pose.position.z=0.0
+        quat = quaternion_from_euler(0,0,0.027)
+
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        self.MoveToPose("map", pose)
+
+    def MoveToWayPoint(self):
+        # pose = geometry_msgs.msg.Pose()
+        # pose.position.x = 0.005
+        # pose.position.y = -0.257
+        # pose.position.z = 0
+        # quat = quaternion_from_euler(0,0,-1.104)
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0.106
+        pose.position.y = -1.161
+        pose.position.z = 0
+        quat = quaternion_from_euler(0, 0, -0.025)
+
         pose.orientation.x = quat[0]
         pose.orientation.y = quat[1]
         pose.orientation.z = quat[2]
@@ -206,7 +240,7 @@ class MoveitMoveArm:
         
         self.moveit_planning_group = moveit_commander.MoveGroupCommander("right_arm")
         self.moveit_planning_group.set_planner_id("RRTkConfigDefault")
-        self.moveit_planning_group.set_planning_time(10.0)
+        self.moveit_planning_group.set_planning_time(5.0)
         self.moveit_planning_group.allow_replanning(True)
         self.tflistener = tf.TransformListener()
         self.inserted_desks = []
@@ -285,28 +319,27 @@ class MoveitMoveArm:
         pose.orientation.w = quat[3]
         return self.MoveToPose(pose, "base_footprint")
 
-    def MoveRightToExtend(self):
-        pose = geometry_msgs.msg.Pose()
-        pose.position.x = 0.58
-        pose.position.y = -0.11
-        pose.position.z = 0.975
-        quat = quaternion_from_euler(-math.pi,0,0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+    def MoveRightToExtend(self, release_pose):
+        pose = copy.deepcopy(release_pose)
+        #pose.position.x = 0.58
+        #pose.position.y = -0.11
+        pose.position.z += 0.005
         return self.MoveToPose(pose, "base_footprint")
 
-    def MoveRightToShortExtend(self):
-        pose = geometry_msgs.msg.Pose()
-        pose.position.x = 0.5
-        pose.position.y = -0.11
-        pose.position.z = 0.975
-        quat = quaternion_from_euler(-math.pi,0,0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+    def MoveRightToShortExtend(self, release_pose):
+        pose = copy.deepcopy(release_pose)
+        #pose.position.x = 0.58
+        #pose.position.y = -0.11
+        pose.position.z += 0.005
+
+        # retract along the x-axis of the r_wrist_roll_link frame
+        factor_wrist_x = -0.15
+        (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time())
+        wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
+        wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
+        pose.position.x += wrist_offset_x[0]
+        pose.position.y += wrist_offset_x[1]
+        pose.position.z += wrist_offset_x[2]
         return self.MoveToPose(pose, "base_footprint")
 
     def AddCollisionObject(self, name, posestamped, input_size):

@@ -73,6 +73,9 @@ class ARGrasping:
 
     def getBestPoseByType(self, input_pose, artype, ee_position):
         valid_poses = self.getValidPosesByType(input_pose, artype)
+        return self.getBestPoseAmongValid(valid_poses, ee_position)
+
+    def getBestPoseAmongValid(self, valid_poses, ee_position):
         if(len(valid_poses) > 0):
             best_distance = 999999
             best_index = 0
@@ -84,9 +87,9 @@ class ARGrasping:
                 if(dist < best_distance):
                     best_index = i
                     best_distance = dist
-            return valid_poses[best_index]
+            return (valid_poses[best_index], best_distance)
         else:
-            return False
+            return (False, False)
 
     def getInterpolatedPose(self, grasp_pose, object_pose):
         dx = grasp_pose.position.x - object_pose.position.x
@@ -140,4 +143,4 @@ class PR2ARGrasping(ARGrasping):
         robot_transform.pitch = 0.0
         robot_transform.yaw = 0
         ARGrasping.__init__(self, planning_group, reference_frame, joint_names, robot_transform)
-    
+
