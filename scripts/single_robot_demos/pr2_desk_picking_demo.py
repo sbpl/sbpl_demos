@@ -71,7 +71,7 @@ class Demo:
 				rospy.loginfo("Moving to wide pose")
 				self.MoveitMoveArm.MoveRightToCarry()
 				rospy.loginfo('Commanding base to Workstation')
-				self.MoveBase.MoveToWorkstation()
+				# self.MoveBase.MoveToWorkstation()
 				rospy.loginfo('Untucking arms')
 				self.TuckArms.UntuckArms()
 
@@ -82,7 +82,7 @@ class Demo:
 			self.TuckArms.TuckArms()
 
 			rospy.loginfo('Commanding base to intern desk...')
-			self.MoveBase.MoveToInternDesk()
+			# self.MoveBase.MoveToInternDesk()
 
 			rospy.loginfo('Commanding Untucking')
 			self.TuckArms.UntuckArms()
@@ -93,6 +93,8 @@ class Demo:
 		## AR TAG PICKING
 		# get current EE position
 		(ee_position, ee_quat) = self.tflistener.lookupTransform("map", "r_wrist_roll_link",rospy.Time())
+		print ee_position
+		print ee_quat
 
 		#want to latch it at this time
 		(markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
@@ -142,7 +144,7 @@ class Demo:
 	def runDemo(self):
 		while not rospy.is_shutdown():
 			
-			self.moveToInternDeskRoutine()
+			# self.moveToInternDeskRoutine()
 
 			self.pickingRoutine()
 
@@ -156,6 +158,23 @@ class Demo:
 			object_pose = self.best_poses_object[0]
 			interp_pose = self.PR2ARGrasping.getInterpolatedPose(grasp_pose, object_pose)
 
+			# correction for offset of interp_pose
+			factor_x = -0.04
+			factor_y = -0.01
+			(base_trans, base_quat) = self.tflistener.lookupTransform("map", "base_footprint", rospy.Time())
+			base_matrix=self.tflistener.fromTranslationRotation(base_trans, base_quat)
+
+			base_offset_matrix_x=base_matrix[:3,0] * factor_x
+			base_offset_matrix_y = base_matrix[:3, 1] * factor_y
+			interp_pose.position.x += base_offset_matrix_x[0] + base_offset_matrix_y[0]
+			interp_pose.position.y += base_offset_matrix_x[1] + base_offset_matrix_y[1]
+			interp_pose.position.z += base_offset_matrix_x[2] + base_offset_matrix_y[2]
+
+			# correction for offset of grasp_pose
+			grasp_pose.position.x += base_offset_matrix_x[0] + base_offset_matrix_y[0]
+			grasp_pose.position.y += base_offset_matrix_x[1] + base_offset_matrix_y[1]
+			grasp_pose.position.z += base_offset_matrix_x[2] + base_offset_matrix_y[2]
+
 			#just for visualization
 			self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
 				(interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
@@ -163,6 +182,7 @@ class Demo:
 
 			# Execute grasp plan
 			rospy.loginfo("Moving to interpolated pose")
+			# interp_pose.position.x -= 0.02
 			success = self.MoveitMoveArm.MoveToPose(interp_pose, "map")
 
 			if not success:
@@ -179,7 +199,7 @@ class Demo:
 			rospy.loginfo("Moving to carry pose")
 			self.MoveitMoveArm.MoveRightToWide()
 
-			self.moveToWorkstationRoutine()
+			# self.moveToWorkstationRoutine()
 			#TODO clear desks, get AR poses for desk, and insert new Desk collision object
 
 			self.dropOffObjectRoutine()
