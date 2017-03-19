@@ -1,0 +1,318 @@
+world_collision_model:
+  frame: odom_combined
+  size_x: 2.0
+  size_y: 3.0
+  size_z: 2.0
+  origin_x: -1.0
+  origin_y: -2.0
+  origin_z: 0.0
+  res_m: 0.02
+  max_distance_m: 0.6
+
+self_collision_model:
+  frame: base_footprint
+  size_x: 3.0
+  size_y: 3.0
+  size_z: 2.0
+  origin_x: -1.5
+  origin_y: -2.0
+  origin_z: 0.0
+  res_m: 0.02
+  max_distance_m: 0.2
+
+robot_collision_model:
+  voxels_models:
+    - { link_name: base_link, res: 0.01 }
+    - { link_name: bl_caster_rotation_link, res: 0.01 }
+    - { link_name: bl_caster_l_wheel_link, res: 0.01 }
+    - { link_name: bl_caster_r_wheel_link, res: 0.01 }
+    - { link_name: br_caster_rotation_link, res: 0.01 }
+    - { link_name: br_caster_l_wheel_link, res: 0.01 }
+    - { link_name: br_caster_r_wheel_link, res: 0.01 }
+    - { link_name: fl_caster_rotation_link, res: 0.01 }
+    - { link_name: fl_caster_l_wheel_link, res: 0.01 }
+    - { link_name: fl_caster_r_wheel_link, res: 0.01 }
+    - { link_name: fr_caster_rotation_link, res: 0.01 }
+    - { link_name: fr_caster_l_wheel_link, res: 0.01 }
+    - { link_name: fr_caster_r_wheel_link, res: 0.01 }
+    - { link_name: torso_lift_link, res: 0.01 }
+    - { link_name: head_pan_link, res: 0.01 }
+    - { link_name: head_tilt_link, res: 0.01 }
+    - { link_name: l_shoulder_pan_link, res: 0.01 }
+    - { link_name: l_shoulder_lift_link, res: 0.01 }
+    - { link_name: l_upper_arm_roll_link, res: 0.01 }
+    - { link_name: l_upper_arm_link, res: 0.01 }
+    - { link_name: l_elbow_flex_link, res: 0.01 }
+    - { link_name: l_forearm_roll_link, res: 0.01 }
+    - { link_name: l_forearm_link, res: 0.01 }
+    - { link_name: l_wrist_flex_link, res: 0.01 }
+    - { link_name: l_wrist_roll_link, res: 0.01 }
+    - { link_name: l_gripper_palm_link, res: 0.01 }
+    - { link_name: l_gripper_r_finger_link, res: 0.01 }
+    - { link_name: l_gripper_r_finger_tip_link, res: 0.01 }
+    - { link_name: l_gripper_l_finger_link, res: 0.01 }
+    - { link_name: l_gripper_l_finger_tip_link, res: 0.01 }
+    - { link_name: laser_tilt_mount_link, res: 0.01 }
+    - { link_name: r_shoulder_pan_link, res: 0.01 }
+    - { link_name: r_shoulder_lift_link, res: 0.01 }
+    - { link_name: r_upper_arm_roll_link, res: 0.01 }
+    - { link_name: r_upper_arm_link, res: 0.01 }
+    - { link_name: r_elbow_flex_link, res: 0.01 }
+    - { link_name: r_forearm_roll_link, res: 0.01 }
+    - { link_name: r_forearm_link, res: 0.01 }
+    - { link_name: r_wrist_flex_link, res: 0.01 }
+    - { link_name: r_wrist_roll_link, res: 0.01 }
+    - { link_name: r_gripper_palm_link, res: 0.01 }
+    - { link_name: r_gripper_r_finger_link, res: 0.01 }
+    - { link_name: r_gripper_r_finger_tip_link, res: 0.01 }
+    - { link_name: r_gripper_l_finger_link, res: 0.01 }
+    - { link_name: r_gripper_l_finger_tip_link, res: 0.01 }
+    - { link_name: base_bellow_link, res: 0.01 }
+
+    # Links with Trivial Collision Geometry (probably used for visualization,
+    # stated here for reference)
+#    - link_name: base_footprint
+#    - link_name: l_gripper_motor_accelerometer_link
+#    - link_name: r_gripper_motor_accelerometer_link
+
+    # Links Without Collision Geometry (stated here for reference)
+#    - link_name: head_plate_frame
+#    - link_name: projector_wg6802418_frame
+#    - link_name: projector_wg6802418_child_frame
+#    - link_name: sensor_mount_link
+#    - link_name: double_stereo_link
+#    - link_name: narrow_stereo_link
+#    - link_name: narrow_stereo_optical_frame
+#    - link_name: narrow_stereo_l_stereo_camera_frame
+#    - link_name: narrow_stereo_l_stereo_camera_optical_frame
+#    - link_name: narrow_stereo_r_stereo_camera_frame
+#    - link_name: narrow_stereo_r_stereo_camera_optical_frame
+#    - link_name: wide_stereo_link
+#    - link_name: wide_stereo_optical_frame
+#    - link_name: wide_stereo_l_stereo_camera_frame
+#    - link_name: wide_stereo_l_stereo_camera_optical_frame
+#    - link_name: wide_stereo_r_stereo_camera_frame
+#    - link_name: wide_stereo_r_stereo_camera_optical_frame
+#    - link_name: high_def_frame
+#    - link_name: high_def_optical_frame
+#    - link_name: imu_link
+#    - link_name: l_forearm_cam_frame
+#    - link_name: l_forearm_cam_optical_frame
+#    - link_name: l_gripper_l_finger_tip_frame
+#    - link_name: l_gripper_tool_frame
+#    - link_name: l_gripper_motor_slider_link
+#    - link_name: l_gripper_motor_screw_link
+#    - link_name: l_gripper_led_frame
+#    - link_name: l_torso_lift_side_plate_link
+#    - link_name: laser_tilt_link
+#    - link_name: r_forearm_cam_frame
+#    - link_name: r_forearm_cam_optical_frame
+#    - link_name: r_gripper_l_finger_tip_frame
+#    - link_name: r_gripper_tool_frame
+#    - link_name: r_gripper_motor_slider_link
+#    - link_name: r_gripper_motor_screw_link
+#    - link_name: r_gripper_led_frame
+#    - link_name: r_torso_lift_side_plate_link
+#    - link_name: base_laser_link
+#    - link_name: torso_lift_motor_screw_link
+  spheres_models:
+    - link_name: base_link
+      auto: false
+      spheres:
+        - { name: b0, x: 0.2, y: -0.2, z: 0.1, radius: 0.2, priority: 4 }
+        - { name: b1, x: 0.2, y: 0.2, z: 0.1, radius: 0.2, priority: 3 }
+        - { name: b2, x: -0.2, y: -0.2, z: 0.1, radius: 0.2, priority: 1 }
+        - { name: b3, x: -0.2, y: 0.2, z: 0.1, radius: 0.2, priority: 1 }
+        - { name: b4, x: -0.0, y: 0.0, z: 0.1, radius: 0.2, priority: 1 }
+        - { name: b5, x: 0.26, y: 0.0, z: 0.25, radius: 0.08, priority: 1 }
+        - { name: s13, x: -0.15, y: 0.0, z: 0.35, radius: 0.15, priority: 1 }
+    - link_name: torso_lift_link
+      auto: false
+      spheres:
+        - { name: t0, x: -0.04, y: -0.188, z: -0.4, radius: 0.15, priority: 1 }
+        - { name: t1, x: -0.04, y: 0.188, z: -0.4, radius: 0.15, priority: 1 }
+        - { name: t2, x: -0.04, y: -0.188, z: -0.28, radius: 0.15, priority: 1 }
+        - { name: t3, x: -0.04, y: 0.188, z: -0.28, radius: 0.15, priority: 1 }
+        - { name: s3, x: -0.15, y: -0.188, z: 0.00, radius: 0.2, priority: 2 }
+        - { name: s4, x: -0.15, y: 0.188, z: 0.00, radius: 0.2, priority: 2 }
+        - { name: s7, x: 0.1, y: 0.05, z: 0.23, radius: 0.08, priority: 1 }
+        - { name: s8, x: 0.1, y: -0.05, z: 0.23, radius: 0.08, priority: 1 }
+        - { name: s11, x: 0.06, y: 0.16, z: 0.23, radius: 0.08, priority: 1 }
+        - { name: s12, x: 0.06, y: -0.16, z: 0.23, radius: 0.08, priority: 1 }
+    - link_name: head_pan_link
+      auto: false
+      spheres:
+        - { name: s9, x: 0.05, y: 0.06, z: 0.08, radius: 0.18, priority: 1 }
+        - { name: s10, x: 0.05, y: -0.06, z: 0.08, radius: 0.18, priority: 1 }
+    - link_name: l_shoulder_pan_link
+      auto: false
+      spheres:
+        - { name: sh0, x: 0.13, y: 0.0, z: -0.04, radius: 0.16, priority: 5 }
+    - link_name: l_upper_arm_roll_link
+      auto: false
+      spheres:
+        - { name: ua0, x: 0.18, y: 0.0, z: -0.015, radius: 0.11, priority: 4 }
+        - { name: ua1, x: 0.26, y: 0.00, z: -0.035, radius: 0.08, priority: 4 }
+        - { name: ua2, x: 0.3275, y: 0.00, z: -0.035, radius: 0.08, priority: 4 }
+        - { name: ua3, x: 0.40, y: 0.0, z: -0.0, radius: 0.105, priority: 2 }
+#    - link_name: l_elbow_flex_link
+#      auto: false
+#      spheres:
+#        - { name: fa0, x: 0.2, y: 0.005, z: 0.00, radius: 0.08, priority: 1 }
+#        - { name: fa1, x: 0.3, y: -0.005, z: 0.00, radius: 0.08, priority: 1 }
+    - link_name: l_forearm_roll_link
+      auto: false
+      spheres:
+        - { name: fa0, x: 0.13, y: 0.0, z: 0.005, radius: 0.075, priority: 2 }
+        - { name: fa1, x: 0.20, y: 0.025, z: -0.01, radius: 0.055, priority: 3 }
+        - { name: fa2, x: 0.20, y: -0.025, z: -0.01, radius: 0.055, priority: 3 }
+        - { name: fa3, x: 0.265, y: 0.0275, z: -0.015, radius: 0.05, priority: 3 }
+        - { name: fa4, x: 0.265, y: -0.0275, z: -0.015, radius: 0.05, priority: 3 }
+        - { name: fa5, x: 0.32, y: 0.0225, z: -0.005, radius: 0.05, priority: 3 }
+        - { name: fa6, x: 0.32, y: -0.0225, z: -0.005, radius: 0.05, priority: 3 }
+    - link_name: l_wrist_roll_link
+      auto: false
+      spheres:
+#        - { name: g0, x: 0.08, y: 0.0, z: 0.00, radius: 0.07, priority: 1 }
+#        - { name: g1, x: 0.14, y: 0.0, z: 0.00, radius: 0.07, priority: 5 }
+#        - { name: g2, x: 0.2, y: 0.0, z: 0.00, radius: 0.03, priority: 5 }
+        - { name: gr0, x: 0.0725, y: -0.0175, z: 0.00, radius: 0.04, priority: 2 }
+        - { name: gr1, x: 0.0725, y: 0.0175, z: 0.00, radius: 0.04, priority: 2 }
+        - { name: gr2, x: 0.0925, y: 0.0, z: 0.00, radius: 0.04, priority: 2 }
+    - link_name: l_gripper_l_finger_link
+      auto: false
+      spheres:
+        - { name: lf0, x: 0.03, y: 0.025, z: 0.00, radius: 0.04, priority: 1 }
+        - { name: lf1, x: 0.08, y: 0.0175, z: 0.00, radius: 0.035, priority: 1 }
+    - link_name: l_gripper_r_finger_link
+      auto: false
+      spheres:
+        - { name: rf0, x: 0.03, y: -0.025, z: 0.00, radius: 0.04, priority: 1 }
+        - { name: rf1, x: 0.08, y: -0.0175, z: 0.00, radius: 0.035, priority: 1 }
+    - link_name: l_gripper_r_finger_tip_link
+      auto: false
+      spheres:
+        - { name: rft0, x: 0.015, y: 0.005, z: 0.00, radius: 0.03, priority: 1 }
+        - { name: rft1, x: 0.035, y: 0.005, z: 0.00, radius: 0.02, priority: 1 }
+    - link_name: l_gripper_l_finger_tip_link
+      auto: false
+      spheres:
+        - { name: lft0, x: 0.015, y: -0.005, z: 0.00, radius: 0.03, priority: 1 }
+        - { name: lft1, x: 0.035, y: -0.005, z: 0.00, radius: 0.02, priority: 1 }
+    - link_name: r_shoulder_pan_link
+      auto: false
+      spheres:
+        - { name: sh0, x: 0.13, y: 0.0, z: -0.04, radius: 0.16, priority: 5 }
+    - link_name: r_upper_arm_roll_link
+      auto: false
+      spheres:
+        - { name: ua0, x: 0.18, y: 0.0, z: -0.015, radius: 0.11, priority: 4 }
+        - { name: ua1, x: 0.26, y: 0.00, z: -0.035, radius: 0.08, priority: 4 }
+        - { name: ua2, x: 0.3275, y: 0.00, z: -0.035, radius: 0.08, priority: 4 }
+        - { name: ua3, x: 0.40, y: 0.0, z: -0.0, radius: 0.105, priority: 2 }
+#    - link_name: r_elbow_flex_link
+#      auto: false
+#      spheres:
+#        - { name: fa0, x: 0.2, y: 0.005, z: 0.00, radius: 0.08, priority: 1 }
+#        - { name: fa1, x: 0.3, y: -0.005, z: 0.00, radius: 0.08, priority: 1 }
+    - link_name: r_forearm_roll_link
+      auto: false
+      spheres:
+        - { name: fa0, x: 0.13, y: 0.0, z: 0.005, radius: 0.075, priority: 2 }
+        - { name: fa1, x: 0.20, y: 0.025, z: -0.01, radius: 0.055, priority: 3 }
+        - { name: fa2, x: 0.20, y: -0.025, z: -0.01, radius: 0.055, priority: 3 }
+        - { name: fa3, x: 0.265, y: 0.0275, z: -0.015, radius: 0.05, priority: 3 }
+        - { name: fa4, x: 0.265, y: -0.0275, z: -0.015, radius: 0.05, priority: 3 }
+        - { name: fa5, x: 0.32, y: 0.0225, z: -0.005, radius: 0.05, priority: 3 }
+        - { name: fa6, x: 0.32, y: -0.0225, z: -0.005, radius: 0.05, priority: 3 }
+    - link_name: r_wrist_roll_link
+      auto: false
+      spheres:
+#        - { name: g0, x: 0.08, y: 0.0, z: 0.00, radius: 0.07, priority: 1 }
+#        - { name: g1, x: 0.14, y: 0.0, z: 0.00, radius: 0.07, priority: 5 }
+#        - { name: g2, x: 0.2, y: 0.0, z: 0.00, radius: 0.03, priority: 5 }
+        - { name: gr0, x: 0.0725, y: -0.0175, z: 0.00, radius: 0.04, priority: 2 }
+        - { name: gr1, x: 0.0725, y: 0.0175, z: 0.00, radius: 0.04, priority: 2 }
+        - { name: gr2, x: 0.0925, y: 0.0, z: 0.00, radius: 0.04, priority: 2 }
+    - link_name: r_gripper_l_finger_link
+      auto: false
+      spheres:
+        - { name: lf0, x: 0.03, y: 0.025, z: 0.00, radius: 0.04, priority: 1 }
+        - { name: lf1, x: 0.08, y: 0.0175, z: 0.00, radius: 0.035, priority: 1 }
+    - link_name: r_gripper_r_finger_link
+      auto: false
+      spheres:
+        - { name: rf0, x: 0.03, y: -0.025, z: 0.00, radius: 0.04, priority: 1 }
+        - { name: rf1, x: 0.08, y: -0.0175, z: 0.00, radius: 0.035, priority: 1 }
+    - link_name: r_gripper_r_finger_tip_link
+      auto: false
+      spheres:
+        - { name: rft0, x: 0.015, y: 0.005, z: 0.00, radius: 0.03, priority: 1 }
+        - { name: rft1, x: 0.035, y: 0.005, z: 0.00, radius: 0.02, priority: 1 }
+    - link_name: r_gripper_l_finger_tip_link
+      auto: false
+      spheres:
+        - { name: lft0, x: 0.015, y: -0.005, z: 0.00, radius: 0.03, priority: 1 }
+        - { name: lft1, x: 0.035, y: -0.005, z: 0.00, radius: 0.02, priority: 1 }
+  collision_groups:
+    - name: left_arm
+      groups: [ left_gripper ]
+      chains:
+        - base: l_shoulder_pan_link
+          tip: l_wrist_roll_link
+    - name: left_arm_and_torso
+      groups: [ left_arm ]
+      links:
+        - name: torso_lift_link
+    - name: right_arm
+      groups: [ right_gripper ]
+      chains:
+        - base: r_shoulder_pan_link
+          tip: r_wrist_roll_link
+    - name: right_arm_and_torso
+      groups: [ right_arm ]
+      links:
+        - name: torso_lift_link
+    - name: arms
+      groups: [ right_arm, left_arm ]
+      links: []
+    - name: head
+      links:
+        - name: head_pan_link
+        - name: head_tilt_link
+    - name: torso
+      groups: [ arms, head ]
+      links:
+        - name: torso_lift_link
+        - name: laser_tilt_mount_link
+    - name: whole_body
+      groups: [ torso ]
+      links:
+        - name: base_link
+        - name: bl_caster_rotation_link
+        - name: bl_caster_l_wheel_link
+        - name: bl_caster_r_wheel_link
+        - name: br_caster_rotation_link
+        - name: br_caster_l_wheel_link
+        - name: br_caster_r_wheel_link
+        - name: fl_caster_rotation_link
+        - name: fl_caster_l_wheel_link
+        - name: fl_caster_r_wheel_link
+        - name: fr_caster_rotation_link
+        - name: fr_caster_l_wheel_link
+        - name: fr_caster_r_wheel_link
+        - name: base_bellow_link
+    - name: right_gripper
+      links:
+        - name: r_gripper_palm_link
+        - name: r_gripper_r_finger_link
+        - name: r_gripper_r_finger_tip_link
+        - name: r_gripper_l_finger_link
+        - name: r_gripper_l_finger_tip_link
+    - name: left_gripper
+      links:
+        - name: l_gripper_palm_link
+        - name: l_gripper_r_finger_link
+        - name: l_gripper_r_finger_tip_link
+        - name: l_gripper_l_finger_link
+        - name: l_gripper_l_finger_tip_link

@@ -1,4 +1,12 @@
 <launch>
+
+  <!-- choose the planner between sbpl and ompl -->
+  <!-- NOTE to switch the planner to ompl, need to change the planner id for 'self.moveit_planning_group.set_planner_id()' in /scripts/sbpl_demos/pr2_helpers.py -->
+  <!-- NOTE also make sure to execute 'rosparam delete /move_group' to prevent any possible confusion -->
+  <arg name="use_sbpl_pipeline" default="true" />
+  <rosparam command="delete" param="/move_group" />
+
+
   <!-- i2g_pr2_follow_trajectory_wrapper.launch-->
   <node pkg="groovy_indigo_moveit_wrapper" type="i2g_follow_joint_trajectory.py" name="i2g_r_arm_follow_joint_trajectory" output="screen">
     <param name="indigo_action" type="str" value="pr2_r_arm_controller/follow_joint_trajectory"/>
@@ -33,18 +41,30 @@
   -->
   <!--<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" /> -->
 
-  <include file="$(find pr2_moveit_config)/launch/move_group.launch">
-    <arg name="allow_trajectory_execution" value="true"/>
-    <arg name="fake_execution" value="false"/>
-    <arg name="info" value="true"/>
-    <arg name="debug" value="$(arg debug)"/>
-  </include>
-<!--
-  <include file="$(find pr2_moveit_config)/launch/moveit_rviz.launch">
-    <arg name="config" value="true"/>
-    <arg name="debug" value="$(arg debug)"/>
-  </include>
 
-  <include file="$(find pr2_moveit_config)/launch/default_warehouse_db.launch" if="$(arg db)"/>
--->
+  <group if="$(arg use_sbpl_pipeline)">
+    <include file="$(find sbpl_demos)/launch/pr2/pr2_move_group_sbpl.launch">
+      <arg name="allow_trajectory_execution" value="true"/>
+      <arg name="fake_execution" value="false"/>
+      <arg name="info" value="true"/>
+      <arg name="debug" value="$(arg debug)"/>
+    </include>
+	<rosparam command="load" file="$(find sbpl_demos)/config/pr2/sbpl_planning_params.yaml"/>
+  </group>
+  <group unless="$(arg use_sbpl_pipeline)">
+    <include file="$(find pr2_moveit_config)/launch/move_group.launch">
+      <arg name="allow_trajectory_execution" value="true"/>
+      <arg name="fake_execution" value="false"/>
+      <arg name="info" value="true"/>
+      <arg name="debug" value="$(arg debug)"/>
+    </include>
+    <!--
+    <include file="$(find pr2_moveit_config)/launch/moveit_rviz.launch">
+      <arg name="config" value="true"/>
+      <arg name="debug" value="$(arg debug)"/>
+    </include>
+    <include file="$(find pr2_moveit_config)/launch/default_warehouse_db.launch" if="$(arg db)"/>
+    -->
+  </group>
+
 </launch>

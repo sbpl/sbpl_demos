@@ -1,0 +1,95 @@
+<launch>
+
+  <include file="$(find pr2_moveit_config)/launch/planning_context.launch" />
+
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <arg name="info" default="$(arg debug)" />  
+  <arg unless="$(arg info)" name="command_args" value="" />
+  <arg     if="$(arg info)" name="command_args" value="--debug" />
+
+  <arg name="allow_trajectory_execution" default="true"/>
+  <arg name="fake_execution" default="false"/>
+  <arg name="max_safe_path_cost" default="1"/>
+  <arg name="jiggle_fraction" default="0.05"/>
+  <arg name="publish_monitored_planning_scene" default="true"/>
+  <arg name="moveit_octomap_sensor_params_file" default="$(find pr2_moveit_config)/config/sensors_kinect.yaml" />
+
+
+    <param name="collision_detector" value="collision_detection/CollisionPluginSBPL"/>
+    <rosparam command="load" file="$(find sbpl_demos)/config/pr2/collision_model_pr2.yaml"/>
+<!--     <rosparam param="world_collision_model"> -->
+<!--         size_x: 20.0 -->
+<!--         size_y: 20.0 -->
+<!--         size_z: 2.1 -->
+<!--         origin_x: &#45;10.0 -->
+<!--         origin_y: &#45;10.0 -->
+<!--         origin_z: &#45;0.10 -->
+<!--         res_m: 0.05 -->
+<!--         max_distance_m: 0.8 # will be buffed out by the largest sphere in the collision model -->
+<!--         frame_id: map -->
+<!--     </rosparam> -->
+<!--     <rosparam param="self_collision_model"> -->
+<!--         size_x: 3.0 -->
+<!--         size_y: 3.0 -->
+<!--         size_z: 2.0 -->
+<!--         origin_x: &#45;1.5 -->
+<!--         origin_y: &#45;1.5 -->
+<!--         origin_z: 0.0 -->
+<!--         res_m: 0.02 -->
+<!--         max_distance_m: 0.2 # will be buffed out by the largest sphere in the collision model -->
+<!--         frame_id: base_footprint -->
+<!--     </rosparam> -->
+
+
+  <include ns="move_group" file="$(find sbpl_demos)/config/pr2/planning_pipeline.launch.xml">
+    <arg name="pipeline" value="sbpl" />
+  </include>
+
+  <include ns="move_group" file="$(find pr2_moveit_config)/launch/trajectory_execution.launch.xml" if="$(arg allow_trajectory_execution)">
+    <arg name="moveit_controller_manager" value="pr2" unless="$(arg fake_execution)"/>
+    <arg name="moveit_controller_manager" value="fake" if="$(arg fake_execution)"/>
+    <arg name="moveit_manage_controllers" value="true" />
+  </include>
+
+  <include ns="move_group" file="$(find pr2_moveit_config)/launch/sensor_manager.launch.xml" if="$(arg allow_trajectory_execution)">
+    <arg name="moveit_sensor_manager" value="pr2" /> 
+    <arg name="moveit_octomap_sensor_params_file" value="$(arg moveit_octomap_sensor_params_file)"/>
+  </include>
+
+  <node name="move_group" launch-prefix="$(arg launch_prefix)" pkg="moveit_ros_move_group" type="move_group" respawn="false" output="screen" args="$(arg command_args)">
+    <!-- Set the display variable, in case OpenGL code is used internally -->
+    <env name="DISPLAY" value="$(optenv DISPLAY :0)" />
+
+    <param name="trajectory_execution/execution_duration_monitoring" value="false"/>
+    <param name="trajectory_execution/allowed_execution_duration_scaling" value="1.5"/>
+
+    <param name="allow_trajectory_execution" value="$(arg allow_trajectory_execution)"/>
+    <param name="max_safe_path_cost" value="$(arg max_safe_path_cost)"/>
+    <param name="jiggle_fraction" value="$(arg jiggle_fraction)" />
+
+    <param name="capabilities" value="
+				      move_group/MoveGroupCartesianPathService
+				      move_group/MoveGroupExecuteService
+				      move_group/MoveGroupKinematicsService
+				      move_group/MoveGroupMoveAction
+				      move_group/MoveGroupPickPlaceAction
+				      move_group/MoveGroupPlanService
+				      move_group/MoveGroupQueryPlannersService
+				      move_group/MoveGroupStateValidationService
+				      move_group/MoveGroupGetPlanningSceneService
+				      move_group/ClearOctomapService
+				      " />
+
+    <!-- Publish the planning scene of the physical robot so that rviz plugin can know actual robot -->
+    <param name="planning_scene_monitor/publish_planning_scene" value="$(arg publish_monitored_planning_scene)" />
+    <param name="planning_scene_monitor/publish_geometry_updates" value="$(arg publish_monitored_planning_scene)" />
+    <param name="planning_scene_monitor/publish_state_updates" value="$(arg publish_monitored_planning_scene)" />
+    <param name="planning_scene_monitor/publish_transforms_updates" value="$(arg publish_monitored_planning_scene)" />
+  </node>
+
+  <rosparam command="load" file="$(find pr2_moveit_config)/config/grasping.yaml"/>
+  
+</launch>
