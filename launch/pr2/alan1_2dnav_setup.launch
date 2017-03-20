@@ -4,5 +4,5 @@
   <include file="$(find pr2_navigation_teleop)/teleop.xml" />
   <include file="$(find pr2_navigation_perception)/lasers_and_filters.xml" />
   <include file="$(find pr2_navigation_perception)/ground_plane.xml" />
-  <include file="$(find pr2_navigation_global)/move_base.xml" />
+  <include file="~/catkin_ws/src/sbpl_demos/config/pr2/move_base.xml" />
 </launch>
