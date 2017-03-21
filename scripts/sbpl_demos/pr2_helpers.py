@@ -242,27 +242,32 @@ class MoveitMoveArm:
 
         # NOTE to switch the planner to ompl, need to set the parameter 'use_sbpl_pipeline' to 'false' in launch/pr2/tatooine_moveit_setup.launch
         # NOTE also make sure to execute 'rosparam delete /move_group' to prevent any possible confusion
-#         self.moveit_planning_group.set_planner_id("RRTkConfigDefault")
-#         self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_BFS_ML]")
-        self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_JD_ML]")
+        use_sbpl_pipeline = False
 
-        self.moveit_planning_group.set_planning_time(rospy.get_param("move_group/allowed_planning_time"))
-        self.moveit_planning_group.allow_replanning(True)
+        if use_sbpl_pipeline:
+            self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_BFS_ML]")
+            self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_JD_ML]")
 
-        # TODO need to convert the reference frame of this workspace from /base_footprint to /odom_combined (or don't need to do it due to moveit's but?)
-        workspace_frame = rospy.get_param("move_group/workspace_frame")
-        min_x = rospy.get_param("move_group/workspace_min/x")
-        min_y = rospy.get_param("move_group/workspace_min/y")
-        min_z = rospy.get_param("move_group/workspace_min/z")
-        max_x = rospy.get_param("move_group/workspace_max/x")
-        max_y = rospy.get_param("move_group/workspace_max/y")
-        max_z = rospy.get_param("move_group/workspace_max/z")
-        workspace = [min_x, min_y, min_z, max_x, max_y, max_z]
-        self.moveit_planning_group.set_workspace(workspace)    # CHECK header.frame_id is set to /odom_combined?
+            self.moveit_planning_group.set_planning_time(rospy.get_param("move_group/allowed_planning_time"))
+            self.moveit_planning_group.allow_replanning(True)
 
-        self.moveit_planning_group.set_goal_position_tolerance(rospy.get_param("move_group/tolerance/position"))
-        self.moveit_planning_group.set_goal_orientation_tolerance(rospy.get_param("move_group/tolerance/orientation"))
-        self.moveit_planning_group.set_goal_joint_tolerance(rospy.get_param("move_group/tolerance/joint"))
+            # TODO need to convert the reference frame of this workspace from /base_footprint to /odom_combined (or don't need to do it due to moveit's but?)
+            workspace_frame = rospy.get_param("move_group/workspace_frame")
+            min_x = rospy.get_param("move_group/workspace_min/x")
+            min_y = rospy.get_param("move_group/workspace_min/y")
+            min_z = rospy.get_param("move_group/workspace_min/z")
+            max_x = rospy.get_param("move_group/workspace_max/x")
+            max_y = rospy.get_param("move_group/workspace_max/y")
+            max_z = rospy.get_param("move_group/workspace_max/z")
+            workspace = [min_x, min_y, min_z, max_x, max_y, max_z]
+            self.moveit_planning_group.set_workspace(workspace)    # CHECK header.frame_id is set to /odom_combined?
+
+            self.moveit_planning_group.set_goal_position_tolerance(rospy.get_param("move_group/tolerance/position"))
+            self.moveit_planning_group.set_goal_orientation_tolerance(rospy.get_param("move_group/tolerance/orientation"))
+            self.moveit_planning_group.set_goal_joint_tolerance(rospy.get_param("move_group/tolerance/joint"))
+
+        else:
+            self.moveit_planning_group.set_planner_id("RRTkConfigDefault")
 
         self.tflistener = tf.TransformListener()
         self.inserted_desks = []

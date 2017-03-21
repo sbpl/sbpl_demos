@@ -90,13 +90,13 @@ graph_configs:
   RightArmManipLatticeConfigDefault:
     graph: manip
     discretization:
-      r_shoulder_pan_joint: 0.017453292519943
-      r_shoulder_lift_joint: 0.017453292519943
-      r_upper_arm_roll_joint: 0.017453292519943
-      r_elbow_flex_joint: 0.017453292519943
-      r_forearm_roll_joint: 0.017453292519943
-      r_wrist_flex_joint: 0.017453292519943
-      r_wrist_roll_joint: 0.017453292519943
+      r_shoulder_pan_joint: 0.010
+      r_shoulder_lift_joint: 0.010
+      r_upper_arm_roll_joint: 0.010
+      r_elbow_flex_joint: 0.010
+      r_forearm_roll_joint: 0.010
+      r_wrist_flex_joint: 0.010
+      r_wrist_roll_joint: 0.010
     # mprim_filename: uploaded via roslaunch
     use_xyz_snap_mprim: false
     use_rpy_snap_mprim: false
@@ -109,13 +109,13 @@ graph_configs:
   RightArmManipLatticeEgraphConfigDefault:
     graph: manip_lattice_egraph
     discretization:
-      r_shoulder_pan_joint: 0.017453292519943
-      r_shoulder_lift_joint: 0.017453292519943
-      r_upper_arm_roll_joint: 0.017453292519943
-      r_elbow_flex_joint: 0.017453292519943
-      r_forearm_roll_joint: 0.017453292519943
-      r_wrist_flex_joint: 0.017453292519943
-      r_wrist_roll_joint: 0.017453292519943
+      r_shoulder_pan_joint: 0.010
+      r_shoulder_lift_joint: 0.010
+      r_upper_arm_roll_joint: 0.010
+      r_elbow_flex_joint: 0.010
+      r_forearm_roll_joint: 0.010
+      r_wrist_flex_joint: 0.010
+      r_wrist_roll_joint: 0.010
     # mprim_filename: uploaded via roslaunch
     use_xyz_snap_mprim: false
     use_rpy_snap_mprim: false
@@ -131,14 +131,14 @@ graph_configs:
     graph: manip
     # angular resolution of each active joint variable
     discretization:
-      r_shoulder_pan_joint: 0.017453292519943
-      r_shoulder_lift_joint: 0.017453292519943
-      r_upper_arm_roll_joint: 0.017453292519943
-      r_elbow_flex_joint: 0.017453292519943
-      r_forearm_roll_joint: 0.017453292519943
-      r_wrist_flex_joint: 0.017453292519943
-      r_wrist_roll_joint: 0.017453292519943
-      torso_lft_joint: 0.017453292519943
+      r_shoulder_pan_joint: 0.010
+      r_shoulder_lift_joint: 0.010
+      r_upper_arm_roll_joint: 0.010
+      r_elbow_flex_joint: 0.010
+      r_forearm_roll_joint: 0.010
+      r_wrist_flex_joint: 0.010
+      r_wrist_roll_joint: 0.010
+      torso_lft_joint: 0.010
     # mprim_filename: uploaded via roslaunch
     use_xyz_snap_mprim: false
     use_rpy_snap_mprim: false

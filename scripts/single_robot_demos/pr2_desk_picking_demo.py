@@ -49,7 +49,7 @@ class Demo:
 			
 			# place a collision object at the marker
 			obj.pose.header.stamp = rospy.Time.now()
-			obj.pose.header.frame_id = "map"
+			obj.pose.header.frame_id = "odom_combined"
 			size = (0,0,0)
 			if(artype == AR_TYPES.CUBOID_EDGE):
 				size = (0.2, 0.05, 0.05)
@@ -115,7 +115,7 @@ class Demo:
 		self.GripperCommand.Command('r', 1) #open grigger
 		## AR TAG PICKING
 		# get current EE position
-		(ee_position, ee_quat) = self.tflistener.lookupTransform("map", "r_wrist_roll_link", rospy.Time())
+		(ee_position, ee_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
 
 		#want to latch it at this time
 		(markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
@@ -127,7 +127,7 @@ class Demo:
 			desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
 			cnt = 0
 			for desk in desk_markers.markers:
-				desk.pose.header.frame_id = "map"
+				desk.pose.header.frame_id = "odom_combined"
 				desk.pose.header.stamp = rospy.Time.now()
 				print desk
 				self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk.pose)
@@ -160,7 +160,7 @@ class Demo:
 
 	def runDemo(self):
 		rospy.loginfo('Untucking arms')
-		self.TuckArms.UntuckRightArms()
+# 		self.TuckArms.UntuckRightArms()
 		self.moveToInternDeskRoutine()
 
 		while not rospy.is_shutdown():
@@ -182,7 +182,7 @@ class Demo:
 			# correction for offset of interp_pose
 			factor_arm_x = -0.04
 			factor_arm_y = -0.01
-			(arm_trans, arm_quat) = self.tflistener.lookupTransform("map", "base_footprint", rospy.Time())
+			(arm_trans, arm_quat) = self.tflistener.lookupTransform("odom_combined", "base_footprint", rospy.Time())
 			arm_matrix = self.tflistener.fromTranslationRotation(arm_trans, arm_quat)
 
 			arm_offset_x = arm_matrix[:3,0] * factor_arm_x
@@ -197,7 +197,7 @@ class Demo:
 			grasp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
 
 			factor_wrist_x = 0.02
-			(wrist_trans, wrist_quat) = self.tflistener.lookupTransform("map", "r_wrist_roll_link", rospy.Time())
+			(wrist_trans, wrist_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
 			wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
 
 			wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
@@ -208,11 +208,11 @@ class Demo:
 			#just for visualization
 			self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
 				(interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
-				rospy.Time.now(), "desired_grasp", "map")
+				rospy.Time.now(), "desired_grasp", "odom_combined")
 
 			# Execute grasp plan
 			rospy.loginfo("Moving to interpolated pose")
-			success = self.MoveitMoveArm.MoveToPose(interp_pose, "map")
+			success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
 			if not success:
 				rospy.logwarn("could not move to interpolated pose, retrying")
 				self.MoveitMoveArm.MoveRightToWide()
@@ -222,7 +222,7 @@ class Demo:
 
 			rospy.loginfo("Removing collision objects and moving to final grasp pose")
 			self.MoveitMoveArm.removeAllObjects()
-			success = self.MoveitMoveArm.MoveToPose(grasp_pose, "map")
+			success = self.MoveitMoveArm.MoveToPose(grasp_pose, "odom_combined")
 
 			# grip_success: True when completely closed, False when grasped something
 			grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
@@ -235,11 +235,11 @@ class Demo:
 			# retract to interpolate pose
 			rospy.loginfo("Moving back to interpolated pose")
 			interp_pose.position.z += 0.15
-			success = self.MoveitMoveArm.MoveToPose(interp_pose, "map")
+			success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
 			if not success:
 				rospy.logwarn("could not move to interpolated pose, retrying")
 				interp_pose.position.z -= 0.12
-				success = self.MoveitMoveArm.MoveToPose(interp_pose, "map")
+				success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
 				if not success:
 					rospy.logwarn("could not move to interpolated pose, aborted")
 					self.MoveitMoveArm.MoveRightToWide()
@@ -256,7 +256,7 @@ class Demo:
 
 			# compute release pose in base_footprint frame
 			grasp_pose_stamped = PoseStamped()
-			grasp_pose_stamped.header.frame_id = "map"
+			grasp_pose_stamped.header.frame_id = "odom_combined"
 			grasp_pose_stamped.pose = grasp_pose
 			release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
 			release_pose = release_pose_stamped.pose

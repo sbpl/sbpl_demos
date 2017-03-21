@@ -107,7 +107,7 @@ class ARGrasping:
 class RomanARGrasping(ARGrasping):
     def __init__(self):
         planning_group = "right_arm_and_torso"
-        reference_frame = "map"
+        reference_frame = "odom_combined"
         joint_names = ["torso_joint1",
                        "limb_right_joint1",
                        "limb_right_joint2",
@@ -129,7 +129,7 @@ class RomanARGrasping(ARGrasping):
 class PR2ARGrasping(ARGrasping):
     def __init__(self):
         planning_group = "right_arm"
-        reference_frame = "map"
+        reference_frame = "odom_combined"
         joint_names = ["r_elbow_flex_joint",
                        "r_forearm_roll_joint",
                        "r_shoulder_lift_joint", 
