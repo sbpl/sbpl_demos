@@ -40,7 +40,7 @@
     <rosparam file="$(find sbpl_demos)/config/pr2/pr2_navigation_local/local_costmap_params.yaml" command="load" />
     <rosparam file="$(find sbpl_demos)/config/pr2/pr2_navigation_local/global_costmap_params.yaml" command="load" />
     
-    <rosparam file="$(find pr2_navigation_config)/move_base/dwa_local_planner_params.yaml" command="load" />
+    <!--<rosparam file="$(find pr2_navigation_config)/move_base/dwa_local_planner_params.yaml" command="load" />-->
     <rosparam file="$(find sbpl_demos)/config/pr2/pr2_navigation_config/move_base/move_base_params.yaml" command="load" />
     <!--
     <rosparam file="$(find turtlebot_navigation)/param/global_planner_params.yaml" command="load" />
@@ -52,6 +52,7 @@
     <!--
     <rosparam file="$(find pr2_navigation_config)/move_base/move_base_params.yaml" command="load" />
     <rosparam file="$(find pr2_navigation_config)/move_base/global_planner_params.yaml" command="load" />
+    
     <rosparam file="$(find pr2_navigation_config)/move_base/dwa_local_planner.yaml" command="load" ns="DWAPlannerROS" />
     <rosparam file="$(find pr2_navigation_config)/move_base/recovery_behaviors.yaml" command="load" />
     -->

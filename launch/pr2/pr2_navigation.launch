@@ -1,0 +1,130 @@
+<launch>
+    <include file="$(find pr2_machine)/$(env ROBOT).machine"/>
+    
+  <include file="$(find pr2_navigation_perception)/lasers_and_filters.xml" />
+  <include file="$(find pr2_navigation_perception)/ground_plane.xml" />
+
+      <node pkg="pr2_move_base" name="pr2_move_base_node" type="pr2_move_base.py" machine="c2" output="screen"/>
+
+    <!-- map server (publishing empty map) -->
+    <!-- <node pkg="map_server" type="map_server" name="map_server" args="$(find sbpl_3dnav_planner)/maps/nsh1612.pgm 0.05"/> -->
+    <!-- load ik -->
+    <!--
+    <include file="$(find pr2_arm_navigation_kinematics)/launch/pr2_ik_rarm_node.launch"/>
+    <include file="$(find pr2_arm_navigation_kinematics)/launch/pr2_ik_larm_node.launch"/>
+    -->
+
+    <!-- <include file="$(find sbpl_3dnav_planner)/launch/sbpl_planning_both_arms.launch"/> -->
+    <node pkg="topic_tools" type="throttle" name="throttle_joint_states" args="messages joint_states 4.0"/>
+
+    <node pkg="map_server" name="levine_map" type="map_server" args="$(find sbpl_3dnav_planner)/maps/labmap_2d.yaml" respawn="false" >
+    <remap from="map" to="map_server_map"/>
+  </node>
+<!--
+  <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" args="$(find sbpl_3dnav_planner)/maps/lab_001.bt" respawn="false" >
+-->
+  <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" respawn="false" >
+    <param name="resolution" value="0.025" />
+    <param name="sensor_model/range" value="4.0" />
+
+    <param name="sensor_model/hit" value= "0.8" />
+    <param name="sensor_model/miss" value= "0.31" />
+    <param name="sensor_model/min" value= "0.12" />
+    <param name="sensor_model/max" value= "0.95" />
+
+    <param name="min_z_range" value="0.05" />
+    <param name="max_z_range" value="1.8" />
+    <param name="min_x_size" value="25.0" />
+    <param name="min_y_size" value="25.0" />
+
+    <param name="pointcloud_min_z" value="0.10"/>
+    <param name="pointcloud_max_z" value="1.80"/>
+    <param name="filter_ground" value="true"/>
+    <param name="occupancy_min_z" value="0.05"/>
+    <param name="occupancy_max_z" value="2.0"/>
+
+    <!--remap from="cloud_in" to="/narrow_stereo_textured/points_filtered_attached2" /-->
+    <remap from="cloud_in" to="/head_mount_kinect/depth_registered/points" />
+  </node>
+
+  <!-- Throttle the voxel grid that is being published for rviz --> <!--node ns="move_base_node/local_costmap" name="voxel_grid_throttle" pkg="topic_tools" type="throttle" machine="c2" args="messages voxel_grid 3.0 voxel_grid_throttled" /-->
+
+    <!-- launch move_base with sbpl_3dnav_planner as a plugin -->
+    <node pkg="move_base" type="move_base" name="move_base" output="screen" machine="c1" >
+        <param name="base_global_planner" value="Sbpl3DNavPlanner"/>
+
+
+        <!--<rosparam file="$(find sbpl_full_body_planner)/config/pr2_both_arms.yaml" command="load"/>-->
+        <!--<rosparam file="$(find sbpl_full_body_planner)/config/pr2_body.yaml" command="load"/>-->
+
+	    <rosparam file="$(find sbpl_3dnav_planner)/config/levine_4th_floor_config.yaml" command="load"/>
+    	<rosparam file="$(find sbpl_3dnav_planner)/config/pr2_body_10cm_no_arms.yaml" command="load"/>
+
+        <param name="planner/motion_primitive_file" value="$(find sbpl_full_body_planner)/config/pr2-32.mprim"/>
+        <param name="planner/base_motion_primitive_file" value="$(find sbpl_full_body_planner)/config/full_body_base.mprim"/>
+        <param name="planner/left_arm_description_file" value="$(find sbpl_arm_planner)/config/pr2_left_arm.cfg"/>
+        <param name="planner/right_arm_description_file" value="$(find sbpl_arm_planner)/config/pr2_right_arm.cfg"/>
+
+        <remap from="odom" to="base_odometry/odom" />
+        <!--remap from="cmd_vel" to="navigation/cmd_vel" /-->
+        <remap from="cmd_vel" to="base_controller/command"/>
+        <remap from="collision_map_occ" to="collision_map_out"/>
+        <!--<remap from="move_base_simple/goal" to="/goal"/>-->
+        <rosparam file="$(find sbpl_3dnav_planner)/config/sbpl_global_params.yaml" command="load"/>
+        <rosparam file="$(find sbpl_3dnav_planner)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find sbpl_3dnav_planner)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find sbpl_3dnav_planner)/config/local_costmap_params_close.yaml" command="load" />
+        <rosparam file="$(find sbpl_3dnav_planner)/config/global_costmap_params.yaml" command="load" />
+        <!-- <rosparam file="$(find sbpl_3dnav_planner)/config/base_local_planner_trajectory.yaml" command="load" /> -->
+        <rosparam file="$(find sbpl_3dnav_planner)/config/base_local_planner_poses.yaml" command="load" />
+
+    <!-- Load common configuration files -->
+    <rosparam file="$(find pr2_navigation_config)/move_base/move_base_params.yaml" command="load" />
+    <!--rosparam file="$(find pr2_navigation_config)/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" /-->
+    <!--rosparam file="$(find pr2_navigation_config)/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" /-->
+    <!--rosparam file="$(find pr2_navigation_config)/move_base/dwa_local_planner.yaml" command="load" ns="DWAPlannerROS" /-->
+    <!--rosparam file="$(find pr2_navigation_config)/move_base/recovery_behaviors.yaml" command="load" /-->
+
+    <!-- Load global navigation specific parameters -->
+    <!--rosparam file="$(find pr2_navigation_global)/config/local_costmap_params.yaml" command="load" /-->
+    <!--rosparam file="$(find pr2_navigation_global)/config/global_costmap_params.yaml" command="load" /-->
+
+    </node>
+
+    <!-- localization -->
+    <node pkg="amcl" type="amcl" name="amcl">
+        <remap from="scan" to="base_scan" />
+   	    <param name="base_frame_id" value="base_footprint"/>
+   	    <param name="odom_model_type" value="omni"/>
+   	    <param name="odom_alpha5" value="0.1"/>
+   	    <param name="transform_tolerance" value="0.2" />
+   	    <param name="gui_publish_rate" value="10.0"/>
+   	    <param name="laser_max_beams" value="30"/>
+   	    <param name="min_particles" value="500"/>
+   	    <param name="max_particles" value="5000"/>
+   	    <param name="kld_err" value="0.05"/>
+   	    <param name="kld_z" value="0.99"/>
+   	    <param name="odom_alpha1" value="0.2"/>
+   	    <param name="odom_alpha2" value="0.2"/>
+   	    <param name="odom_alpha3" value="0.8"/>
+   	    <param name="odom_alpha4" value="0.2"/>
+   	    <param name="laser_z_hit" value="0.5"/>
+   	    <param name="laser_z_short" value="0.05"/>
+   	    <param name="laser_z_max" value="0.05"/>
+   	    <param name="laser_z_rand" value="0.5"/>
+   	    <param name="laser_sigma_hit" value="0.2"/>
+   	    <param name="laser_lambda_short" value="0.1"/>
+   	    <param name="laser_lambda_short" value="0.1"/>
+   	    <param name="laser_model_type" value="likelihood_field"/>
+   	    <param name="laser_likelihood_max_dist" value="2.0"/>
+   	    <param name="update_min_d" value="0.2"/>
+   	    <param name="update_min_a" value="0.5"/>
+   	    <param name="odom_frame_id" value="odom_combined"/>
+   	    <param name="resample_interval" value="1"/>
+   	    <param name="transform_tolerance" value="0.1"/>
+   	    <param name="recovery_alpha_slow" value="0.0"/>
+   	    <param name="recovery_alpha_fast" value="0.0"/>
+
+   	    <param name="use_map_topic" value="true"/>
+    </node> 
+</launch>
