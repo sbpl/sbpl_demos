@@ -16,6 +16,7 @@ class AR_TYPES(Enum):
 	ROD_END = 4
 	CUBOID_FLAT = 5
 	CUBOID_EDGE = 6
+	GENERAL_OBJ = 7
 
 
 class ARTagListener:

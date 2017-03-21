@@ -8,6 +8,7 @@ import tf
 import numpy
 from geometry_msgs.msg import Pose, PoseStamped
 from sbpl_demos import perception_helpers
+from sbpl_demos import perch_helpers
 from sbpl_demos import grasping_helpers
 from sbpl_demos import pr2_helpers
 from sbpl_demos.perception_helpers import AR_TYPES
@@ -15,11 +16,13 @@ from sbpl_demos.perception_helpers import AR_TYPES
 class Demo:
 	def __init__(self):
 		self.STATIONARY = True
+# 		self.STATIONARY = False
 		self.tflistener = tf.TransformListener()
 		self.tfbroadcaster = tf.TransformBroadcaster()
 		self.GripperCommand = pr2_helpers.GripperCommand()
 		self.PointHead = pr2_helpers.PointHead()
 		self.ARTagListener = perception_helpers.ARTagListener()
+		self.PerchClient = perch_helpers.PerchClient()
 		self.PR2ARGrasping = grasping_helpers.PR2ARGrasping()
 		self.MoveitMoveArm = pr2_helpers.MoveitMoveArm()
 		self.TorsoCommand = pr2_helpers.TorsoCommand()
@@ -35,33 +38,41 @@ class Demo:
 		self.TorsoCommand.MoveTorso(0.2)
 
 	def computeObjectPoseRoutine(self, name, artype, ee_position, markers):
-		obj_markers = self.ARTagListener.getMarkersByType(markers, artype)
-		cnt = 0
-		for obj in obj_markers.markers:
-			valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(obj.pose.pose, artype)
-			if(valid_poses_candidates):
-				self.valid_poses.append(valid_poses_candidates)
-				(best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
-				if(best_candidate):
-					self.best_poses.append(best_candidate)
-					self.best_distances.append(best_distance)
-					self.best_poses_object.append(obj.pose.pose)
-			
-			# place a collision object at the marker
-			obj.pose.header.stamp = rospy.Time.now()
-			obj.pose.header.frame_id = "odom_combined"
-			size = (0,0,0)
-			if(artype == AR_TYPES.CUBOID_EDGE):
-				size = (0.2, 0.05, 0.05)
-			elif(artype == AR_TYPES.CYLINDER):
-				size = (0.02, 0.02, 0.3)
-			elif(artype == AR_TYPES.ROD_END):
-				size = (0.07, 0.07, 0.15)
-			elif(artype == AR_TYPES.CUBE):
-				size = (0.07, 0.07, 0.07)
-			self.MoveitMoveArm.AddCollisionObject("object_"+name+"_"+ str(cnt), obj.pose, size )
-			rospy.sleep(2.0)
-			cnt+=1
+		if artype is not AR_TYPES.GENERAL_OBJ:
+
+			obj_markers = self.ARTagListener.getMarkersByType(markers, artype)
+			cnt = 0
+			for obj in obj_markers.markers:
+				valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(obj.pose.pose, artype)
+				if(valid_poses_candidates):
+					self.valid_poses.append(valid_poses_candidates)
+					(best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
+					if(best_candidate):
+						self.best_poses.append(best_candidate)
+						self.best_distances.append(best_distance)
+						self.best_poses_object.append(obj.pose.pose)
+
+				# place a collision object at the marker
+				obj.pose.header.stamp = rospy.Time.now()
+				obj.pose.header.frame_id = "odom_combined"
+				size = (0,0,0)
+				if(artype == AR_TYPES.CUBOID_EDGE):
+					size = (0.2, 0.05, 0.05)
+				elif(artype == AR_TYPES.CYLINDER):
+					size = (0.02, 0.02, 0.3)
+				elif(artype == AR_TYPES.ROD_END):
+					size = (0.07, 0.07, 0.15)
+				elif(artype == AR_TYPES.CUBE):
+					size = (0.07, 0.07, 0.07)
+				self.MoveitMoveArm.AddCollisionObject("object_"+name+"_"+ str(cnt), obj.pose, size )
+				rospy.sleep(2.0)
+				cnt+=1
+
+		else:
+			obj_pose = self.PerchClient.getObjectPose(name)
+			print obj_pose
+#			valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(obj.pose.pose, artype)
+
 
 	def moveToWorkstationRoutine(self):
 		if(not self.STATIONARY):
@@ -148,6 +159,9 @@ class Demo:
 		if(n_rod_ends >0):
 			rospy.loginfo("Computing poses for ROD_END")
 			self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
+
+		# perch
+		self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
 
 	def dropOffObjectRoutine(self, release_pose):
 		rospy.loginfo("Moving to extend pose")

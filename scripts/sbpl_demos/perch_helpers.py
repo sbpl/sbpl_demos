@@ -8,52 +8,71 @@ from geometry_msgs.msg import Pose
 
 
 class PerchClient:
-	def __init__(self):
+    def __init__(self):
 
-		self.locked = False
+        self.locked = True
 
-		self.publisher = rospy.Publisher('/requested_object', String, queue_size=10)
-
-		self.requested_object = String("006_mustard_bottle")
-# 		self.requested_object = String("011_banana")
-# 		self.requested_object = String("019_pitcher_base")
-# 		self.requested_object = String("024_bowl")
-
-		rospy.Subscriber("/perch_pose", Pose, self.perch_callback)
+        self.publisher = rospy.Publisher('/requested_object', String, queue_size=10)
+        rospy.Subscriber("/perch_pose", Pose, self.perch_callback)
 
 
-	def send_request(self):
+    def getObjectPose(self, requested_object):
 
-			self.publisher.publish(self.requested_object)
-			self.locked = True
-			print "published.."
+        self.locked = True
+
+#         self.requested_object = String("006_mustard_bottle")
+#         self.requested_object = String("011_banana")
+#         self.requested_object = String("019_pitcher_base")
+#         self.requested_object = String("024_bowl")
+
+        self.requested_object = String(requested_object)
+
+        self.send_request()
+        tic = rospy.Time.now()
+        rospy.loginfo("Sent object recognition request...")
+
+        while not rospy.is_shutdown():
+            if not self.locked:
+                rospy.loginfo("Received object recognition result...")
+                return self.perch_pose
+            else:
+                toc = rospy.Time.now()
+                if tic.to_sec() - toc.to_sec() > 30:
+                    rospy.logwarn("Could not object recognition result in 30 sec... Returning a dummy pose")
+                    return Pose()
+
+                rospy.sleep(1)
 
 
-	def perch_callback(self, data):
+    def send_request(self):
 
-		if self.locked:
-
-			print "callback!"
-
-			self.perch_pose = data
-			print self.perch_pose
-
-			# TODO make use of the object localization results for grasping
-
-			self.locked = False
+            self.publisher.publish(self.requested_object)
+            self.locked = True
 
 
-if __name__ == "__main__":
+    def perch_callback(self, data):
 
-	rospy.init_node('object_localizer_client')
+        if self.locked:
 
-	perch_client = PerchClient()
+            self.perch_pose = data
+            print self.perch_pose
 
-	while not rospy.is_shutdown():
+            # TODO make use of the object localization results for grasping
 
-		rospy.sleep(1)
-		print "in the loop.."
+            self.locked = False
 
-		if not perch_client.locked:
-			perch_client.send_request()
+
+# if __name__ == "__main__":
+#
+#     rospy.init_node('object_localizer_client')
+#
+#     perch_client = PerchClient()
+#
+#     while not rospy.is_shutdown():
+#
+#         rospy.sleep(1)
+#         print "in the loop.."
+#
+#         if not perch_client.locked:
+#             perch_client.send_request()
 
