@@ -187,7 +187,7 @@ class MoveBase:
     def MoveToInternDesk(self):
         pose = geometry_msgs.msg.Pose()
         pose.position.x = -0.29
-        pose.position.y = -2.0
+        pose.position.y = -2.5
         pose.position.z = 0.0
         quat = quaternion_from_euler(0,0,-math.pi/2.0)
         pose.orientation.x = quat[0]

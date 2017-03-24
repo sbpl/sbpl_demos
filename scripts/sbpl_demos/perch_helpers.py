@@ -2,6 +2,7 @@
 import sys
 import roslib
 import rospy
+import math
 
 from std_msgs.msg import String
 from geometry_msgs.msg import Pose
@@ -16,7 +17,7 @@ class PerchClient:
         rospy.Subscriber("/perch_pose", Pose, self.perch_callback)
 
 
-    def getObjectPose(self, requested_object):
+    def getGraspPose(self, requested_object):
 
         self.locked = True
 
@@ -34,7 +35,8 @@ class PerchClient:
         while not rospy.is_shutdown():
             if not self.locked:
                 rospy.loginfo("Received object recognition result...")
-                return self.perch_pose
+                return self.get_grasp_pose(self.requested_object, self.perch_pose)
+
             else:
                 toc = rospy.Time.now()
                 if tic.to_sec() - toc.to_sec() > 30:
@@ -56,10 +58,29 @@ class PerchClient:
 
             self.perch_pose = data
             print self.perch_pose
-
-            # TODO make use of the object localization results for grasping
-
             self.locked = False
+
+
+    def get_grasp_pose(self, requested_object, perch_pose):
+
+        grasp_pose = Pose()
+#         if requested_object is "006_mustard_bottle":
+#         rotz = 20/180*math.pi
+        rotz = 0/180*math.pi
+        grasp_pose.position.x = perch_pose.position.x*math.cos(rotz) - perch_pose.position.y*math.sin(rotz)
+        grasp_pose.position.x = perch_pose.position.x*math.sin(rotz) + perch_pose.position.y*math.cos(rotz)
+        grasp_pose.position.z = perch_pose.position.z
+        grasp_pose.orientation.x = perch_pose.orientation.x
+        grasp_pose.orientation.y = perch_pose.orientation.y
+        grasp_pose.orientation.z = perch_pose.orientation.z
+        grasp_pose.orientation.w = perch_pose.orientation.w
+
+#         elif requested_object is "011_banana":
+#         elif requested_object is "019_pitcher_base":
+#         elif requested_object is "024_bowl":
+
+        return grasp_pose
+
 
 
 # if __name__ == "__main__":

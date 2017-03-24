@@ -67,7 +67,7 @@ class ARGrasping:
             self.request.roll_interval = [math.pi/2.0]
             self.request.pitch_interval = [-math.pi/2.0, math.pi/2.0]
             self.request.yaw_interval = [-math.pi/2.0]
-        if(artype == AR_TYPES.GENERAL_OBJh):
+        if(artype == AR_TYPES.GENERAL_OBJ):
             self.request.x_interval = [0]
             self.request.y_interval = [0]
             self.request.z_interval = [0]

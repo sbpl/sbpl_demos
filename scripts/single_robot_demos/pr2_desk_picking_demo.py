@@ -69,9 +69,17 @@ class Demo:
 				cnt+=1
 
 		else:
-			obj_pose = self.PerchClient.getObjectPose(name)
-			print obj_pose
-#			valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(obj.pose.pose, artype)
+			grasp_pose_perch = self.PerchClient.getGraspPose(name)
+			print grasp_pose_perch
+			valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
+			if(valid_poses_candidates):
+				self.valid_poses.append(valid_poses_candidates)
+				(best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
+				if(best_candidate):
+					self.best_poses.append(best_candidate)
+					self.best_distances.append(best_distance)
+					self.best_poses_object.append(obj.pose.pose)
+					print best_candidate
 
 
 	def moveToWorkstationRoutine(self):
@@ -161,7 +169,7 @@ class Demo:
 			self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
 
 		# perch
-		self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+# 		self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
 
 	def dropOffObjectRoutine(self, release_pose):
 		rospy.loginfo("Moving to extend pose")
@@ -175,7 +183,7 @@ class Demo:
 	def runDemo(self):
 		rospy.loginfo('Untucking arms')
 # 		self.TuckArms.UntuckRightArms()
-		self.moveToInternDeskRoutine()
+# 		self.moveToInternDeskRoutine()
 
 		while not rospy.is_shutdown():
 
@@ -237,6 +245,12 @@ class Demo:
 			rospy.loginfo("Removing collision objects and moving to final grasp pose")
 			self.MoveitMoveArm.removeAllObjects()
 			success = self.MoveitMoveArm.MoveToPose(grasp_pose, "odom_combined")
+			if not success:
+				rospy.logwarn("could not move to interpolated pose, retrying")
+				self.MoveitMoveArm.MoveRightToWide()
+				self.MoveitMoveArm.removeAllObjectsAndDesks()
+				rospy.sleep(1)
+				continue
 
 			# grip_success: True when completely closed, False when grasped something
 			grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
