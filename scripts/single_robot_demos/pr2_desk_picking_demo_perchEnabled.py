@@ -14,7 +14,7 @@ from sbpl_demos import pr2_helpers
 from sbpl_demos.perception_helpers import AR_TYPES
 
 class Demo:
-	def __init__(self):
+	def __init__(self,args_percept='perch'):
 		self.STATIONARY = True
 # 		self.STATIONARY = False
 		self.tflistener = tf.TransformListener()
@@ -28,6 +28,9 @@ class Demo:
 		self.TorsoCommand = pr2_helpers.TorsoCommand()
 		self.TuckArms = pr2_helpers.TuckArms()
 # 		self.MoveBase = pr2_helpers.MoveBase()
+		
+		self.args_percept = args_percept
+
 	
 		rospy.sleep(1.0)
 		rospy.loginfo('All Action clients connected!')
@@ -137,6 +140,7 @@ class Demo:
 		(ee_position, ee_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
 
 		#want to latch it at this time
+
 		(markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
 		rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
 			n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
@@ -152,24 +156,26 @@ class Demo:
 				self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk.pose)
 				cnt+=1
 
-		if(n_cylinders >0):
-			rospy.loginfo("Computing poses for CYLINDERS")
-			self.computeObjectPoseRoutine("cylinder", AR_TYPES.CYLINDER, ee_position, markers)
+		if self.args_percept == 'ar':
+			if(n_cylinders >0):
+				rospy.loginfo("Computing poses for CYLINDERS")
+				self.computeObjectPoseRoutine("cylinder", AR_TYPES.CYLINDER, ee_position, markers)
 
-		if(n_cubes >0):
-			rospy.loginfo("Computing poses for CUBES")
-			self.computeObjectPoseRoutine("cubes", AR_TYPES.CUBE, ee_position, markers)
+			if(n_cubes >0):
+				rospy.loginfo("Computing poses for CUBES")
+				self.computeObjectPoseRoutine("cubes", AR_TYPES.CUBE, ee_position, markers)
 
-		if(n_cuboid_edges >0):
-			rospy.loginfo("Computing poses for CUBOID_EDGE")
-			self.computeObjectPoseRoutine("cuboid_edge", AR_TYPES.CUBOID_EDGE, ee_position, markers)			
+			if(n_cuboid_edges >0):
+				rospy.loginfo("Computing poses for CUBOID_EDGE")
+				self.computeObjectPoseRoutine("cuboid_edge", AR_TYPES.CUBOID_EDGE, ee_position, markers)			
 
-		if(n_rod_ends >0):
-			rospy.loginfo("Computing poses for ROD_END")
-			self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
+			if(n_rod_ends >0):
+				rospy.loginfo("Computing poses for ROD_END")
+				self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
 
 		# perch
-# 		self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+		if self.args_percept == 'perch':
+			self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
 
 	def dropOffObjectRoutine(self, release_pose):
 		rospy.loginfo("Moving to extend pose")
@@ -301,7 +307,13 @@ class Demo:
 
 
 if __name__ == "__main__":
+
 	rospy.init_node('pr2_grasp_test')
-	demo = Demo()
+	parser = argparse.ArgumentParser(description='script for picking demo')
+    parser.add_argument('-p','--percept', type=str, default='perch',
+                        help='The perception type to use')
+    args = parser.parse_args()
+
+	demo = Demo(args.percept)
 	demo.runDemo()
 
