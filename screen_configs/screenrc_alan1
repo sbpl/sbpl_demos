@@ -13,8 +13,8 @@ screen -t kinect
 stuff "roslaunch sbpl_demos alan1_kinect_setup.launch"
 
 screen -t 2dnav
-#stuff "roslaunch sbpl_demos alan1_2dnav_setup.launch"
-stuff "roslaunch sbpl_demos pr2_navigation.launch"
+stuff "roslaunch sbpl_demos alan1_2dnav_setup.launch"
+#stuff "roslaunch sbpl_demos pr2_navigation.launch"
 
 screen -t 2dmap
 stuff "roslaunch sbpl_demos alan1_2dmap_setup.launch"

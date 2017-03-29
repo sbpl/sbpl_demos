@@ -7,6 +7,6 @@
 <!--   <include file="$(find pr2_moveit_config)/launch/$(arg pipeline)_planning_pipeline.launch.xml" /> -->
 
   <arg name="pipeline" default="sbpl" />
-  <include file="$(find sbpl_demos)/config/pr2/$(arg pipeline)_planning_pipeline.launch.xml" />
+  <include file="$(find sbpl_demos)/config/pr2/manipulation/$(arg pipeline)_planning_pipeline.launch.xml" />
 
 </launch>

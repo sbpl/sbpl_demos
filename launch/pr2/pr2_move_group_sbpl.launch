@@ -19,7 +19,7 @@
 
 
     <param name="collision_detector" value="collision_detection/CollisionPluginSBPL"/>
-    <rosparam command="load" file="$(find sbpl_demos)/config/pr2/collision_model_pr2.yaml"/>
+	<rosparam command="load" file="$(find sbpl_demos)/config/pr2/manipulation/collision_model_pr2.yaml"/>
 <!--     <rosparam param="world_collision_model"> -->
 <!--         size_x: 20.0 -->
 <!--         size_y: 20.0 -->
@@ -44,7 +44,7 @@
 <!--     </rosparam> -->
 
 
-  <include ns="move_group" file="$(find sbpl_demos)/config/pr2/planning_pipeline.launch.xml">
+  <include ns="move_group" file="$(find sbpl_demos)/config/pr2/manipulation/planning_pipeline.launch.xml">
     <arg name="pipeline" value="sbpl" />
   </include>
 

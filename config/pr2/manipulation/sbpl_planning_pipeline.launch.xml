@@ -17,18 +17,18 @@
 
 	<rosparam command="load" file="$(find pr2_moveit_config)/config/kinematics.yaml"/>
 
-    <rosparam command="load" file="$(find sbpl_demos)/config/pr2/sbpl_planning2.yaml"/>
+	<rosparam command="load" file="$(find sbpl_demos)/config/pr2/manipulation/sbpl_planning2.yaml"/>
 
     <!-- motion primitives -->
     <group ns="graph_configs/RightArmManipLatticeConfigDefault">
-		<param name="mprim_filename" value="$(find sbpl_demos)/config/pr2/pr2_arm.mprim"/>
+		<param name="mprim_filename" value="$(find sbpl_demos)/config/pr2/manipulation/pr2_arm.mprim"/>
     </group>
     <group ns="graph_configs/RightArmManipLatticeEgraphConfigDefault">
-		<param name="mprim_filename" value="$(find sbpl_demos)/config/pr2/pr2_arm.mprim"/>
+		<param name="mprim_filename" value="$(find sbpl_demos)/config/pr2/manipulation/pr2_arm.mprim"/>
     </group>
 	<!-- TODO -->
 <!--     <group ns="graph_configs/RightArmAndTorsoManipLatticeConfigDefault"> -->
-<!-- 		<param name="mprim_filename" value="$(find sbpl_demos)/config/pr2/pr2_arm_and_torso_TODO.mprim"/> -->
+<!-- 		<param name="mprim_filename" value="$(find sbpl_demos)/config/pr2/manipulation/pr2_arm_and_torso_TODO.mprim"/> -->
 <!--     </group> -->
 
     <group ns="right_arm/planner_configs/right_arm_ARA_BFS_ML">

@@ -50,7 +50,7 @@
       <arg name="info" value="true"/>
       <arg name="debug" value="$(arg debug)"/>
     </include>
-	<rosparam command="load" file="$(find sbpl_demos)/config/pr2/sbpl_planning_params.yaml"/>
+	<rosparam command="load" file="$(find sbpl_demos)/config/pr2/manipulation/sbpl_planning_params.yaml"/>
   </group>
   <group unless="$(arg use_sbpl_pipeline)">
     <include file="$(find pr2_moveit_config)/launch/move_group.launch">
