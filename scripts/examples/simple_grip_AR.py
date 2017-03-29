@@ -3,8 +3,8 @@ import math
 import sys
 import roslib
 import rospy
-import sbpl_demos.pr2_helpers as pr2
-import sbpl_demos.FindARTag
+import pr2_helpers as pr2
+import FindARTag
 
 ## for moveit commander
 import copy

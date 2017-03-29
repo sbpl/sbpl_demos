@@ -10,17 +10,17 @@ import sbpl_demos.pr2_helpers as pr2
 
 if __name__ == "__main__":
 
-	rospy.init_node('roman_grasp_test')
-	pr2_GripperCommand = pr2.GripperCommand()
-	pr2_RoconMoveArm = pr2.RoconMoveArm()
+    rospy.init_node('roman_grasp_test')
+    pr2_GripperCommand = pr2.GripperCommand()
+    pr2_RoconMoveArm = pr2.RoconMoveArm()
 
-	pr2_GripperCommand.Command('r', 1)
+    pr2_GripperCommand.Command('r', 1)
 
-	pr2_RoconMoveArm.MoveToHandoff()
-	pr2_GripperCommand.Command('r', 0)
+    pr2_RoconMoveArm.MoveToHandoff()
+    pr2_GripperCommand.Command('r', 0)
 
-	pr2_RoconMoveArm.MoveToHome()
+    pr2_RoconMoveArm.MoveToHome()
 
-	pr2_GripperCommand.Command('r', 1)
+    pr2_GripperCommand.Command('r', 1)
 
-	print('shutting down...')	
+    print('shutting down...')    
