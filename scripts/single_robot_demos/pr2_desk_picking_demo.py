@@ -71,15 +71,15 @@ class Demo:
 		else:
 			grasp_pose_perch = self.PerchClient.getGraspPose(name)
 			print grasp_pose_perch
-			valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
-			if(valid_poses_candidates):
-				self.valid_poses.append(valid_poses_candidates)
-				(best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
-				if(best_candidate):
-					self.best_poses.append(best_candidate)
-					self.best_distances.append(best_distance)
-					self.best_poses_object.append(obj.pose.pose)
-					print best_candidate
+# 			valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
+# 			if(valid_poses_candidates):
+# 				self.valid_poses.append(valid_poses_candidates)
+# 				(best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
+# 				if(best_candidate):
+# 					self.best_poses.append(best_candidate)
+# 					self.best_distances.append(best_distance)
+# 					self.best_poses_object.append(obj.pose.pose)
+# 					print best_candidate
 
 
 	def moveToWorkstationRoutine(self):
@@ -169,7 +169,7 @@ class Demo:
 			self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
 
 		# perch
-# 		self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+		#self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
 
 	def dropOffObjectRoutine(self, release_pose):
 		rospy.loginfo("Moving to extend pose")
@@ -223,10 +223,11 @@ class Demo:
 			wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
 
 			wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
-			grasp_pose.position.x += wrist_offset_x[0]
-			grasp_pose.position.y += wrist_offset_x[1]
-			grasp_pose.position.z += wrist_offset_x[2]
+			grasp_pose.position.x += wrist_offset_x[0] + 0.2
+			grasp_pose.position.y += wrist_offset_x[1] + 0.2 
+			grasp_pose.position.z += wrist_offset_x[2] + 0.2
 
+			import pdb; pdb.set_trace()
 			#just for visualization
 			self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
 				(interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),

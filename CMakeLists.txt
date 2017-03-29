@@ -70,3 +70,7 @@ target_link_libraries(pr2_rocon_marker_publisher ${catkin_LIBRARIES} )
 add_executable(pose_upsample_node src/pose_upsample_node.cpp)
 add_dependencies(pose_upsample_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pose_upsample_node ${catkin_LIBRARIES} )
+
+add_executable(pose_upsample_node_perchEnabled src/pose_upsample_node_perchEnabled.cpp)
+add_dependencies(pose_upsample_node_perchEnabled ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pose_upsample_node_perchEnabled ${catkin_LIBRARIES} )

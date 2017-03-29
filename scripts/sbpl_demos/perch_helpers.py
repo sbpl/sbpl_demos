@@ -63,23 +63,25 @@ class PerchClient:
 
     def get_grasp_pose(self, requested_object, perch_pose):
 
-        grasp_pose = Pose()
-#         if requested_object is "006_mustard_bottle":
-#         rotz = 20/180*math.pi
-        rotz = 0/180*math.pi
-        grasp_pose.position.x = perch_pose.position.x*math.cos(rotz) - perch_pose.position.y*math.sin(rotz)
-        grasp_pose.position.x = perch_pose.position.x*math.sin(rotz) + perch_pose.position.y*math.cos(rotz)
-        grasp_pose.position.z = perch_pose.position.z
-        grasp_pose.orientation.x = perch_pose.orientation.x
-        grasp_pose.orientation.y = perch_pose.orientation.y
-        grasp_pose.orientation.z = perch_pose.orientation.z
-        grasp_pose.orientation.w = perch_pose.orientation.w
-
-#         elif requested_object is "011_banana":
-#         elif requested_object is "019_pitcher_base":
-#         elif requested_object is "024_bowl":
-
-        return grasp_pose
+#         grasp_pose = Pose()
+# #         if requested_object is "006_mustard_bottle":
+# #         rotz = 20/180*math.pi
+#         rotz = 0/180*math.pi
+#         grasp_pose.position.x = perch_pose.position.x*math.cos(rotz) - perch_pose.position.y*math.sin(rotz)
+#         grasp_pose.position.x = perch_pose.position.x*math.sin(rotz) + perch_pose.position.y*math.cos(rotz)
+#         grasp_pose.position.z = perch_pose.position.z
+#         grasp_pose.orientation.x = perch_pose.orientation.x
+#         grasp_pose.orientation.y = perch_pose.orientation.y
+#         grasp_pose.orientation.z = perch_pose.orientation.z
+#         grasp_pose.orientation.w = perch_pose.orientation.w
+#
+#
+# #         elif requested_object is "011_banana":
+# #         elif requested_object is "019_pitcher_base":
+# #         elif requested_object is "024_bowl":
+#
+#         return grasp_pose
+        return perch_pose
 
 
 

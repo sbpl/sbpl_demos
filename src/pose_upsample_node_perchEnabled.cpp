@@ -138,7 +138,7 @@ PoseUpsampler::PoseUpsampler(bool enableTFVisualization=true):
     perturb_yaw_interval_(1,0),
     robot_transform_set_(false),
     enable_TF_visualization_(enableTFVisualization),
-    ikService_(nh_.serviceClient<moveit_msgs::GetPositionIK>("compute_ik")),
+    //ikService_(nh_.serviceClient<moveit_msgs::GetPositionIK>("compute_ik")),
     joint_names_({"shoulder_pan_joint","shoulder_lift_joint","elbow_joint",
     "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"}),
     reference_frame_("map"),
@@ -352,7 +352,7 @@ int main(int argc, char **argv)
     p.orientation.w = 1;
     std::vector<geometry_msgs::Pose> vPoses;
     PU.generatePoses(p, vPoses);
-    PU.generatePoseswIKChecking(p, vPoses);
+    //PU.generatePoseswIKChecking(p, vPoses);
     PU.run();
     return 0;
 }

@@ -6,6 +6,8 @@ import rospy
 import actionlib
 import tf
 import numpy
+import argparse
+import pdb
 from geometry_msgs.msg import Pose, PoseStamped
 from sbpl_demos import perception_helpers
 from sbpl_demos import perch_helpers
@@ -74,15 +76,16 @@ class Demo:
 		else:
 			grasp_pose_perch = self.PerchClient.getGraspPose(name)
 			print grasp_pose_perch
-			valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
-			if(valid_poses_candidates):
-				self.valid_poses.append(valid_poses_candidates)
-				(best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
-				if(best_candidate):
-					self.best_poses.append(best_candidate)
-					self.best_distances.append(best_distance)
-					self.best_poses_object.append(obj.pose.pose)
-					print best_candidate
+			self.best_poses.append(grasp_pose_perch)
+# 			valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
+# 			if(valid_poses_candidates):
+# 				self.valid_poses.append(valid_poses_candidates)
+# 				(best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
+# 				if(best_candidate):
+# 					self.best_poses.append(best_candidate)
+# 					self.best_distances.append(best_distance)
+# 					self.best_poses_object.append(obj.pose.pose)
+# 					print best_candidate
 
 
 	def moveToWorkstationRoutine(self):
@@ -176,6 +179,8 @@ class Demo:
 		# perch
 		if self.args_percept == 'perch':
 			self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+			#self.computeObjectPoseRoutine("011_banana", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+			#self.computeObjectPoseRoutine("024_bowl", AR_TYPES.GENERAL_OBJ, ee_position, markers)
 
 	def dropOffObjectRoutine(self, release_pose):
 		rospy.loginfo("Moving to extend pose")
@@ -193,17 +198,24 @@ class Demo:
 
 		while not rospy.is_shutdown():
 
+			
 			self.pickingRoutine()
 
 			if not len(self.best_poses) > 0:
 				rospy.logwarn("No poses found, retrying")
-				self.MoveitMoveArm.removeAllObjectsAndDesks()
-				rospy.sleep(1)
-				continue
+				#self.MoveitMoveArm.removeAllObjectsAndDesks()
+				#rospy.sleep(1)
+				#continue
 
 			# select the best desired grasp among the candidates
-			best_index = min(xrange(len(self.best_distances)), key=self.best_distances.__getitem__)
-			grasp_pose = self.best_poses[best_index]
+			#best_index = min(xrange(len(self.best_distances)), key=self.best_distances.__getitem__)
+			
+			pdb.set_trace()
+
+			best_index = 0
+
+			dx = 0.2
+			grasp_pose = self.best_poses_object[best_index] #empty right now, needs position xyz and orientation xyzw
 			object_pose = self.best_poses_object[best_index]
 			interp_pose = self.PR2ARGrasping.getInterpolatedPose(grasp_pose, object_pose)
 
@@ -220,19 +232,22 @@ class Demo:
 			interp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
 
 			# correction for offset of grasp_pose
+			grasp_pose = self.best_poses[0]
 			grasp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
 			grasp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
 			grasp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
+			
+			pdb.set_trace()
 
 			factor_wrist_x = 0.02
 			(wrist_trans, wrist_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
 			wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
 
 			wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
-			grasp_pose.position.x += wrist_offset_x[0]
-			grasp_pose.position.y += wrist_offset_x[1]
-			grasp_pose.position.z += wrist_offset_x[2]
-
+			grasp_pose.position.x += wrist_offset_x[0] + .2
+			grasp_pose.position.y += wrist_offset_x[1] + .2
+			grasp_pose.position.z += wrist_offset_x[2] + .2
+ 
 			#just for visualization
 			self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
 				(interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
@@ -310,9 +325,9 @@ if __name__ == "__main__":
 
 	rospy.init_node('pr2_grasp_test')
 	parser = argparse.ArgumentParser(description='script for picking demo')
-    parser.add_argument('-p','--percept', type=str, default='perch',
-                        help='The perception type to use')
-    args = parser.parse_args()
+	parser.add_argument('-p','--percept', type=str, default='perch',
+						help='The perception type to use')
+	args = parser.parse_args()
 
 	demo = Demo(args.percept)
 	demo.runDemo()
