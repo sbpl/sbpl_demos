@@ -1,0 +1,112 @@
+<launch>
+  <include file="$(find pr2_machine)/$(env ROBOT).machine" />
+
+  <!-- Bring up the tilt_laser aware version of move_base -->
+<!--   <node pkg="pr2_move_base" name="pr2_move_base_node" type="pr2_move_base.py" machine="c2" /> -->
+
+  <!-- Trajectory generator -->
+  <node pkg="joint_trajectory_generator" type="joint_trajectory_generator" output="screen"
+        name="joint_trajectory_generator" ns="r_arm_controller" >
+    <param name="max_acc" value="2.0" />
+    <param name="max_vel" value="2.5" />
+  </node>
+  <node pkg="joint_trajectory_generator" type="joint_trajectory_generator" output="screen"
+        name="joint_trajectory_generator" ns="l_arm_controller" >
+    <param name="max_acc" value="2.0" />
+    <param name="max_vel" value="2.5" />
+  </node>
+
+  <include file="$(find pr2_arm_navigation_kinematics)/launch/pr2_ik_rarm_node.launch"/>
+  <include file="$(find pr2_arm_navigation_kinematics)/launch/pr2_ik_larm_node.launch"/>
+
+  <!-- tuckarm action -->
+  <node pkg="pr2_tuck_arms_action" type="tuck_arms.py" name="tuck_arms_action" output="screen">
+    <param name="r_joint_trajectory_action" value="r_arm_controller/joint_trajectory_generator" />
+    <param name="l_joint_trajectory_action" value="l_arm_controller/joint_trajectory_generator" />
+    <param name="move_duration" value="0.0" />
+  </node>
+
+  <!-- Throttle the voxel grid that is being published for rviz -->
+  <node ns="move_base_node/local_costmap" name="voxel_grid_throttle" pkg="topic_tools" type="throttle" machine="c2" args="messages voxel_grid 3.0 voxel_grid_throttled" />
+
+<!--   <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" args="$(find sbpl_3dnav_planner)/maps/lab_001.bt" respawn="false" > -->
+  <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" respawn="false" >
+    <param name="resolution" value="0.025" />
+    <param name="sensor_model/range" value="4.0" />
+
+    <param name="sensor_model/hit" value= "0.8" />
+    <param name="sensor_model/miss" value= "0.31" />
+    <param name="sensor_model/min" value= "0.12" />
+    <param name="sensor_model/max" value= "0.95" />
+
+    <param name="min_z_range" value="0.05" />
+    <param name="max_z_range" value="1.8" />
+    <param name="min_x_size" value="25.0" />
+    <param name="min_y_size" value="25.0" />
+
+    <param name="pointcloud_min_z" value="0.10"/>
+    <param name="pointcloud_max_z" value="1.80"/>
+    <param name="filter_ground" value="true"/>
+    <param name="occupancy_min_z" value="0.05"/>
+    <param name="occupancy_max_z" value="2.0"/>
+
+    <!--remap from="cloud_in" to="/narrow_stereo_textured/points_filtered_attached2" /-->
+    <remap from="cloud_in" to="/kinect_head/depth_registered/points" />
+  </node>
+
+  <node pkg="move_base" type="move_base" name="move_base_node" machine="c2" output="screen">
+    <remap from="odom" to="base_odometry/odom" />
+    <remap from="cmd_vel" to="navigation/cmd_vel" />
+
+	<!-- Set the local/global planner for the PR2 -->
+<!--     <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" /> -->
+<!--     <param name="base_local_planner" value="SBPLLatticePlanner3D" /> -->
+    <param name="base_local_planner" value="pose_follower_3d/PoseFollower3D" />
+    <param name="base_global_planner" value="Sbpl3DNavPlanner"/>
+
+    <!-- Load common configuration files -->
+<!--     <rosparam file="$(find pr2_navigation_config)/move_base/move_base_params.yaml" command="load" /> -->
+<!--     <rosparam file="$(find pr2_navigation_config)/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" /> -->
+<!--     <rosparam file="$(find pr2_navigation_config)/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" /> -->
+<!--     <rosparam file="$(find pr2_navigation_config)/move_base/dwa_local_planner.yaml" command="load" ns="DWAPlannerROS" /> -->
+<!--     <rosparam file="$(find pr2_navigation_config)/move_base/recovery_behaviors.yaml" command="load" /> -->
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/move_base_params.yaml" command="load" />
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/costmap_common_params.yaml" command="load" ns="global_costmap" />
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/costmap_common_params.yaml" command="load" ns="local_costmap" />
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/dwa_local_planner.yaml" command="load" ns="DWAPlannerROS" />
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/recovery_behaviors.yaml" command="load" />
+
+    <!-- Load global navigation specific parameters -->
+<!--     <rosparam file="$(find pr2_navigation_global)/config/local_costmap_params.yaml" command="load" /> -->
+<!--     <rosparam file="$(find pr2_navigation_global)/config/global_costmap_params.yaml" command="load" /> -->
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/local_costmap_params.yaml" command="load" />
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/global_costmap_params.yaml" command="load" />
+
+
+    <!-- Load sbpl planner specific parameters -->
+
+<!-- 	<rosparam file="$(find sbpl_3dnav_planner)/config/sbpl_global_params.yaml" command="load"/> -->
+<!-- 	<rosparam file="$(find sbpl_3dnav_planner)/config/levine_4th_floor_config.yaml" command="load"/> -->
+<!-- 	<rosparam file="$(find sbpl_full_body_planner)/config/pr2_both_arms.yaml" command="load"/> -->
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/sbpl_global_params.yaml" command="load"/>
+
+<!-- 	<rosparam file="$(find sbpl_3dnav_planner)/config/base_local_planner_poses.yaml" command="load" /> -->
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/pf3d_local_planner.yaml" command="load" />
+
+<!-- 	<rosparam file="$(find sbpl_full_body_planner)/config/pr2_body.yaml" command="load"/> -->
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/pr2_body.yaml" command="load"/>
+
+<!-- 	<param name="planner/motion_primitive_file" value="$(find sbpl_full_body_planner)/config/pr2&#45;32.mprim"/> -->
+<!-- 	<param name="planner/base_motion_primitive_file" value="$(find sbpl_full_body_planner)/config/full_body_base.mprim"/> -->
+<!-- 	<param name="planner/left_arm_description_file" value="$(find sbpl_arm_planner)/config/pr2_left_arm.cfg"/> -->
+<!-- 	<param name="planner/right_arm_description_file" value="$(find sbpl_arm_planner)/config/pr2_right_arm.cfg"/> -->
+	<param name="planner/motion_primitive_file" value="$(find sbpl_demos)/config/pr2/navigation/pr2-32.mprim"/>
+	<param name="planner/base_motion_primitive_file" value="$(find sbpl_demos)/config/pr2/navigation/full_body_base.mprim"/>
+	<param name="planner/left_arm_description_file" value="$(find sbpl_demos)/config/pr2/navigation/pr2_left_arm.cfg"/>
+	<param name="planner/right_arm_description_file" value="$(find sbpl_demos)/config/pr2/navigation/pr2_right_arm.cfg"/>
+
+	<remap from="collision_map_occ" to="collision_map_out"/>
+
+  </node>
+
+</launch>

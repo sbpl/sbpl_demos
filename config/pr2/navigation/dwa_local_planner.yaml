@@ -17,8 +17,10 @@ min_rot_vel: 0.3
 sim_time: 1.7
 sim_granularity: 0.025
 
-goal_distance_bias: 32.0
-path_distance_bias: 24.0
+# goal_distance_bias: 32.0
+# path_distance_bias: 24.0
+goal_distance_bias: 0.8
+path_distance_bias: 0.6
 occdist_scale: 0.01
 
 stop_time_buffer: 0.2
@@ -40,3 +42,5 @@ yaw_goal_tolerance: 0.17
 
 rot_stopped_vel: 0.01
 trans_stopped_vel: 0.01
+
+holonomic_robot: true
