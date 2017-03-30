@@ -3,18 +3,22 @@ source screenrc.common
 screen -t bash
 #stuff "roscore^M"
 
-screen -t teleop
-stuff "roslaunch pr2_teleop teleop_keyboard.launch"
-
 screen -t dash
 stuff "rosrun pr2_dashboard pr2_dashboard"
 
-screen -t kinect
-stuff "roslaunch sbpl_demos alan1_kinect_setup.launch"
+screen -t teleop
+stuff "roslaunch pr2_teleop teleop_keyboard.launch"
 
-screen -t 2dnav
-stuff "roslaunch sbpl_demos alan1_2dnav_setup.launch"
-#stuff "roslaunch sbpl_demos pr2_navigation.launch"
+screen -t tuckarm
+stuff "rosrun pr2_tuckarm tuck_arms.py b"
 
 screen -t 2dmap
 stuff "roslaunch sbpl_demos alan1_2dmap_setup.launch"
+
+screen -t 2dnav
+stuff "ssh demos@alan2;  # roslaunch sbpl_demos alan1_2dnav_setup.launch"
+#stuff "roslaunch sbpl_demos pr2_navigation.launch"
+ 
+screen -t kinect
+stuff "roslaunch sbpl_demos alan1_kinect_setup.launch"
+
