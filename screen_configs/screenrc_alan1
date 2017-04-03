@@ -15,10 +15,12 @@ stuff "rosrun pr2_tuckarm tuck_arms.py b"
 screen -t 2dmap
 stuff "roslaunch sbpl_demos alan1_2dmap_setup.launch"
 
-screen -t 2dnav
-stuff "ssh demos@alan2;  # roslaunch sbpl_demos alan1_2dnav_setup.launch"
-#stuff "roslaunch sbpl_demos pr2_navigation.launch"
+# screen -t 2dnav
+# stuff "roslaunch sbpl_demos alan1_2dnav_setup.launch"
+screen -t 3dnav@alan2
+stuff "ssh demos@alan2;  # roslaunch sbpl_demos alan2_3dnav_setup.launch"
  
 screen -t kinect
-stuff "roslaunch sbpl_demos alan1_kinect_setup.launch"
+stuff "roslaunch sbpl_demos alan1_kinect_setup.launch;  "
+stuff "# make sure to kill kinect before (re-)launching alan1_3dnav_setup.launch"
 

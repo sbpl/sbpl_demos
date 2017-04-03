@@ -50,14 +50,16 @@ visualizations:
 
 collision_space:
   reference_frame: map
-  resolution: 0.02
-  collision_map_topic: collision_map_occ    #ignored
+#   resolution: 0.02
+  resolution: 0.05  # need to be the same with resolution for octomap_server_node?
+  collision_map_topic: collision_map_occ    # hard-coded in sbpl_3dnav_planner.cpp
 
   occupancy_grid:
-    origin_x: -50.0
-    origin_y: -50.0
+    # NOTE origin is the minimum-valued corner of the grid world
+    origin_x: -5.0
+    origin_y: -5.0
     origin_z: 0.0
-    size_x: 6.0
+    size_x: 10.0
     size_y: 10.0
     size_z: 2.0
 
