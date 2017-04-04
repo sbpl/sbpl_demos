@@ -1,7 +1,7 @@
 #Independent settings for the local costmap
 local_costmap:
   publish_voxel_map: true
-  global_frame: odom_combined
+  global_frame: odom_combined    # set this value to 'map' if pose_follower_3d is not a fixed version (which removed hard-coded frame_id)
   robot_base_frame: base_footprint
   update_frequency: 1.0
   publish_frequency: 2.0

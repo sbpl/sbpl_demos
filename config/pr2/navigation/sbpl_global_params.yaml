@@ -46,12 +46,11 @@ visualizations:
   end_effector_path: false
   collision_model: false
   collision_model_trajectory: false
-  trajectory_throttle: 100
+  trajectory_throttle: 20
 
 collision_space:
   reference_frame: map
-#   resolution: 0.02
-  resolution: 0.05  # need to be the same with resolution for octomap_server_node?
+  resolution: 0.02    # need to be the same with xyz_resolution(meters) in pr2-32.mprim
   collision_map_topic: collision_map_occ    # hard-coded in sbpl_3dnav_planner.cpp
 
   occupancy_grid:
