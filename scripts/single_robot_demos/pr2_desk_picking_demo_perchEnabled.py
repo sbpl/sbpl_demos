@@ -76,7 +76,14 @@ class Demo:
         else:
             grasp_pose_perch = self.PerchClient.getGraspPose(name)
             print grasp_pose_perch
-            self.best_poses.append(grasp_pose_perch)
+            #Should hold object pose
+            self.best_poses_object.append(grasp_pose_perch)
+
+            #Give an offset
+            g1 = copy.deepcopy(grasp_pose_perch)
+            g1.position.y = g1.position.y + 0.01
+            #Should hold grasp pose
+            self.best_poses.append(g1)
 #             valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
 #             if(valid_poses_candidates):
 #                 self.valid_poses.append(valid_poses_candidates)
@@ -215,7 +222,7 @@ class Demo:
             best_index = 0
 
             dx = 0.2
-            grasp_pose = self.best_poses_object[best_index] #empty right now, needs position xyz and orientation xyzw
+            grasp_pose = self.best_poses[best_index] #empty right now, needs position xyz and orientation xyzw
             object_pose = self.best_poses_object[best_index]
             interp_pose = self.PR2ARGrasping.getInterpolatedPose(grasp_pose, object_pose)
 
