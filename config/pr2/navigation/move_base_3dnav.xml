@@ -26,38 +26,8 @@
     <param name="move_duration" value="0.0" />
   </node>
 
-  <!-- Throttle the voxel grid that is being published for rviz -->
-<!--   <node ns="move_base_node/local_costmap" name="voxel_grid_throttle" pkg="topic_tools" type="throttle" machine="c2" args="messages voxel_grid 3.0 voxel_grid_throttled" /> -->
 
-<!--   <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" args="$(find sbpl_3dnav_planner)/maps/lab_001.bt" respawn="false" > -->
-  <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" respawn="false" >
-<!--     <param name="resolution" value="0.025" /> -->
-    <param name="resolution" value="0.04" />
-    <param name="sensor_model/range" value="4.0" />
-
-    <param name="sensor_model/hit" value= "0.8" />
-<!--     <param name="sensor_model/miss" value= "0.31" /> -->
-    <param name="sensor_model/miss" value= "0.41" />
-    <param name="sensor_model/min" value= "0.12" />
-    <param name="sensor_model/max" value= "0.95" />
-
-    <param name="min_z_range" value="0.05" />
-    <param name="max_z_range" value="1.8" />
-    <param name="min_x_size" value="25.0" />
-    <param name="min_y_size" value="25.0" />
-
-    <param name="pointcloud_min_z" value="0.10"/>
-    <param name="pointcloud_max_z" value="1.80"/>
-    <param name="filter_ground" value="true"/>
-    <param name="occupancy_min_z" value="0.05"/>
-    <param name="occupancy_max_z" value="2.0"/>
-
-    <param name="latch" value="false"/>
-
-    <!--remap from="cloud_in" to="/narrow_stereo_textured/points_filtered_attached2" /-->
-    <remap from="cloud_in" to="/kinect_head/depth_registered/points" />
-  </node>
-
+  <!-- launch move_base -->
   <node pkg="move_base" type="move_base" name="move_base_node" machine="c2" output="screen">
     <remap from="odom" to="base_odometry/odom" />
     <remap from="cmd_vel" to="navigation/cmd_vel" />
@@ -95,7 +65,7 @@
 	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/sbpl_global_params.yaml" command="load"/>
 
 <!-- 	<rosparam file="$(find sbpl_3dnav_planner)/config/base_local_planner_poses.yaml" command="load" /> -->
-	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/pf3d_local_planner.yaml" command="load" />
+	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/sbpl_local_params.yaml" command="load" />
 
 <!-- 	<rosparam file="$(find sbpl_3dnav_planner)/config/pr2_body_10cm_no_arms.yaml" command="load"/> -->
 	<rosparam file="$(find sbpl_demos)/config/pr2/navigation/pr2_body_10cm_no_arms.yaml" command="load"/>

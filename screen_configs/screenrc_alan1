@@ -12,8 +12,10 @@ stuff "roslaunch pr2_teleop teleop_keyboard.launch"
 screen -t tuckarm
 stuff "rosrun pr2_tuckarm tuck_arms.py b"
 
-screen -t 2dmap
-stuff "roslaunch sbpl_demos alan1_2dmap_setup.launch"
+# screen -t 2dmap
+# stuff "roslaunch sbpl_demos alan1_2dmap_setup.launch"
+screen -t 3dmap
+stuff "roslaunch sbpl_demos alan1_3dmap_setup.launch"
 
 # screen -t 2dnav
 # stuff "roslaunch sbpl_demos alan1_2dnav_setup.launch"
