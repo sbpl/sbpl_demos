@@ -3,7 +3,7 @@ planner:
   epsilon2: 2.0
   verbose: false
   search_mode: true
-  allocated_time: 20
+  allocated_time: 30
   object_radius: 0.10
   use_dijkstra_heuristic: true
   use_research_heuristic: false
