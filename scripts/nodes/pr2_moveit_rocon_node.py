@@ -8,19 +8,19 @@ from sbpl_demos.msg import RoconMoveArmAction, RoconMoveArmGoal, RoconMoveArmRes
 import actionlib
 
 class PR2MoveitRocon(object):
-	def __init__(self):
-		self.MoveitMoveArm = pr2.MoveitMoveArm()
-		self.server = actionlib.SimpleActionServer('rocon_move_arm', RoconMoveArmAction, self.execute, False)
-		self.server.start()
+    def __init__(self):
+        self.MoveitMoveArm = pr2.MoveitMoveArm()
+        self.server = actionlib.SimpleActionServer('rocon_move_arm', RoconMoveArmAction, self.execute, False)
+        self.server.start()
 
-	def execute(self, goal):
-		success = self.MoveitMoveArm.MoveToPose(goal.target_pose)
-		result = RoconMoveArmResult()
-		result.success = success
-		self.server.set_succeeded(result)
+    def execute(self, goal):
+        success = self.MoveitMoveArm.MoveToPose(goal.target_pose)
+        result = RoconMoveArmResult()
+        result.success = success
+        self.server.set_succeeded(result)
 
 if __name__ == "__main__":
-	rospy.init_node("pr2_moveit_rocon_node")
-	srv = PR2MoveitRocon()
-	rospy.spin()
-	
+    rospy.init_node("pr2_moveit_rocon_node")
+    srv = PR2MoveitRocon()
+    rospy.spin()
+    

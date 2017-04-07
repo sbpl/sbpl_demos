@@ -6,6 +6,8 @@ import rospy
 import actionlib
 import tf
 import numpy
+import argparse
+import pdb
 from geometry_msgs.msg import Pose, PoseStamped
 from sbpl_demos import perception_helpers
 from sbpl_demos import perch_helpers
@@ -14,7 +16,7 @@ from sbpl_demos import pr2_helpers
 from sbpl_demos.perception_helpers import AR_TYPES
 
 class Demo:
-    def __init__(self):
+    def __init__(self,args_percept='perch'):
         self.STATIONARY = True
 #         self.STATIONARY = False
         self.tflistener = tf.TransformListener()
@@ -28,6 +30,9 @@ class Demo:
         self.TorsoCommand = pr2_helpers.TorsoCommand()
         self.TuckArms = pr2_helpers.TuckArms()
 #         self.MoveBase = pr2_helpers.MoveBase()
+        
+        self.args_percept = args_percept
+
     
         rospy.sleep(1.0)
         rospy.loginfo('All Action clients connected!')
@@ -71,6 +76,14 @@ class Demo:
         else:
             grasp_pose_perch = self.PerchClient.getGraspPose(name)
             print grasp_pose_perch
+            #Should hold object pose
+            self.best_poses_object.append(grasp_pose_perch)
+
+            #Give an offset
+            g1 = copy.deepcopy(grasp_pose_perch)
+            g1.position.y = g1.position.y + 0.01
+            #Should hold grasp pose
+            self.best_poses.append(g1)
 #             valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
 #             if(valid_poses_candidates):
 #                 self.valid_poses.append(valid_poses_candidates)
@@ -137,6 +150,7 @@ class Demo:
         (ee_position, ee_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
 
         #want to latch it at this time
+
         (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
         rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
             n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
@@ -152,24 +166,28 @@ class Demo:
                 self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk.pose)
                 cnt+=1
 
-        if(n_cylinders >0):
-            rospy.loginfo("Computing poses for CYLINDERS")
-            self.computeObjectPoseRoutine("cylinder", AR_TYPES.CYLINDER, ee_position, markers)
+        if self.args_percept == 'ar':
+            if(n_cylinders >0):
+                rospy.loginfo("Computing poses for CYLINDERS")
+                self.computeObjectPoseRoutine("cylinder", AR_TYPES.CYLINDER, ee_position, markers)
 
-        if(n_cubes >0):
-            rospy.loginfo("Computing poses for CUBES")
-            self.computeObjectPoseRoutine("cubes", AR_TYPES.CUBE, ee_position, markers)
+            if(n_cubes >0):
+                rospy.loginfo("Computing poses for CUBES")
+                self.computeObjectPoseRoutine("cubes", AR_TYPES.CUBE, ee_position, markers)
 
-        if(n_cuboid_edges >0):
-            rospy.loginfo("Computing poses for CUBOID_EDGE")
-            self.computeObjectPoseRoutine("cuboid_edge", AR_TYPES.CUBOID_EDGE, ee_position, markers)            
+            if(n_cuboid_edges >0):
+                rospy.loginfo("Computing poses for CUBOID_EDGE")
+                self.computeObjectPoseRoutine("cuboid_edge", AR_TYPES.CUBOID_EDGE, ee_position, markers)            
 
-        if(n_rod_ends >0):
-            rospy.loginfo("Computing poses for ROD_END")
-            self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
+            if(n_rod_ends >0):
+                rospy.loginfo("Computing poses for ROD_END")
+                self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
 
         # perch
-        #self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+        if self.args_percept == 'perch':
+            self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+            #self.computeObjectPoseRoutine("011_banana", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+            #self.computeObjectPoseRoutine("024_bowl", AR_TYPES.GENERAL_OBJ, ee_position, markers)
 
     def dropOffObjectRoutine(self, release_pose):
         rospy.loginfo("Moving to extend pose")
@@ -187,17 +205,24 @@ class Demo:
 
         while not rospy.is_shutdown():
 
+            
             self.pickingRoutine()
 
             if not len(self.best_poses) > 0:
                 rospy.logwarn("No poses found, retrying")
-                self.MoveitMoveArm.removeAllObjectsAndDesks()
-                rospy.sleep(1)
-                continue
+                #self.MoveitMoveArm.removeAllObjectsAndDesks()
+                #rospy.sleep(1)
+                #continue
 
             # select the best desired grasp among the candidates
-            best_index = min(xrange(len(self.best_distances)), key=self.best_distances.__getitem__)
-            grasp_pose = self.best_poses[best_index]
+            #best_index = min(xrange(len(self.best_distances)), key=self.best_distances.__getitem__)
+            
+            pdb.set_trace()
+
+            best_index = 0
+
+            dx = 0.2
+            grasp_pose = self.best_poses[best_index] #empty right now, needs position xyz and orientation xyzw
             object_pose = self.best_poses_object[best_index]
             interp_pose = self.PR2ARGrasping.getInterpolatedPose(grasp_pose, object_pose)
 
@@ -214,20 +239,22 @@ class Demo:
             interp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
 
             # correction for offset of grasp_pose
+            grasp_pose = self.best_poses[0]
             grasp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
             grasp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
             grasp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
+            
+            pdb.set_trace()
 
             factor_wrist_x = 0.02
             (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
             wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
 
             wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
-            grasp_pose.position.x += wrist_offset_x[0] + 0.2
-            grasp_pose.position.y += wrist_offset_x[1] + 0.2 
-            grasp_pose.position.z += wrist_offset_x[2] + 0.2
-
-            import pdb; pdb.set_trace()
+            grasp_pose.position.x += wrist_offset_x[0] + .2
+            grasp_pose.position.y += wrist_offset_x[1] + .2
+            grasp_pose.position.z += wrist_offset_x[2] + .2
+ 
             #just for visualization
             self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
                 (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
@@ -302,7 +329,13 @@ class Demo:
 
 
 if __name__ == "__main__":
+
     rospy.init_node('pr2_grasp_test')
-    demo = Demo()
+    parser = argparse.ArgumentParser(description='script for picking demo')
+    parser.add_argument('-p','--percept', type=str, default='perch',
+                        help='The perception type to use')
+    args = parser.parse_args()
+
+    demo = Demo(args.percept)
     demo.runDemo()
 

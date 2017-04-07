@@ -15,47 +15,47 @@ from sbpl_demos.msg import RoconRobotiqAction, RoconRobotiqGoal, RoconRobotiqRes
 
 
 if __name__ == "__main__":
-	rospy.init_node('roman_grasp_test_v3')
-	PickClient=actionlib.SimpleActionClient('/roman_pick_action', RoconPickAction)
-	ArmClient=actionlib.SimpleActionClient('/roman_move_arm', RoconMoveArmAction)
-	GraspClient=actionlib.SimpleActionClient('/roman_grasp_action', RoconRobotiqAction)
-	rospy.loginfo("Waiting for servers...")
-	PickClient.wait_for_server()
-	ArmClient.wait_for_server()
-	GraspClient.wait_for_server()
-	rospy.loginfo("Connected.")
+    rospy.init_node('roman_grasp_test_v3')
+    PickClient=actionlib.SimpleActionClient('/roman_pick_action', RoconPickAction)
+    ArmClient=actionlib.SimpleActionClient('/roman_move_arm', RoconMoveArmAction)
+    GraspClient=actionlib.SimpleActionClient('/roman_grasp_action', RoconRobotiqAction)
+    rospy.loginfo("Waiting for servers...")
+    PickClient.wait_for_server()
+    ArmClient.wait_for_server()
+    GraspClient.wait_for_server()
+    rospy.loginfo("Connected.")
 
-	Home = RoconMoveArmGoal()
-	Home.goal_type = RoconMoveArmGoal.HOME
+    Home = RoconMoveArmGoal()
+    Home.goal_type = RoconMoveArmGoal.HOME
 
-	Handoff = RoconMoveArmGoal()
-	Handoff.goal_type = RoconMoveArmGoal.HANDOFF
+    Handoff = RoconMoveArmGoal()
+    Handoff.goal_type = RoconMoveArmGoal.HANDOFF
 
-	Open = RoconRobotiqGoal()
-	Open.grasp_type = RoconRobotiqGoal.OPEN 
+    Open = RoconRobotiqGoal()
+    Open.grasp_type = RoconRobotiqGoal.OPEN 
 
-	Close = RoconRobotiqGoal()
-	Close.grasp_type = RoconRobotiqGoal.CLOSE 
+    Close = RoconRobotiqGoal()
+    Close.grasp_type = RoconRobotiqGoal.CLOSE 
 
-	Pinch = RoconRobotiqGoal()
-	Pinch.grasp_type = RoconRobotiqGoal.PINCH
+    Pinch = RoconRobotiqGoal()
+    Pinch.grasp_type = RoconRobotiqGoal.PINCH
 
 
-	while not rospy.is_shutdown():
-		# Start the demo
-		print "go home"
-		ArmClient.send_goal(Home)
-		ArmClient.wait_for_result()
+    while not rospy.is_shutdown():
+        # Start the demo
+        print "go home"
+        ArmClient.send_goal(Home)
+        ArmClient.wait_for_result()
 
-		GraspClient.send_goal(Open)
-		GraspClient.wait_for_result()
+        GraspClient.send_goal(Open)
+        GraspClient.wait_for_result()
 
-		print "pick"
-		PickClient.send_goal(RoconPickGoal())
-		result = PickClient.wait_for_result()
-		if result:
-			ArmClient.send_goal(Handoff)
-			ArmClient.wait_for_result()
+        print "pick"
+        PickClient.send_goal(RoconPickGoal())
+        result = PickClient.wait_for_result()
+        if result:
+            ArmClient.send_goal(Handoff)
+            ArmClient.wait_for_result()
 
-			GraspClient.send_goal(Open)
-			GraspClient.wait_for_result()
+            GraspClient.send_goal(Open)
+            GraspClient.wait_for_result()
