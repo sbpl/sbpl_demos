@@ -21,6 +21,8 @@ class Demo:
         test_poses = [
                 Pose(position=Point(x=0.5, y=-0.3, z=0.8), orientation=Quaternion(x=0, y=0, z=0, w=1)),
                 Pose(position=Point(x=0.6, y=-0.2, z=0.8), orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                Pose(position=Point(x=0.7, y=-0.1, z=0.8), orientation=Quaternion(x=0, y=0, z=0, w=1)),
+                Pose(position=Point(x=0.5, y=-0.3, z=0.8), orientation=Quaternion(x=0, y=0, z=0, w=1)),
                 ]
 
 
