@@ -1,10 +1,10 @@
 world_collision_model:
   frame: odom_combined
-  size_x: 2.0
-  size_y: 3.0
+  size_x: 10.0
+  size_y: 10.0
   size_z: 2.0
-  origin_x: -1.0
-  origin_y: -2.0
+  origin_x: -5.0
+  origin_y: -5.0
   origin_z: 0.0
   res_m: 0.02
   max_distance_m: 0.6
@@ -15,12 +15,15 @@ self_collision_model:
   size_y: 3.0
   size_z: 2.0
   origin_x: -1.5
-  origin_y: -2.0
+  origin_y: -1.5
   origin_z: 0.0
   res_m: 0.02
   max_distance_m: 0.2
 
 robot_collision_model:
+  world_joint:
+    name: world_joint
+    type: planar # fixed, floating
   voxels_models:
     - { link_name: base_link, res: 0.01 }
     - { link_name: bl_caster_rotation_link, res: 0.01 }

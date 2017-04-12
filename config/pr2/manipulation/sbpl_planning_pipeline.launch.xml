@@ -1,13 +1,14 @@
 <launch>
     <arg name="planning_plugin" value="sbpl_interface/SBPLPlanner"/>
 
-    <arg name="planning_adapters" value="
-            default_planner_request_adapters/FixWorkspaceBounds
-            default_planner_request_adapters/FixStartStateBounds
-            default_planner_request_adapters/FixStartStateCollision
-            default_planner_request_adapters/FixStartStatePathConstraints"/>
-
+<!--     <arg name="planning_adapters" value=" -->
+<!--             default_planner_request_adapters/FixWorkspaceBounds -->
+<!--             default_planner_request_adapters/FixStartStateBounds -->
+<!--             default_planner_request_adapters/FixStartStateCollision -->
+<!--             default_planner_request_adapters/FixStartStatePathConstraints"/> -->
             <!-- default_planner_request_adapters/AddTimeParameterization -->
+
+    <arg name="planning_adapters" value=""/>
 
     <arg name="start_state_max_bounds_error" value="0.1"/>
 
@@ -17,7 +18,12 @@
 
 	<rosparam command="load" file="$(find pr2_moveit_config)/config/kinematics.yaml"/>
 
-	<rosparam command="load" file="$(find sbpl_demos)/config/pr2/manipulation/sbpl_planning2.yaml"/>
+
+<!-- <!&#45;&#45;    <rosparam command="load" file="$(find rcta)/config/robots/roman/moveit/sbpl_planning2.yaml"/> &#45;&#45;> -->
+<!-- 	<rosparam command="load" file="$(find sbpl_demos)/config/pr2/manipulation/sbpl_planning2.yaml"/> -->
+
+<!--     <rosparam command="load" file="$(find pr2_sbpl_interface_config)/config/sbpl_planning.yaml"/> -->
+	<rosparam command="load" file="$(find sbpl_demos)/config/pr2/manipulation/sbpl_planning.yaml"/>
 
     <!-- motion primitives -->
     <group ns="graph_configs/RightArmManipLatticeConfigDefault">
@@ -31,10 +37,15 @@
 <!-- 		<param name="mprim_filename" value="$(find sbpl_demos)/config/pr2/manipulation/pr2_arm_and_torso_TODO.mprim"/> -->
 <!--     </group> -->
 
-    <group ns="right_arm/planner_configs/right_arm_ARA_BFS_ML">
-        <param name="plan_output_dir" value="$(env HOME)/.ros/pr2_right_arm_paths"/>
+    <group ns="graph_configs/BaseManipLatticeConfigDefault">
+        <param name="mprim_filename" value="$(find pr2_sbpl_interface_config)/config/pr2_base.mprim"/>
     </group>
-    <group ns="graph_configs/RightArmManipLatticeEgraphConfigDefault">
-        <param name="egraph_path" value="$(env HOME)/.ros/pr2_right_arm_paths"/>
-    </group>
+
+<!--     <group ns="right_arm/planner_configs/right_arm_ARA_BFS_ML"> -->
+<!--         <param name="plan_output_dir" value="$(env HOME)/.ros/pr2_right_arm_paths"/> -->
+<!--     </group> -->
+<!--     <group ns="graph_configs/RightArmManipLatticeEgraphConfigDefault"> -->
+<!--         <param name="egraph_path" value="$(env HOME)/.ros/pr2_right_arm_paths"/> -->
+<!--     </group> -->
+
 </launch>

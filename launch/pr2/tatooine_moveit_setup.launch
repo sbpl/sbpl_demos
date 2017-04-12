@@ -4,7 +4,8 @@
   <!-- NOTE to switch the planner to ompl, need to change the planner id for 'self.moveit_planning_group.set_planner_id()' in /scripts/sbpl_demos/pr2_helpers.py -->
   <!-- NOTE also make sure to execute 'rosparam delete /move_group' to prevent any possible confusion -->
 <!--   <arg name="use_sbpl_pipeline" default="true" /> -->
-  <arg name="use_sbpl_pipeline" default="false" />
+<!--   <arg name="use_sbpl_pipeline" default="false" /> -->
+  <arg name="use_sbpl_pipeline" default="true" />
   <rosparam command="delete" param="/move_group" />
 
 

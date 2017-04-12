@@ -4,6 +4,16 @@ screen -t bash
 #stuff "roscore^M"
 stuff "pr2master"
 
+screen -t perch
+stuff "pr2master; ^M"
+stuff "source ~/ros/perch_ws/devel/setup.bash; ^M"
+stuff "roslaunch object_recognition_node pr2_object_recognition.launch"
+
+screen -t web
+stuff "pr2master; ^M"
+stuff "roslaunch rosbridge_server rosbridge_websocket.launch;  ^M"
+stuff "# run 'sudo /etc/init.d/apache2 start' if apache2 is not running"
+
 screen -t ar_track
 stuff "pr2master; ^M"
 stuff "roslaunch sbpl_demos tatooine_ar_setup.launch"

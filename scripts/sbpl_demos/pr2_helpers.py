@@ -242,11 +242,15 @@ class MoveitMoveArm:
 
         # NOTE to switch the planner to ompl, need to set the parameter 'use_sbpl_pipeline' to 'false' in launch/pr2/tatooine_moveit_setup.launch
         # NOTE also make sure to execute 'rosparam delete /move_group' to prevent any possible confusion
-        use_sbpl_pipeline = False
+#         use_sbpl_pipeline = False
+        use_sbpl_pipeline = True
 
         if use_sbpl_pipeline:
-            self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_BFS_ML]")
-            self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_JD_ML]")
+#             self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_BFS_ML]")
+#             self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_JD_ML]")
+            # new config names from recent pr2_sbpl_interface_config package
+            self.moveit_planning_group.set_planner_id("base[arastar_joint_dist_manip]")
+            self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_manip]")
 
             self.moveit_planning_group.set_planning_time(rospy.get_param("move_group/allowed_planning_time"))
             self.moveit_planning_group.allow_replanning(True)
