@@ -7,6 +7,7 @@ roslib.load_manifest('sbpl_demos')
 import rospy
 from sbpl_demos.srv import *
 from sensor_msgs.msg import JointState
+from tf
 import threading
 
 
@@ -17,6 +18,7 @@ class LatestJointStates:
         rospy.init_node('joint_states_listener')
         self.lock = threading.Lock()
         self.name = []
+        self.header = []
         self.position = []
         self.velocity = []
         self.effort = []
@@ -28,7 +30,7 @@ class LatestJointStates:
 
     #thread function: listen for joint_states messages
     def joint_states_listener(self):
-        rospy.Subscriber('joint_states', JointState, self.joint_states_callback)
+        rospy.Subscriber('tf', JointState, self.joint_states_callback)
         rospy.spin()
 
 
@@ -36,6 +38,7 @@ class LatestJointStates:
     def joint_states_callback(self, msg):
         self.lock.acquire()
         self.name = msg.name
+        self.header = msg.header
         self.position = msg.position
         self.velocity = msg.velocity
         self.effort = msg.effort
@@ -55,6 +58,7 @@ class LatestJointStates:
         self.lock.acquire()
         if joint_name in self.name:
             index = self.name.index(joint_name)
+            header = self.header[index]
             position = self.position[index]
             velocity = self.velocity[index]
             effort = self.effort[index]

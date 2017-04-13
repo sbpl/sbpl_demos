@@ -41,7 +41,7 @@ if __name__ == "__main__":
     rate = rospy.Rate(10.0)
     while not rospy.is_shutdown():
         
-        # object_pose = PerchClient.getGraspPose("006_mustard_bottle")
+        object_pose = PerchClient.getGraspPose("006_mustard_bottle")
 
         try:
             (pose_base_to_wrist, quat_base_to_wrist) = listener.lookupTransform("r_wrist_roll_link", "base_link", rospy.Time(0))
@@ -54,20 +54,27 @@ if __name__ == "__main__":
         except (tf.ExtrapolationException):
             print "extrap exception"
             continue
-        object_pose = Pose()
-        object_pose.position.x = 0
-        object_pose.position.y = 1
-        object_pose.position.z = 10
+        # object_pose = Pose()
+        # object_pose.position.x = 0
+        # object_pose.position.y = 1
+        # object_pose.position.z = 10
 
-        object_pose.orientation.x = 1 
-        object_pose.orientation.y = 1 
-        object_pose.orientation.z = 1 
-        object_pose.orientation.w = 1
+        # object_pose.orientation.x = 1 
+        # object_pose.orientation.y = 1 
+        # object_pose.orientation.z = 1 
+        # object_pose.orientation.w = 1
+
+        object_transf_trans = (object_pose.position.x, object_pose.position.y, object_pose.position.z)
+        object_transf_rot = (object_pose.orientation.x, object_pose.orientation.y, object_pose.orientation.z, object_pose.orientation.w)
 
         T_b_w = listener.fromTranslationRotation(pose_base_to_wrist, quat_base_to_wrist)
-        T_b_o = listener.transformPose(object_pose)
+        T_b_o = listener.fromTranslationRotation(object_transf_trans, object_transf_rot)
 
-        # T_o_w = inv(T_b_o)*T_b_w
+        T_o_b = np.eye(4)
+        T_o_b[:3, :3] = np.transpose(T_b_o[:3,:3])
+        T_o_b[:3, 3] = -T_o_b[:3,3]
+
+        T_o_w = T_o_b*T_b_w
 
         print "Base to wrist: Pose: " + str(pose_base_to_wrist) + ", Quat:" + str(quat_base_to_wrist)
         print "Wrist Transform: " + str(T_b_w)
