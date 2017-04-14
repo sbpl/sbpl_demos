@@ -14,7 +14,9 @@ class PerchClient:
         self.locked = True
 
         self.publisher = rospy.Publisher('/requested_object', String, queue_size=10)
+        rospy.sleep(1)
         rospy.Subscriber("/perch_pose", Pose, self.perch_callback)
+        rospy.sleep(1)
 
 
     def getGraspPose(self, requested_object):
@@ -49,6 +51,7 @@ class PerchClient:
     def send_request(self):
 
             self.publisher.publish(self.requested_object)
+            rospy.sleep(1)
             self.locked = True
 
 

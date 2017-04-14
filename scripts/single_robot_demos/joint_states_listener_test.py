@@ -9,6 +9,7 @@ from geometry_msgs.msg import Pose
 import tf
 import time
 import sys
+import numpy as np
 from sbpl_demos import perch_helpers
 
 def call_return_joint_states(joint_names):
@@ -32,7 +33,7 @@ def pplist(list):
 
 #print out the positions, velocities, and efforts of the right arm joints
 if __name__ == "__main__":
-    rospy.init_node('joint_state')
+    rospy.init_node('joint_states_listener_test')
     
     PerchClient = perch_helpers.PerchClient()
     
@@ -41,7 +42,9 @@ if __name__ == "__main__":
     rate = rospy.Rate(10.0)
     while not rospy.is_shutdown():
         
-        object_pose = PerchClient.getGraspPose("006_mustard_bottle")
+        # object_pose = PerchClient.getGraspPose("003_cracker_box")
+        object_pose = PerchClient.getGraspPose("019_pitcher_base")
+        # object_pose = PerchClient.getGraspPose("006_mustard_bottle")
 
         try:
             (pose_base_to_wrist, quat_base_to_wrist) = listener.lookupTransform("r_wrist_roll_link", "base_link", rospy.Time(0))
@@ -72,14 +75,16 @@ if __name__ == "__main__":
 
         T_o_b = np.eye(4)
         T_o_b[:3, :3] = np.transpose(T_b_o[:3,:3])
-        T_o_b[:3, 3] = -T_o_b[:3,3]
+        T_o_b[:3, 3] = -T_b_o[:3,3]
+
+        print str(T_o_b )+ " times "+ str(T_b_w)
 
         T_o_w = T_o_b*T_b_w
 
         print "Base to wrist: Pose: " + str(pose_base_to_wrist) + ", Quat:" + str(quat_base_to_wrist)
         print "Wrist Transform: " + str(T_b_w)
         print "Object Transform: " + str(T_b_o)
-        print "Object to Wrist Transform: " + str(T_o_w)
+        print "Object to Wrist Transform: \n" + str(T_o_w)
         print "Object pose" + str(object_pose)
 
         # (position, velocity, effort) = call_return_joint_states(joint_names)
