@@ -245,6 +245,50 @@ class Demo:
             object_name = "003_cracker_box"
             (grasp_pose, interp_pose) = self.pickingRoutinePerch(object_name)
 
+            # just for visualization
+            self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
+                (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
+                rospy.Time.now(), "interp_pose_org", "odom_combined")
+            self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
+                (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
+                rospy.Time.now(), "grasp_pose_org", "odom_combined")
+
+
+            # correction for offset of interp_pose
+            factor_arm_x = -0.04
+            factor_arm_y = -0.01
+            (arm_trans, arm_quat) = self.tflistener.lookupTransform("odom_combined", "base_footprint", rospy.Time())
+            arm_matrix = self.tflistener.fromTranslationRotation(arm_trans, arm_quat)
+
+            arm_offset_x = arm_matrix[:3,0] * factor_arm_x
+            arm_offset_y = arm_matrix[:3,1] * factor_arm_y
+            interp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
+            interp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
+            interp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
+
+            # correction for offset of grasp_pose
+            grasp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
+            grasp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
+            grasp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
+
+#             factor_wrist_x = 0.02
+            factor_wrist_x = 0.00
+            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
+            wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
+
+            wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
+            grasp_pose.position.x += wrist_offset_x[0]
+            grasp_pose.position.y += wrist_offset_x[1]
+            grasp_pose.position.z += wrist_offset_x[2]
+
+            # just for visualization
+            self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
+                (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
+                rospy.Time.now(), "interp_pose", "odom_combined")
+            self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
+                (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
+                rospy.Time.now(), "grasp_pose", "odom_combined")
+
 
             # Execute grasp plan
             rospy.loginfo("Moving to interpolated pose")

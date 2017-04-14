@@ -337,11 +337,15 @@ class MoveitMoveArm:
         pose.position.x = 0
         pose.position.y = -0.64
         pose.position.z = 1.05
-        quat = quaternion_from_euler(-3.002, 0.117, 0.130)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+#         quat = quaternion_from_euler(-3.002, 0.117, 0.130)
+#         pose.orientation.x = quat[0]
+#         pose.orientation.y = quat[1]
+#         pose.orientation.z = quat[2]
+#         pose.orientation.w = quat[3]
+        pose.orientation.x = 0.00129958
+        pose.orientation.y = 0.0836125
+        pose.orientation.z = 0.0657168
+        pose.orientation.w = 0.994329
         return self.MoveToPose(pose, "base_footprint")
 
     def MoveRightToCarry(self):
