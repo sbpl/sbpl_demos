@@ -162,23 +162,62 @@ class Demo:
         rospy.loginfo('Commanding right gripper open')
         self.GripperCommand.Command('r', 1) #open grigger
 
+        # get grasp and pre-grasp poses
         (grasp_poses_perch, interp_poses_perch, distances_to_grasp) = self.PerchClient.getGraspPoses(object_name)
-
         print grasp_poses_perch
         print interp_poses_perch
         print distances_to_grasp
+
+        # add collision model
+        (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
+        rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
+            n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
+        if(n_desks > 0):
+            rospy.loginfo("Inserting Desk Collision objects")
+            desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
+            cnt = 0
+            for desk in desk_markers.markers:
+                desk.pose.header.frame_id = "odom_combined"
+                desk.pose.header.stamp = rospy.Time.now()
+                print desk
+                self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk.pose)
+                cnt+=1
+
         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
 
     def pickingRoutinePerchSpin(self):
         rospy.loginfo('Commanding right gripper open')
         self.GripperCommand.Command('r', 1) #open grigger
 
+        # get grasp and pre-grasp poses
         rospy.logwarn("Waiting for user's object selection from tablet...")
         (grasp_poses_perch, interp_poses_perch, distances_to_grasp) = self.PerchClient.getGraspPosesSpin()
-
         print grasp_poses_perch
         print interp_poses_perch
         print distances_to_grasp
+
+        # add collision model
+        (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
+        rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
+            n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
+        if(n_desks > 0):
+            rospy.loginfo("Inserting Desk Collision objects")
+            desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
+            cnt = 0
+            for desk_marker in desk_markers.markers:
+
+#                 desk_marker_stamped = PoseStamped()
+#                 desk_marker_stamped.header.frame_id = "odom_combined"
+#                 desk_marker_stamped.pose = desk_marker.pose
+#                 desk_marker_in_map_stamped = self.tflistener.transformPose("map", desk_marker_stamped)
+
+                desk_marker.pose.header.frame_id = "odom_combined"
+#                 desk_marker.pose.header.stamp = rospy.Time.now()
+                desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
+                print desk_marker_in_map
+                self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
+                cnt+=1
+
         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
 
     def dropOffObjectRoutine(self, release_pose):

@@ -422,10 +422,28 @@ class MoveitMoveArm:
         self.moveit_planning_scene.add_box(name, posestamped, size=input_size)
         self.inserted_objects.append(name)
 
-    def AddDeskCollisionObject(self, name, posestamped):
-        posestamped.pose.position.y -= 0.35
-        posestamped.pose.position.z = 0.35
-        self.moveit_planning_scene.add_box(name, posestamped, size=(.67,1.52, .7) )
+#     def AddDeskCollisionObject(self, name, posestamped):
+#         posestamped.pose.position.y -= 0.35
+#         posestamped.pose.position.z = 0.35
+#         self.moveit_planning_scene.add_box(name, posestamped, size=(.67,1.52, .7) )
+#         rospy.loginfo("Added desk object %s", name)
+#         self.inserted_desks.append(name)
+
+    def AddDeskCollisionObject(self, name, pose_in_map):
+
+        # adjust offset of marker on the desk
+        pose_in_map.pose.position.x += -0.44
+        pose_in_map.pose.position.y += -0.30
+        pose_in_map.pose.position.z = 0.35
+
+        # constrain desk orientation
+        pose_in_map.pose.orientation.x = 0
+        pose_in_map.pose.orientation.y = 0
+        pose_in_map.pose.orientation.z = 0
+        pose_in_map.pose.orientation.w = 1
+
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 1.52, 0.7))
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.7))
         rospy.loginfo("Added desk object %s", name)
         self.inserted_desks.append(name)
 
