@@ -139,10 +139,19 @@ class GripperCommand:
     def Command(self, gripper, open):
 
         goal = GripperCommandGoal()
-        if open == 1:
-            goal.command.position = 0.09
-        else:
-            goal.command.position = 0.0
+
+#         if open == 1:
+#             goal.command.position = 0.09
+#         else:
+#             goal.command.position = 0.0
+        if open > 1.0:
+            rospy.logwarn("GripperCommand.Command() only accepts value from 0 (close) to 1 (open)")
+            open = 1.0
+        elif open < 0.0:
+            rospy.logwarn("GripperCommand.Command() only accepts value from 0 (close) to 1 (open)")
+            open = 0.0
+        goal.command.position = (0.09 - 0.0) * open/(1.0 - 0.0) + 0.0
+
         goal.command.max_effort = float(-1.0) 
         
         if gripper == 'l':
