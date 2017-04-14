@@ -169,6 +169,18 @@ class Demo:
         print distances_to_grasp
         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
 
+    def pickingRoutinePerchSpin(self):
+        rospy.loginfo('Commanding right gripper open')
+        self.GripperCommand.Command('r', 1) #open grigger
+
+        rospy.logwarn("Waiting for user's object selection from tablet...")
+        (grasp_poses_perch, interp_poses_perch, distances_to_grasp) = self.PerchClient.getGraspPosesSpin()
+
+        print grasp_poses_perch
+        print interp_poses_perch
+        print distances_to_grasp
+        return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
+
     def dropOffObjectRoutine(self, release_pose):
         rospy.loginfo("Moving to extend pose")
         self.MoveitMoveArm.MoveRightToExtend(release_pose)
@@ -238,8 +250,11 @@ class Demo:
 
 
             ## PERCH INSTEAD OF AR TAGS
-            object_name = "003_cracker_box"
-            (grasp_poses, interp_poses, distances_to_grasp) = self.pickingRoutinePerch(object_name)
+
+#             object_name = "003_cracker_box"
+#             (grasp_poses, interp_poses, distances_to_grasp) = self.pickingRoutinePerch(object_name)
+
+            (grasp_poses, interp_poses, distances_to_grasp) = self.pickingRoutinePerchSpin()
 
             if not len(grasp_poses) > 0:
                 rospy.logwarn("No poses found, retrying")
@@ -326,7 +341,7 @@ class Demo:
 #                 continue
 #             rospy.loginfo("Succeeded to grasp.")
             grip_success = self.GripperCommand.Command('r', 0.55) #Close Gripper   # HACK for 003_cracker_box
-            rospy.loginfo("Assuming succeeded to grasp...")
+            rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
 
             # retract to interpolate pose
             rospy.loginfo("Moving back to interpolated pose")
