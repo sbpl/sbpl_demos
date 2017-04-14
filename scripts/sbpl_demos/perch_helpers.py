@@ -229,9 +229,9 @@ class PerchClient:
 
     # computed distance from the current end-effector pose to a grasp pose
     def compute_distance_to_grasp(self, ee_position, grasp_pose):
-        dx = grasp_pose.position.x -  ee_position[0]
-        dy = grasp_pose.position.y -  ee_position[1]
-        dz = grasp_pose.position.z -  ee_position[2]
+        dx = grasp_pose.position.x - ee_position[0]
+        dy = grasp_pose.position.y - ee_position[1]
+        dz = grasp_pose.position.z - ee_position[2]
         distance_to_grasp = math.sqrt(dx**2 + dy**2 + dz**2)
         return distance_to_grasp
 

@@ -24,6 +24,8 @@ import geometry_msgs.msg
 from tf.transformations import quaternion_from_euler
 import tf
 
+from sbpl_demos import octomap_helpers
+
 
 class TFLookup:
     def __init__(self):
@@ -180,7 +182,11 @@ class MoveBase:
         self.client.wait_for_server()
         rospy.loginfo("Connected.")
 
+        self.OctomapClient = octomap_helpers.OctomapClient()
+
     def MoveToPose(self, frame, input_pose):
+        self.OctomapClient.clearOctomapWorkspacePR2()
+
         goal = MoveBaseGoal()
         goal.target_pose.header.stamp = rospy.Time.now()
         goal.target_pose.header.frame_id = frame
