@@ -245,13 +245,22 @@ class MoveBase:
 #         pose.orientation.z = quat[2]
 #         pose.orientation.w = quat[3]
 
-        pose.position.x = -0.6574
-        pose.position.y = -1.1089
+#         pose.position.x = -0.6574
+#         pose.position.y = -1.1089
+#         pose.position.z = 0.0
+#         pose.orientation.x = 0.0008
+#         pose.orientation.y = 0.001
+#         pose.orientation.z = -0.6965
+#         pose.orientation.w = 0.7175
+
+#         pose.position.x = 1.254
+        pose.position.x = 0.854
+        pose.position.y = 0.116
         pose.position.z = 0.0
-        pose.orientation.x = 0.0008
-        pose.orientation.y = 0.001
-        pose.orientation.z = -0.6965
-        pose.orientation.w = 0.7175
+        pose.orientation.x = 0.0
+        pose.orientation.y = 0.0
+        pose.orientation.z = 0.0
+        pose.orientation.w = 1.0
 
         self.MoveToPose("map", pose)
 
