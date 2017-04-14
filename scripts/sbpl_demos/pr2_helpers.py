@@ -203,30 +203,50 @@ class MoveBase:
 #         pose.orientation.y = quat[1]
 #         pose.orientation.z = quat[2]
 #         pose.orientation.w = quat[3]
-        pose.position.x = -0.478
-        pose.position.y = -1.122
+
+#         pose.position.x = -0.478
+#         pose.position.y = -1.122
+#         pose.position.z = 0.0
+#         pose.orientation.x = 0.0018
+#         pose.orientation.y = 0.001
+#         pose.orientation.z = -0.7134
+#         pose.orientation.w = 0.70075
+
+        pose.position.x = -1.1574
+        pose.position.y = -1.1089
         pose.position.z = 0.0
-        pose.orientation.x = 0.0018
+        pose.orientation.x = 0.0008
         pose.orientation.y = 0.001
-        pose.orientation.z = -0.7134
-        pose.orientation.w = 0.70075
+        pose.orientation.z = -0.6965
+        pose.orientation.w = 0.7175
+
         self.MoveToPose("map", pose)
 
     def MoveToWorkstation(self):
         pose = geometry_msgs.msg.Pose()
-        # pose.position.x = 0.440
-        # pose.position.y = -1.540
-        # pose.position.z = 0.0
-        # quat = quaternion_from_euler(0,0,-0.004)
-        pose.position.x=-0.234
-        pose.position.y=-1.541
-        pose.position.z=0.0
-        quat = quaternion_from_euler(0,0,0.027)
 
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+#         # pose.position.x = 0.440
+#         # pose.position.y = -1.540
+#         # pose.position.z = 0.0
+#         # quat = quaternion_from_euler(0,0,-0.004)
+#         pose.position.x=-0.234
+#         pose.position.y=-1.541
+#         pose.position.z=0.0
+#         quat = quaternion_from_euler(0,0,0.027)
+#
+#         pose.orientation.x = quat[0]
+#         pose.orientation.y = quat[1]
+#         pose.orientation.z = quat[2]
+#         pose.orientation.w = quat[3]
+
+        pose.position.x = -0.6574
+        pose.position.y = -1.1089
+        pose.position.z = 0.0
+        pose.orientation.x = 0.0008
+        pose.orientation.y = 0.001
+        pose.orientation.z = -0.6965
+        pose.orientation.w = 0.7175
+
         self.MoveToPose("map", pose)
 
     def MoveToWayPoint(self):

@@ -15,8 +15,8 @@ from sbpl_demos.perception_helpers import AR_TYPES
 
 class Demo:
     def __init__(self):
-        self.STATIONARY = True
-#         self.STATIONARY = False
+#         self.STATIONARY = True
+        self.STATIONARY = False
         self.tflistener = tf.TransformListener()
         self.tfbroadcaster = tf.TransformBroadcaster()
         self.GripperCommand = pr2_helpers.GripperCommand()
@@ -27,7 +27,7 @@ class Demo:
         self.MoveitMoveArm = pr2_helpers.MoveitMoveArm()
         self.TorsoCommand = pr2_helpers.TorsoCommand()
         self.TuckArms = pr2_helpers.TuckArms()
-#         self.MoveBase = pr2_helpers.MoveBase()
+        self.MoveBase = pr2_helpers.MoveBase()
     
         rospy.sleep(1.0)
         rospy.loginfo('All Action clients connected!')
@@ -95,7 +95,7 @@ class Demo:
 #                 self.MoveitMoveArm.MoveRightToCarry()
 
                 rospy.loginfo('Commanding base to Workstation')
-#                 self.MoveBase.MoveToWorkstation()
+                self.MoveBase.MoveToWorkstation()
 # HACK XXX
 #                 rospy.loginfo('Untucking arms')
 #                 self.TuckArms.UntuckRightArms()
@@ -108,7 +108,7 @@ class Demo:
 #             self.TuckArms.TuckArms()
 
             rospy.loginfo('Commanding base to intern desk...')
-#             self.MoveBase.MoveToInternDesk()
+            self.MoveBase.MoveToInternDesk()
 
             rospy.loginfo('Commanding Untucking')
 # HACK XXX
@@ -346,10 +346,6 @@ class Demo:
             rospy.loginfo("Moving to carry pose")
             self.MoveitMoveArm.MoveRightToWide()
 
-            # self.moveToWayPointRoutine()
-            self.moveToWorkstationRoutine()
-            #TODO clear desks, get AR poses for desk, and insert new Desk collision object
-
             # compute release pose in base_footprint frame
             grasp_pose_stamped = PoseStamped()
             grasp_pose_stamped.header.frame_id = "odom_combined"
@@ -357,6 +353,11 @@ class Demo:
             release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
             release_pose = release_pose_stamped.pose
 
+            # self.moveToWayPointRoutine()
+            self.moveToWorkstationRoutine()
+            #TODO clear desks, get AR poses for desk, and insert new Desk collision object
+
+            # release the object
             self.dropOffObjectRoutine(release_pose)
 
 #             self.GripperCommand.Command('r', 0) #Close Gripper
