@@ -186,14 +186,21 @@ class MoveBase:
 
     def MoveToInternDesk(self):
         pose = geometry_msgs.msg.Pose()
-        pose.position.x = -0.29
-        pose.position.y = -2.5
+#         pose.position.x = -0.29
+#         pose.position.y = -2.5
+#         pose.position.z = 0.0
+#         quat = quaternion_from_euler(0,0,-math.pi/2.0)
+#         pose.orientation.x = quat[0]
+#         pose.orientation.y = quat[1]
+#         pose.orientation.z = quat[2]
+#         pose.orientation.w = quat[3]
+        pose.position.x = -0.478
+        pose.position.y = -1.122
         pose.position.z = 0.0
-        quat = quaternion_from_euler(0,0,-math.pi/2.0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+        pose.orientation.x = 0.0018
+        pose.orientation.y = 0.001
+        pose.orientation.z = -0.7134
+        pose.orientation.w = 0.70075
         self.MoveToPose("map", pose)
 
     def MoveToWorkstation(self):
