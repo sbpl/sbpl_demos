@@ -1,0 +1,27 @@
+003_cracker_box:
+  pregrasp:
+    rotation: []
+    translation: []
+
+  grasp:
+    rotation: []
+    translation: []
+
+006_mustard_bottle:
+  pregrasp:
+    rotation: []
+    translation: []
+
+  grasp:
+    rotation: []
+    translation: []
+
+019_pitcher_base:
+  pregrasp:
+    rotation: []
+    translation: []
+
+  grasp:
+    rotation: []
+    translation: []
+  
