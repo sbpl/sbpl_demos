@@ -377,7 +377,8 @@ class MoveitMoveArm:
         self.inserted_objects.append(name)
 
     def AddDeskCollisionObject(self, name, posestamped):
-        posestamped.pose.position.y -= 0.35
+        posestamped.pose.position.x += 0.20
+        #posestamped.pose.position.y -= 0.10
         posestamped.pose.position.z = 0.35
         self.moveit_planning_scene.add_box(name, posestamped, size=(.67,1.52, .7) )
         rospy.loginfo("Added desk object %s", name)

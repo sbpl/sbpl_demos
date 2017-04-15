@@ -163,6 +163,7 @@ class Demo:
                 desk.pose.header.frame_id = "odom_combined"
                 desk.pose.header.stamp = rospy.Time.now()
                 print desk
+                
                 self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk.pose)
                 cnt+=1
 
@@ -185,7 +186,9 @@ class Demo:
 
         # perch
         if self.args_percept == 'perch':
-            self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+            #self.computeObjectPoseRoutine("006_mustard_bottle", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+            self.computeObjectPoseRoutine("003_cracker_box", AR_TYPES.GENERAL_OBJ, ee_position, markers)
+            #self.computeObjectPoseRoutine("011_banana", AR_TYPES.GENERAL_OBJ, ee_position, markers)
             #self.computeObjectPoseRoutine("011_banana", AR_TYPES.GENERAL_OBJ, ee_position, markers)
             #self.computeObjectPoseRoutine("024_bowl", AR_TYPES.GENERAL_OBJ, ee_position, markers)
 
@@ -217,7 +220,7 @@ class Demo:
             # select the best desired grasp among the candidates
             #best_index = min(xrange(len(self.best_distances)), key=self.best_distances.__getitem__)
             
-            pdb.set_trace()
+            #pdb.set_trace()
 
             best_index = 0
 
@@ -244,7 +247,7 @@ class Demo:
             grasp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
             grasp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
             
-            pdb.set_trace()
+            #pdb.set_trace()
 
             factor_wrist_x = 0.02
             (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
