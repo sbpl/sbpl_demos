@@ -28,7 +28,8 @@ class Demo:
         self.TorsoCommand = pr2_helpers.TorsoCommand()
         self.TuckArms = pr2_helpers.TuckArms()
         self.MoveBase = pr2_helpers.MoveBase()
-    
+        self.ArmJointCommand = pr2_helpers.ArmJointCommand()
+
         rospy.sleep(1.0)
         rospy.loginfo('All Action clients connected!')
         #rospy.loginfo('Commanding Untucking')
@@ -236,8 +237,13 @@ class Demo:
 #         rospy.loginfo('Untucking arms')
 #         self.TuckArms.UntuckRightArms()
 #         self.moveToInternDeskRoutine()
-        rospy.loginfo("Moving to wide open")
-        self.MoveitMoveArm.MoveRightToWide()
+
+#         rospy.loginfo("Moving to wide open")
+#         self.MoveitMoveArm.MoveRightToWide()
+
+        rospy.loginfo("Moving arms to wide open")
+        self.ArmJointCommand.MoveRightArmToWide()
+        self.ArmJointCommand.MoveLeftArmToWide()
 
         while not rospy.is_shutdown():
 

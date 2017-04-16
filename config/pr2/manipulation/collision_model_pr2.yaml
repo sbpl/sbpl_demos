@@ -1,5 +1,5 @@
 world_collision_model:
-  frame: odom_combined
+  frame: odom_combined    # it makes more sense to set this to /map, but this is just to separate manipulation pipeline from map_server stuffs
   size_x: 10.0
   size_y: 10.0
   size_z: 2.0
@@ -21,9 +21,14 @@ self_collision_model:
   max_distance_m: 0.2
 
 robot_collision_model:
+  # this joint for PR2 is defined in pr2_moveit_config/config/pr2.srdf
   world_joint:
     name: world_joint
-    type: planar # fixed, floating
+    # options for type: planar, fixed, floating
+    # NOTE 'planar' will ignore any sensor data about orientation/x,y from /odom_combined to /base_footprint
+    # which may cause the execution of a planned motion fails to get to the desired planning goal
+    type: planar
+#     type: floating
   voxels_models:
     - { link_name: base_link, res: 0.01 }
     - { link_name: bl_caster_rotation_link, res: 0.01 }

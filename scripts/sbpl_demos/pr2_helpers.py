@@ -15,6 +15,8 @@ from pr2_controllers_msgs.msg import SingleJointPositionAction, SingleJointPosit
 from pr2_common_action_msgs.msg import TuckArmsAction, TuckArmsGoal
 from sbpl_demos.srv import PoseUpsampleRequest, PoseUpsample
 from sbpl_demos.msg import XYZRPY
+from groovy_pr2_controllers_msgs.msg import JointTrajectoryAction, JointTrajectoryGoal
+from groovy_trajectory_msgs.msg import JointTrajectoryPoint
 
 ## for moveit commander
 import copy
@@ -515,3 +517,43 @@ class RoconMoveArm:
             result = self.client.get_result()
             return result.success
         return False
+
+
+class ArmJointTrajAction:
+    def __init__(self, arm_name):
+        #arm_name should be l_arm or r_arm
+        self.name = arm_name
+        self.jta = actionlib.SimpleActionClient('/'+arm_name+'_controller/joint_trajectory_action',
+                                                JointTrajectoryAction)
+        rospy.loginfo('Waiting for joint trajectory action')
+        self.jta.wait_for_server()
+        rospy.loginfo('Found joint trajectory action!')
+
+    def MoveArmToJoint(self, angles):
+        goal = JointTrajectoryGoal()
+        char = self.name[0] #either 'r' or 'l'
+        goal.trajectory.joint_names = [char+'_shoulder_pan_joint',
+                                       char+'_shoulder_lift_joint',
+                                       char+'_upper_arm_roll_joint',
+                                       char+'_elbow_flex_joint',
+                                       char+'_forearm_roll_joint',
+                                       char+'_wrist_flex_joint',
+                                       char+'_wrist_roll_joint']
+        point = JointTrajectoryPoint()
+        point.positions = angles
+        point.time_from_start = rospy.Duration(3)
+        goal.trajectory.points.append(point)
+        self.jta.send_goal_and_wait(goal)
+
+class ArmJointCommand:
+    def __init__(self):
+        self.RightArmJointCommand = ArmJointTrajAction('r_arm')
+        self.LeftArmJointCommand = ArmJointTrajAction('l_arm')
+
+    def MoveRightArmToWide(self):
+#         self.RightArmJointCommand.MoveArmToJoint([-1.0538075152641313, -0.0916694754002904, -0.009580763730843156, -1.4663557424420106, -0.03568253566579777, -0.09952282756129005, 14.158282159510952])
+        self.RightArmJointCommand.MoveArmToJoint([-1.0538075152641313, -0.0916694754002904, -0.009580763730843156, -1.4663557424420106, -0.03568253566579777, -0.09952282756129005, 1.59191154515])
+
+    def MoveLeftArmToWide(self):
+        self.LeftArmJointCommand.MoveArmToJoint([2.050585009506385, 1.168843268710281, 2.0143859931673638, -1.691908510777547, 1.264066293462545, -0.09850362202844609, 0.00586820137944688])
+
