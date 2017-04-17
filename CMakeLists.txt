@@ -31,6 +31,7 @@ add_message_files(
 add_service_files(
   FILES 
   PoseUpsample.srv 
+  ReturnJointStates.srv
 )
 add_action_files(
   FILES

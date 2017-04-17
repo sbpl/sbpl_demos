@@ -122,7 +122,6 @@ class PerchClient:
             # add to the result container
             grasp_poses.append(grasp_pose)
 
-
             # i-th pre-grasp pose
             interp_matrix_in_local = interp_matrices_in_local[i]
 
