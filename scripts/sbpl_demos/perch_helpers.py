@@ -17,6 +17,7 @@ class PerchClient:
     def __init__(self):
 
         self.locked = True
+        self.requested = True    # just for information
 
         self.tflistener = tf.TransformListener()
         self.tfbroadcaster = tf.TransformBroadcaster()
@@ -24,6 +25,7 @@ class PerchClient:
         self.publisher = rospy.Publisher('/requested_object', String, queue_size=10)
         rospy.sleep(1)
         rospy.Subscriber("/perch_pose", Pose, self.perch_callback)
+        rospy.Subscriber("/requested_object", String, self.web_callback)    # just for information
         rospy.sleep(1)
 
 
@@ -35,7 +37,6 @@ class PerchClient:
 
     def getGraspPosesSpin(self):
 
-        self.locked = False
         object_pose_in_base = self.getObjectPoseSpin()
         return self.compute_grasp_pose_in_odom(object_pose_in_base)
 
@@ -185,6 +186,7 @@ class PerchClient:
     def getObjectPoseSpin(self):
 
         self.locked = True
+        self.requested = False    # just for information
 
         tic = rospy.Time.now()
 
@@ -195,8 +197,9 @@ class PerchClient:
 
             else:
                 toc = rospy.Time.now()
-                if (toc.to_sec() - tic.to_sec()) % 30.0 < 1.0:
-                    rospy.loginfo("Waiting for user's object selection from tablet... %f sec has passed...", toc.to_sec() - tic.to_sec())
+                if not self.requested:
+                    if (toc.to_sec() - tic.to_sec()) % 30.0 < 1.0:
+                        rospy.loginfo("Waiting for user's object selection from tablet... %f sec has passed...", toc.to_sec() - tic.to_sec())
 
                 rospy.sleep(1)
 
@@ -215,6 +218,13 @@ class PerchClient:
             self.perch_pose = data
             # print self.perch_pose
             self.locked = False
+
+
+    def web_callback(self, data):
+
+        if not self.requested:
+            rospy.loginfo("Received user's object selection!")
+            self.requested = True
 
 
     # convert transformation matrix to geometry_msgs/Pose

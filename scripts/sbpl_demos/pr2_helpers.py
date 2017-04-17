@@ -452,13 +452,21 @@ class MoveitMoveArm:
         pose_in_map.pose.position.z = 0.35
 
         # constrain desk orientation
+#         pose_in_map.pose.orientation.x = 0
+#         pose_in_map.pose.orientation.y = 0
+#         pose_in_map.pose.orientation.z = 0
+#         pose_in_map.pose.orientation.w = 1
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.7))
+
         pose_in_map.pose.orientation.x = 0
         pose_in_map.pose.orientation.y = 0
-        pose_in_map.pose.orientation.z = 0
-        pose_in_map.pose.orientation.w = 1
+        quat_z = pose_in_map.pose.orientation.z
+        quat_w = pose_in_map.pose.orientation.w
+        quat_norm = math.sqrt(quat_z**2 + quat_w**2)
+        pose_in_map.pose.orientation.z = quat_z / quat_norm
+        pose_in_map.pose.orientation.w = quat_w / quat_norm
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 1.52, 0.7))
 
-#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 1.52, 0.7))
-        self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.7))
         rospy.loginfo("Added desk object %s", name)
         self.inserted_desks.append(name)
 

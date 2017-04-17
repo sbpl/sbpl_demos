@@ -160,43 +160,43 @@ class Demo:
 #             rospy.loginfo("Computing poses for ROD_END")
 #             self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
 
-    def pickingRoutinePerch(self, object_name):
-        rospy.loginfo('Commanding right gripper open')
-        self.GripperCommand.Command('r', 1) #open grigger
-
-        # get grasp and pre-grasp poses
-        (grasp_poses_perch, interp_poses_perch, distances_to_grasp) = self.PerchClient.getGraspPoses(object_name)
-        print grasp_poses_perch
-        print interp_poses_perch
-        print distances_to_grasp
-
-        # add collision model
-        (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
-        rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
-            n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
-        if(n_desks > 0):
-            rospy.loginfo("Inserting Desk Collision objects")
-            desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
-            cnt = 0
-            for desk_marker in desk_markers.markers:
-                try:
-                    desk_marker.pose.header.frame_id = "odom_combined"
-#                     desk_marker.pose.header.stamp = rospy.Time.now()
-                    desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
-                    print desk_marker_in_map
-                    self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
-                    cnt+=1
-                except (tf.LookupException):
-                    print "tf.LookupException: Desk collision model will not be added!"
-                    continue
-                except (tf.ConnectivityException):
-                    print "tf.ConnectivityException"
-                    continue
-                except (tf.ExtrapolationException):
-                    print "tf.ExtrapolationException"
-                    continue
-
-        return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
+#     def pickingRoutinePerch(self, object_name):
+#         rospy.loginfo('Commanding right gripper open')
+#         self.GripperCommand.Command('r', 1) #open grigger
+#
+#         # get grasp and pre-grasp poses
+#         (grasp_poses_perch, interp_poses_perch, distances_to_grasp) = self.PerchClient.getGraspPoses(object_name)
+#         print grasp_poses_perch
+#         print interp_poses_perch
+#         print distances_to_grasp
+#
+#         # add collision model
+#         (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
+#         rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
+#             n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
+#         if(n_desks > 0):
+#             rospy.loginfo("Inserting Desk Collision objects")
+#             desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
+#             cnt = 0
+#             for desk_marker in desk_markers.markers:
+#                 try:
+#                     desk_marker.pose.header.frame_id = "odom_combined"
+#                     #desk_marker.pose.header.stamp = rospy.Time.now()
+#                     desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
+#                     print desk_marker_in_map
+#                     self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
+#                     cnt+=1
+#                 except (tf.LookupException):
+#                     print "tf.LookupException: Desk collision model will not be added!"
+#                     continue
+#                 except (tf.ConnectivityException):
+#                     print "tf.ConnectivityException"
+#                     continue
+#                 except (tf.ExtrapolationException):
+#                     print "tf.ExtrapolationException"
+#                     continue
+#
+#         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
 
     def pickingRoutinePerchSpin(self):
         rospy.loginfo('Commanding right gripper open')
@@ -221,8 +221,9 @@ class Demo:
             for desk_marker in desk_markers.markers:
                 try:
                     desk_marker.pose.header.frame_id = "odom_combined"
-#                     desk_marker.pose.header.stamp = rospy.Time.now()
+                    #desk_marker.pose.header.stamp = rospy.Time.now()
                     desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
+                    print "desk_marker_in_map"
                     print desk_marker_in_map
                     self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
                     cnt+=1
@@ -237,6 +238,64 @@ class Demo:
                     continue
 
         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
+
+
+    def compensateMoveItOdomToBaseError(self, odom_to_des_pose):
+
+        # Compensate transformation error from /odom_combined to /base_footprint of MoveIt's Scene Robot
+        # this error comes from 'planar' robot_collision_model/world_joint/type that virtually connects /odom_combined and /base_footprint
+
+        # T_odom_to_desrev = T_odom_to_base * T_base_to_desrev
+        #                  = T_odom_to_base * T_base_to_baserev * T_baserev_to_desrev
+        #                  = T_odom_to_base * T_base_to_baserev * T_base_to_des
+        #                  = T_odom_to_baserev * T_base_to_des
+
+        # T_odom_to_baserev
+        (odom_to_base_trans, odom_to_base_quat) = self.tflistener.lookupTransform("odom_combined", "base_footprint", rospy.Time())
+        odom_to_baserev_trans = odom_to_base_trans
+        odom_to_baserev_quat = (0.0, 0.0, odom_to_base_quat[2], odom_to_base_quat[3])   # planar world_joint constraint for quaternion/x,y to be zeros
+        T_odom_to_baserev = self.tflistener.fromTranslationRotation(odom_to_baserev_trans, odom_to_baserev_quat)
+
+        # base_to_des_pose
+        odom_to_des_pose_stamped = PoseStamped()
+        odom_to_des_pose_stamped.header.frame_id = "odom_combined"
+        odom_to_des_pose_stamped.pose = odom_to_des_pose
+        base_to_des_pose_stamped = self.tflistener.transformPose("base_footprint", odom_to_des_pose_stamped)
+        base_to_des_pose = base_to_des_pose_stamped.pose
+
+        # T_base_to_des
+        base_to_des_pose = base_to_des_pose
+        base_to_des_trans = (base_to_des_pose.position.x, base_to_des_pose.position.y, base_to_des_pose.position.z)
+        base_to_des_quat = (base_to_des_pose.orientation.x, base_to_des_pose.orientation.y, base_to_des_pose.orientation.z, base_to_des_pose.orientation.w)
+        T_base_to_des = self.tflistener.fromTranslationRotation(base_to_des_trans, base_to_des_quat)
+
+        # T_odom_to_desrev
+        T_odom_to_desrev = numpy.dot(T_odom_to_baserev, T_base_to_des)
+
+        # convert transformation matrix to geometry_msgs/Pose
+        odom_to_desrev_pose = self.PerchClient.convert_T_to_Pose(T_odom_to_desrev)
+
+        return odom_to_desrev_pose
+
+
+    def compensateKinectCalibrationError(self, odom_to_des_pose):
+
+        # HACK hard-coded calibration offset
+        offset_x_in_base = -0.005
+        offset_y_in_base = -0.02
+        (odom_to_base_trans, odom_to_base_quat) = self.tflistener.lookupTransform("odom_combined", "base_footprint", rospy.Time())
+        T_odom_to_base = self.tflistener.fromTranslationRotation(odom_to_base_trans, odom_to_base_quat)
+
+        odom_to_desrev_pose = copy.deepcopy(odom_to_des_pose)
+
+        offset_x_in_odom = T_odom_to_base[:3,0] * offset_x_in_base
+        offset_y_in_odom = T_odom_to_base[:3,1] * offset_y_in_base
+        odom_to_desrev_pose.position.x += offset_x_in_odom[0] + offset_y_in_odom[0]
+        odom_to_desrev_pose.position.y += offset_x_in_odom[1] + offset_y_in_odom[1]
+        odom_to_desrev_pose.position.z += offset_x_in_odom[2] + offset_y_in_odom[2]
+
+        return odom_to_desrev_pose
+
 
     def dropOffObjectRoutine(self, release_pose):
         rospy.loginfo("Moving to extend pose")
@@ -338,33 +397,9 @@ class Demo:
                 rospy.Time.now(), "grasp_pose_best", "odom_combined")
 
 
-            # correction for offset of interp_pose
-#             factor_arm_x = -0.04
-            factor_arm_x = -0.06
-            factor_arm_y = -0.01
-            (arm_trans, arm_quat) = self.tflistener.lookupTransform("odom_combined", "base_footprint", rospy.Time())
-            arm_matrix = self.tflistener.fromTranslationRotation(arm_trans, arm_quat)
-
-            arm_offset_x = arm_matrix[:3,0] * factor_arm_x
-            arm_offset_y = arm_matrix[:3,1] * factor_arm_y
-            interp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
-            interp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
-            interp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
-
-            # correction for offset of grasp_pose
-            grasp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
-            grasp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
-            grasp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
-
-            factor_wrist_x = 0.02
-#             factor_wrist_x = 0.00
-            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
-            wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
-
-            wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
-            grasp_pose.position.x += wrist_offset_x[0]
-            grasp_pose.position.y += wrist_offset_x[1]
-            grasp_pose.position.z += wrist_offset_x[2]
+            # compensate transformation error from /odom_combined to /base_footprint of MoveIt's Scene Robot
+            interp_pose = self.compensateMoveItOdomToBaseError(interp_pose)
+            grasp_pose = self.compensateMoveItOdomToBaseError(grasp_pose)
 
             # just for visualization
             self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
@@ -373,6 +408,19 @@ class Demo:
             self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
                 (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
                 rospy.Time.now(), "grasp_pose_best_rev", "odom_combined")
+
+
+            # compensate Kinect calibration error
+            interp_pose = self.compensateKinectCalibrationError(interp_pose)
+            grasp_pose = self.compensateKinectCalibrationError(grasp_pose)
+
+            # just for visualization
+            self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
+                (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
+                rospy.Time.now(), "interp_pose_best_rev2", "odom_combined")
+            self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
+                (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
+                rospy.Time.now(), "grasp_pose_best_rev2", "odom_combined")
 
 
             # Execute grasp plan
@@ -403,7 +451,7 @@ class Demo:
 #                 continue
 #             rospy.loginfo("Succeeded to grasp.")
             grip_success = self.GripperCommand.Command('r', 0.55) #Close Gripper   # HACK for 003_cracker_box
-            rospy.loginfo(">>>>>>>>> GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
+            rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
 
             # retract to interpolate pose
             rospy.loginfo("Moving back to interpolated pose")
