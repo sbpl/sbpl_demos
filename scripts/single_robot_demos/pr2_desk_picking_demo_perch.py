@@ -389,12 +389,12 @@ class Demo:
             interp_pose = interp_poses[best_index]
 
             # just for visualization
-            self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
-                (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
-                rospy.Time.now(), "interp_pose_best", "odom_combined")
-            self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
-                (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
-                rospy.Time.now(), "grasp_pose_best", "odom_combined")
+            #self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
+            #    (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
+            #    rospy.Time.now(), "interp_pose_best", "odom_combined")
+            #self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
+            #    (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
+            #    rospy.Time.now(), "grasp_pose_best", "odom_combined")
 
 
             # compensate transformation error from /odom_combined to /base_footprint of MoveIt's Scene Robot
@@ -402,17 +402,17 @@ class Demo:
             grasp_pose = self.compensateMoveItOdomToBaseError(grasp_pose)
 
             # just for visualization
-            self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
-                (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
-                rospy.Time.now(), "interp_pose_best_rev", "odom_combined")
-            self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
-                (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
-                rospy.Time.now(), "grasp_pose_best_rev", "odom_combined")
+            #self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
+            #    (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
+            #    rospy.Time.now(), "interp_pose_best_rev", "odom_combined")
+            #self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
+            #    (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
+            #    rospy.Time.now(), "grasp_pose_best_rev", "odom_combined")
 
 
             # compensate Kinect calibration error
-            interp_pose = self.compensateKinectCalibrationError(interp_pose)
-            grasp_pose = self.compensateKinectCalibrationError(grasp_pose)
+            #interp_pose = self.compensateKinectCalibrationError(interp_pose)
+            #grasp_pose = self.compensateKinectCalibrationError(grasp_pose)
 
             # just for visualization
             self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),

@@ -48,7 +48,8 @@ if __name__ == "__main__":
         # object_pose = PerchClient.getObjectPose("006_mustard_bottle")
 
         try:
-            (pose_base_to_wrist, quat_base_to_wrist) = listener.lookupTransform("r_wrist_roll_link", "base_link", rospy.Time(0))
+#             (pose_base_to_wrist, quat_base_to_wrist) = listener.lookupTransform("r_wrist_roll_link", "base_link", rospy.Time(0))
+            (pose_base_to_wrist, quat_base_to_wrist) = listener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time(0))
         except (tf.LookupException):
             print "lookup exception"
             continue

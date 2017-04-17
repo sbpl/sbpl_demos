@@ -70,10 +70,14 @@ class PerchClient:
 
             # hard-coded grasp poses in object local frame
             if i == 0:
-                grasp_pos_in_local = (0.0, 0.23, 0.0)
+                #grasp_pos_in_local = (0.0, 0.23, 0.0)
+                grasp_pos_in_local = (0.0, 0.16, 0.0)
+                
                 grasp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
             elif i == 1:
-                grasp_pos_in_local = (0.0, -0.23, 0.0)
+                #grasp_pos_in_local = (0.0, -0.23, 0.0)
+                grasp_pos_in_local = (0.0, -0.16, 0.0)
+                
                 grasp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
 
             # transformation matrix of grasp pose in object local frame
@@ -147,7 +151,6 @@ class PerchClient:
             self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
                 (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
                 rospy.Time.now(), "interp_pose_" + str(i), "odom_combined")
-
 
         # return the results
         return (grasp_poses, interp_poses, distances_to_grasp)
