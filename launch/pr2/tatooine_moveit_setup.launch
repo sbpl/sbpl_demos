@@ -29,9 +29,6 @@
   <arg name="db" default="false" />
   <arg name="debug" default="false" />
 
-  <include file="$(find pr2_moveit_config)/launch/planning_context.launch">
-    <arg name="load_robot_description" value="true"/>
-  </include>
 <!--
   <node pkg="tf" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 0 odom_combined base_footprint 100" />
 -->
@@ -43,8 +40,8 @@
   -->
   <!--<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" /> -->
 
-
   <group if="$(arg use_sbpl_pipeline)">
+	<!-- NOTE planning_context.launch is included in pr2_move_group_sbpl.launch -->
     <include file="$(find sbpl_demos)/launch/pr2/pr2_move_group_sbpl.launch">
       <arg name="allow_trajectory_execution" value="true"/>
       <arg name="fake_execution" value="false"/>
@@ -54,6 +51,9 @@
 	<rosparam command="load" file="$(find sbpl_demos)/config/pr2/manipulation/sbpl_planning_params.yaml"/>
   </group>
   <group unless="$(arg use_sbpl_pipeline)">
+    <include file="$(find pr2_moveit_config)/launch/planning_context.launch">
+      <arg name="load_robot_description" value="true"/>
+    </include>
     <include file="$(find pr2_moveit_config)/launch/move_group.launch">
       <arg name="allow_trajectory_execution" value="true"/>
       <arg name="fake_execution" value="false"/>

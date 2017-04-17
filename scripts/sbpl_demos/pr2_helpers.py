@@ -340,7 +340,6 @@ class MoveitMoveArm:
         input_ps = PoseStamped()
         input_ps.pose = pose
         input_ps.header.frame_id = reference_frame
-        # FIXME intensionally set the reference frame to /base_footprint to compensate the effect of bug in moveit?
         correct_ps = self.tflistener.transformPose("odom_combined", input_ps )
 
         self.moveit_planning_group.set_start_state_to_current_state()
