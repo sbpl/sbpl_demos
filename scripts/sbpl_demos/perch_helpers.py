@@ -190,7 +190,7 @@ class PerchClient:
 
         while not rospy.is_shutdown():
             if not self.locked:
-                rospy.loginfo("Received object recognition result...")
+                rospy.loginfo("Received object recognition result from PERCH!")
                 return self.perch_pose
 
             else:
@@ -213,7 +213,7 @@ class PerchClient:
         if self.locked:
 
             self.perch_pose = data
-            print self.perch_pose
+            # print self.perch_pose
             self.locked = False
 
 

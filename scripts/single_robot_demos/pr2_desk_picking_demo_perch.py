@@ -15,19 +15,20 @@ from sbpl_demos.perception_helpers import AR_TYPES
 
 class Demo:
     def __init__(self):
-#         self.STATIONARY = True
-        self.STATIONARY = False
+        self.STATIONARY = True
+#         self.STATIONARY = False
         self.tflistener = tf.TransformListener()
         self.tfbroadcaster = tf.TransformBroadcaster()
         self.GripperCommand = pr2_helpers.GripperCommand()
         self.PointHead = pr2_helpers.PointHead()
         self.ARTagListener = perception_helpers.ARTagListener()
         self.PerchClient = perch_helpers.PerchClient()
-        self.PR2ARGrasping = grasping_helpers.PR2ARGrasping()
+#         self.PR2ARGrasping = grasping_helpers.PR2ARGrasping()
         self.MoveitMoveArm = pr2_helpers.MoveitMoveArm()
         self.TorsoCommand = pr2_helpers.TorsoCommand()
-        self.TuckArms = pr2_helpers.TuckArms()
-        self.MoveBase = pr2_helpers.MoveBase()
+#         self.TuckArms = pr2_helpers.TuckArms()
+        if(not self.STATIONARY):
+            self.MoveBase = pr2_helpers.MoveBase()
         self.ArmJointCommand = pr2_helpers.ArmJointCommand()
 
         rospy.sleep(1.0)
@@ -38,50 +39,50 @@ class Demo:
         rospy.loginfo('Commanding torso')
         self.TorsoCommand.MoveTorso(0.2)
 
-    def computeObjectPoseRoutine(self, name, artype, ee_position, markers):
-        if artype is not AR_TYPES.GENERAL_OBJ:
-
-            obj_markers = self.ARTagListener.getMarkersByType(markers, artype)
-            cnt = 0
-            for obj in obj_markers.markers:
-                valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(obj.pose.pose, artype)
-                if(valid_poses_candidates):
-                    self.valid_poses.append(valid_poses_candidates)
-                    (best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
-                    if(best_candidate):
-                        self.best_poses.append(best_candidate)
-                        self.best_distances.append(best_distance)
-                        self.best_poses_object.append(obj.pose.pose)
-
-                # place a collision object at the marker
-                obj.pose.header.stamp = rospy.Time.now()
-                obj.pose.header.frame_id = "odom_combined"
-                size = (0,0,0)
-                if(artype == AR_TYPES.CUBOID_EDGE):
-                    size = (0.2, 0.05, 0.05)
-                elif(artype == AR_TYPES.CYLINDER):
-                    size = (0.02, 0.02, 0.3)
-                elif(artype == AR_TYPES.ROD_END):
-                    size = (0.07, 0.07, 0.15)
-                elif(artype == AR_TYPES.CUBE):
-                    size = (0.07, 0.07, 0.07)
-                self.MoveitMoveArm.AddCollisionObject("object_"+name+"_"+ str(cnt), obj.pose, size )
-                rospy.sleep(2.0)
-                cnt+=1
-
-        else:
-            print("AR_TYPE.GENERAL_OBJ is not currently supported!")
-#             grasp_pose_perch = self.PerchClient.getGraspPose(name)
-#             print grasp_pose_perch
-#             valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
-#             if(valid_poses_candidates):
-#                 self.valid_poses.append(valid_poses_candidates)
-#                 (best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
-#                 if(best_candidate):
-#                     self.best_poses.append(best_candidate)
-#                     self.best_distances.append(best_distance)
-#                     self.best_poses_object.append(obj.pose.pose)
-#                     print best_candidate
+#     def computeObjectPoseRoutine(self, name, artype, ee_position, markers):
+#         if artype is not AR_TYPES.GENERAL_OBJ:
+#
+#             obj_markers = self.ARTagListener.getMarkersByType(markers, artype)
+#             cnt = 0
+#             for obj in obj_markers.markers:
+#                 valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(obj.pose.pose, artype)
+#                 if(valid_poses_candidates):
+#                     self.valid_poses.append(valid_poses_candidates)
+#                     (best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
+#                     if(best_candidate):
+#                         self.best_poses.append(best_candidate)
+#                         self.best_distances.append(best_distance)
+#                         self.best_poses_object.append(obj.pose.pose)
+#
+#                 # place a collision object at the marker
+#                 obj.pose.header.stamp = rospy.Time.now()
+#                 obj.pose.header.frame_id = "odom_combined"
+#                 size = (0,0,0)
+#                 if(artype == AR_TYPES.CUBOID_EDGE):
+#                     size = (0.2, 0.05, 0.05)
+#                 elif(artype == AR_TYPES.CYLINDER):
+#                     size = (0.02, 0.02, 0.3)
+#                 elif(artype == AR_TYPES.ROD_END):
+#                     size = (0.07, 0.07, 0.15)
+#                 elif(artype == AR_TYPES.CUBE):
+#                     size = (0.07, 0.07, 0.07)
+#                 self.MoveitMoveArm.AddCollisionObject("object_"+name+"_"+ str(cnt), obj.pose, size )
+#                 rospy.sleep(2.0)
+#                 cnt+=1
+#
+#         else:
+#             print("AR_TYPE.GENERAL_OBJ is not currently supported!")
+# #             grasp_pose_perch = self.PerchClient.getGraspPose(name)
+# #             print grasp_pose_perch
+# #             valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
+# #             if(valid_poses_candidates):
+# #                 self.valid_poses.append(valid_poses_candidates)
+# #                 (best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
+# #                 if(best_candidate):
+# #                     self.best_poses.append(best_candidate)
+# #                     self.best_distances.append(best_distance)
+# #                     self.best_poses_object.append(obj.pose.pose)
+# #                     print best_candidate
 
 
     def moveToWorkstationRoutine(self):
@@ -115,49 +116,49 @@ class Demo:
 # HACK XXX
 #             self.TuckArms.UntuckRightArms()
 
-    def pickingRoutine(self):
-        self.valid_poses = [] # all IK-valid poses
-        self.best_poses = [] # the best poses, one per item
-        self.best_distances = [] # the best distances, one per item corresponding to best_poses
-        self.best_poses_object = [] #TODO should be a map between pose -> object (AR) pose
-
-        rospy.loginfo('Commanding right gripper open')
-        self.GripperCommand.Command('r', 1) #open grigger
-        ## AR TAG PICKING
-        # get current EE position
-        (ee_position, ee_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
-
-        #want to latch it at this time
-        (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
-        rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
-            n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
-
-        if(n_desks > 0):
-            rospy.loginfo("Inserting Desk Collision objects")
-            desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
-            cnt = 0
-            for desk in desk_markers.markers:
-                desk.pose.header.frame_id = "odom_combined"
-                desk.pose.header.stamp = rospy.Time.now()
-                print desk
-                self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk.pose)
-                cnt+=1
-
-        if(n_cylinders >0):
-            rospy.loginfo("Computing poses for CYLINDERS")
-            self.computeObjectPoseRoutine("cylinder", AR_TYPES.CYLINDER, ee_position, markers)
-
-        if(n_cubes >0):
-            rospy.loginfo("Computing poses for CUBES")
-            self.computeObjectPoseRoutine("cubes", AR_TYPES.CUBE, ee_position, markers)
-
-        if(n_cuboid_edges >0):
-            rospy.loginfo("Computing poses for CUBOID_EDGE")
-            self.computeObjectPoseRoutine("cuboid_edge", AR_TYPES.CUBOID_EDGE, ee_position, markers)            
-
-        if(n_rod_ends >0):
-            rospy.loginfo("Computing poses for ROD_END")
-            self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
+#     def pickingRoutine(self):
+#         self.valid_poses = [] # all IK-valid poses
+#         self.best_poses = [] # the best poses, one per item
+#         self.best_distances = [] # the best distances, one per item corresponding to best_poses
+#         self.best_poses_object = [] #TODO should be a map between pose -> object (AR) pose
+#
+#         rospy.loginfo('Commanding right gripper open')
+#         self.GripperCommand.Command('r', 1) #open grigger
+#         ## AR TAG PICKING
+#         # get current EE position
+#         (ee_position, ee_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
+#
+#         #want to latch it at this time
+#         (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
+#         rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
+#             n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
+#
+#         if(n_desks > 0):
+#             rospy.loginfo("Inserting Desk Collision objects")
+#             desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
+#             cnt = 0
+#             for desk in desk_markers.markers:
+#                 desk.pose.header.frame_id = "odom_combined"
+#                 desk.pose.header.stamp = rospy.Time.now()
+#                 print desk
+#                 self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk.pose)
+#                 cnt+=1
+#
+#         if(n_cylinders >0):
+#             rospy.loginfo("Computing poses for CYLINDERS")
+#             self.computeObjectPoseRoutine("cylinder", AR_TYPES.CYLINDER, ee_position, markers)
+#
+#         if(n_cubes >0):
+#             rospy.loginfo("Computing poses for CUBES")
+#             self.computeObjectPoseRoutine("cubes", AR_TYPES.CUBE, ee_position, markers)
+#
+#         if(n_cuboid_edges >0):
+#             rospy.loginfo("Computing poses for CUBOID_EDGE")
+#             self.computeObjectPoseRoutine("cuboid_edge", AR_TYPES.CUBOID_EDGE, ee_position, markers)            
+#
+#         if(n_rod_ends >0):
+#             rospy.loginfo("Computing poses for ROD_END")
+#             self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
 
     def pickingRoutinePerch(self, object_name):
         rospy.loginfo('Commanding right gripper open')
@@ -177,12 +178,23 @@ class Demo:
             rospy.loginfo("Inserting Desk Collision objects")
             desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
             cnt = 0
-            for desk in desk_markers.markers:
-                desk.pose.header.frame_id = "odom_combined"
-                desk.pose.header.stamp = rospy.Time.now()
-                print desk
-                self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk.pose)
-                cnt+=1
+            for desk_marker in desk_markers.markers:
+                try:
+                    desk_marker.pose.header.frame_id = "odom_combined"
+#                     desk_marker.pose.header.stamp = rospy.Time.now()
+                    desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
+                    print desk_marker_in_map
+                    self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
+                    cnt+=1
+                except (tf.LookupException):
+                    print "tf.LookupException: Desk collision model will not be added!"
+                    continue
+                except (tf.ConnectivityException):
+                    print "tf.ConnectivityException"
+                    continue
+                except (tf.ExtrapolationException):
+                    print "tf.ExtrapolationException"
+                    continue
 
         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
 
@@ -193,9 +205,10 @@ class Demo:
         # get grasp and pre-grasp poses
         rospy.logwarn("Waiting for user's object selection from tablet...")
         (grasp_poses_perch, interp_poses_perch, distances_to_grasp) = self.PerchClient.getGraspPosesSpin()
-        print grasp_poses_perch
-        print interp_poses_perch
-        print distances_to_grasp
+#         print grasp_poses_perch
+#         print interp_poses_perch
+#         print distances_to_grasp
+        print("distances_to_grasp: ", distances_to_grasp)
 
         # add collision model
         (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
@@ -206,18 +219,22 @@ class Demo:
             desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
             cnt = 0
             for desk_marker in desk_markers.markers:
-
-#                 desk_marker_stamped = PoseStamped()
-#                 desk_marker_stamped.header.frame_id = "odom_combined"
-#                 desk_marker_stamped.pose = desk_marker.pose
-#                 desk_marker_in_map_stamped = self.tflistener.transformPose("map", desk_marker_stamped)
-
-                desk_marker.pose.header.frame_id = "odom_combined"
-#                 desk_marker.pose.header.stamp = rospy.Time.now()
-                desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
-                print desk_marker_in_map
-                self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
-                cnt+=1
+                try:
+                    desk_marker.pose.header.frame_id = "odom_combined"
+#                     desk_marker.pose.header.stamp = rospy.Time.now()
+                    desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
+                    print desk_marker_in_map
+                    self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
+                    cnt+=1
+                except (tf.LookupException):
+                    print "tf.LookupException: Cannot find transform between /map and /odom_combined. Desk collision model will not be added!"
+                    continue
+                except (tf.ConnectivityException):
+                    print "tf.ConnectivityException"
+                    continue
+                except (tf.ExtrapolationException):
+                    print "tf.ExtrapolationException"
+                    continue
 
         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
 
@@ -386,7 +403,7 @@ class Demo:
 #                 continue
 #             rospy.loginfo("Succeeded to grasp.")
             grip_success = self.GripperCommand.Command('r', 0.55) #Close Gripper   # HACK for 003_cracker_box
-            rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
+            rospy.loginfo(">>>>>>>>> GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
 
             # retract to interpolate pose
             rospy.loginfo("Moving back to interpolated pose")

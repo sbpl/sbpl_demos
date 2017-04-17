@@ -388,10 +388,14 @@ class MoveitMoveArm:
 #         pose.orientation.y = quat[1]
 #         pose.orientation.z = quat[2]
 #         pose.orientation.w = quat[3]
-        pose.orientation.x = 0.00129958
-        pose.orientation.y = 0.0836125
-        pose.orientation.z = 0.0657168
-        pose.orientation.w = 0.994329
+#         pose.orientation.x = 0.00129958
+#         pose.orientation.y = 0.0836125
+#         pose.orientation.z = 0.0657168
+#         pose.orientation.w = 0.994329
+        pose.orientation.x = 0.0
+        pose.orientation.y = 0.0
+        pose.orientation.z = 0.0
+        pose.orientation.w = 1.0
         return self.MoveToPose(pose, "base_footprint")
 
     def MoveRightToCarry(self):
@@ -531,7 +535,7 @@ class ArmJointTrajAction:
 
     def MoveArmToJoint(self, angles):
         goal = JointTrajectoryGoal()
-        char = self.name[0] #either 'r' or 'l'
+        char = self.name[0]  # either 'r' or 'l'
         goal.trajectory.joint_names = [char+'_shoulder_pan_joint',
                                        char+'_shoulder_lift_joint',
                                        char+'_upper_arm_roll_joint',
@@ -550,9 +554,10 @@ class ArmJointCommand:
         self.RightArmJointCommand = ArmJointTrajAction('r_arm')
         self.LeftArmJointCommand = ArmJointTrajAction('l_arm')
 
+    # NOTE current joint values can be read from 'rostopic echo /[r/l]_arm_controller/state'
+
     def MoveRightArmToWide(self):
-#         self.RightArmJointCommand.MoveArmToJoint([-1.0538075152641313, -0.0916694754002904, -0.009580763730843156, -1.4663557424420106, -0.03568253566579777, -0.09952282756129005, 14.158282159510952])
-        self.RightArmJointCommand.MoveArmToJoint([-1.0538075152641313, -0.0916694754002904, -0.009580763730843156, -1.4663557424420106, -0.03568253566579777, -0.09952282756129005, 1.59191154515])
+        self.RightArmJointCommand.MoveArmToJoint([-1.6583625690312713, 0.6874497663917372, -0.3591542852171954, -2.0396477595207805, 4.633907864244298, -1.2780054373789036, 2.9439450216806975])
 
     def MoveLeftArmToWide(self):
         self.LeftArmJointCommand.MoveArmToJoint([2.050585009506385, 1.168843268710281, 2.0143859931673638, -1.691908510777547, 1.264066293462545, -0.09850362202844609, 0.00586820137944688])
