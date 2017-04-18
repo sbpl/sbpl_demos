@@ -15,8 +15,8 @@ from sbpl_demos.perception_helpers import AR_TYPES
 
 class Demo:
     def __init__(self):
-        self.STATIONARY = True
-#         self.STATIONARY = False
+#         self.STATIONARY = True
+        self.STATIONARY = False
         self.tflistener = tf.TransformListener()
         self.tfbroadcaster = tf.TransformBroadcaster()
         self.GripperCommand = pr2_helpers.GripperCommand()
@@ -35,7 +35,7 @@ class Demo:
         rospy.loginfo('All Action clients connected!')
         #rospy.loginfo('Commanding Untucking')
         #self.TuckArms.UntuckArms()
-        self.PointHead.LookAt("base_footprint", 1.25, 0, 0)
+        self.PointHead.LookAt("base_footprint", 1.25, -0.4, 0)
         rospy.loginfo('Commanding torso')
         self.TorsoCommand.MoveTorso(0.2)
 
@@ -316,6 +316,10 @@ class Demo:
 
 #         rospy.loginfo("Moving to wide open")
 #         self.MoveitMoveArm.MoveRightToWide()
+
+        if(not self.STATIONARY):
+            rospy.loginfo("Initialize PR2 pose")
+            self.MoveBase.InitializePosePR2()
 
         rospy.loginfo("Moving arms to wide open")
         self.ArmJointCommand.MoveRightArmToWide()

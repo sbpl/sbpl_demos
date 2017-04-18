@@ -184,7 +184,11 @@ class MoveBase:
         self.client.wait_for_server()
         rospy.loginfo("Connected.")
 
+        self.PoseIntializer = octomap_helpers.PoseIntializer()
         self.OctomapClient = octomap_helpers.OctomapClient()
+
+    def InitializePosePR2(self):
+        self.PoseIntializer.setInitialPosePR2()
 
     def MoveToPose(self, frame, input_pose):
         self.OctomapClient.clearOctomapWorkspacePR2()
@@ -220,13 +224,21 @@ class MoveBase:
 #         pose.orientation.z = -0.7134
 #         pose.orientation.w = 0.70075
 
-        pose.position.x = -1.1574
-        pose.position.y = -1.1089
-        pose.position.z = 0.0
-        pose.orientation.x = 0.0008
-        pose.orientation.y = 0.001
-        pose.orientation.z = -0.6965
-        pose.orientation.w = 0.7175
+#         pose.position.x = -1.1574
+#         pose.position.y = -1.1089
+#         pose.position.z = 0.0
+#         pose.orientation.x = 0.0008
+#         pose.orientation.y = 0.001
+#         pose.orientation.z = -0.6965
+#         pose.orientation.w = 0.7175
+
+        pose.position.x = -1.06836
+        pose.position.y = -1.14624
+        pose.position.z = -1e-05
+        pose.orientation.x = -0.0017
+        pose.orientation.y = -0.0002
+        pose.orientation.z = -0.70305
+        pose.orientation.w = 0.71114
 
         self.MoveToPose("map", pose)
 
@@ -255,14 +267,22 @@ class MoveBase:
 #         pose.orientation.z = -0.6965
 #         pose.orientation.w = 0.7175
 
-#         pose.position.x = 1.254
-        pose.position.x = 0.854
-        pose.position.y = 0.116
-        pose.position.z = 0.0
-        pose.orientation.x = 0.0
-        pose.orientation.y = 0.0
-        pose.orientation.z = 0.0
-        pose.orientation.w = 1.0
+        pose.position.x = -0.56836
+        pose.position.y = -1.14624
+        pose.position.z = -1e-05
+        pose.orientation.x = -0.0017
+        pose.orientation.y = -0.0002
+        pose.orientation.z = -0.70305
+        pose.orientation.w = 0.71114
+
+# #         pose.position.x = 1.254
+#         pose.position.x = 0.854
+#         pose.position.y = 0.116
+#         pose.position.z = 0.0
+#         pose.orientation.x = 0.0
+#         pose.orientation.y = 0.0
+#         pose.orientation.z = 0.0
+#         pose.orientation.w = 1.0
 
         self.MoveToPose("map", pose)
 
