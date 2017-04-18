@@ -220,6 +220,10 @@ class PerchClient:
                 rospy.sleep(1)
 
 
+    def getRequestedObjectName(self):
+        return self.requested_object
+
+
     def send_request(self):
 
         self.publisher.publish(self.requested_object)
@@ -240,6 +244,7 @@ class PerchClient:
 
         if not self.requested:
             rospy.loginfo("Received user's object selection!")
+            self.requested_object = data
             self.requested = True
 
 

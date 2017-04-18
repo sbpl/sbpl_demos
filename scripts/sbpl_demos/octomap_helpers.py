@@ -66,13 +66,10 @@ class OctomapClient:
 
         except (tf.LookupException):
             print "tf.LookupException: Cannot find transform between /map and /base_footprint. Octomap will not be cleared!"
-            continue
         except (tf.ConnectivityException):
             print "tf.ConnectivityException: Octomap will not be cleared!"
-            continue
         except (tf.ExtrapolationException):
             print "tf.ExtrapolationException: Octomap will not be cleared!"
-            continue
 
 
     def clearOctomapWorkspace(self, min_in_map, max_in_map):

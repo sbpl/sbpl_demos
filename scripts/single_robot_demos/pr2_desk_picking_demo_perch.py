@@ -448,14 +448,16 @@ class Demo:
                 continue
 
             # grip_success: True when completely closed, False when grasped something
-#             grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
-#             if grip_success:
-#                 rospy.loginfo("Failed to grasp. Going back to identifying object location.")
-#                 self.MoveitMoveArm.MoveRightToWide()
-#                 continue
-#             rospy.loginfo("Succeeded to grasp.")
-            grip_success = self.GripperCommand.Command('r', 0.55) #Close Gripper   # HACK for 003_cracker_box
-            rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
+            if self.PerchClient.getRequestedObjectName() == "003_cracker_box":
+                grip_success = self.GripperCommand.Command('r', 0.55) #Close Gripper   # HACK for 003_cracker_box
+                rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
+            else:
+                grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
+                if grip_success:
+                    rospy.loginfo("Failed to grasp. Going back to identifying object location.")
+                    self.MoveitMoveArm.MoveRightToWide()
+                    continue
+                rospy.loginfo("Succeeded to grasp.")
 
             # retract to interpolate pose
             rospy.loginfo("Moving back to interpolated pose")
