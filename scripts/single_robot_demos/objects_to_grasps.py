@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
 
         object_transf_trans = (object_pose.position.x, object_pose.position.y, object_pose.position.z)
-        object_transf_rot = (object_pose.orientation.w, object_pose.orientation.x, object_pose.orientation.y, object_pose.orientation.z)
+        object_transf_rot = (object_pose.orientation.x, object_pose.orientation.y, object_pose.orientation.z, object_pose.orientation.w)
 
         T_b_w = listener.fromTranslationRotation(pose_base_to_wrist, quat_base_to_wrist)
         T_b_o = listener.fromTranslationRotation(object_transf_trans, object_transf_rot)
