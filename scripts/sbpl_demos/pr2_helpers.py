@@ -207,31 +207,8 @@ class MoveBase:
 
     def MoveToInternDesk(self):
         pose = geometry_msgs.msg.Pose()
-#         pose.position.x = -0.29
-#         pose.position.y = -2.5
-#         pose.position.z = 0.0
-#         quat = quaternion_from_euler(0,0,-math.pi/2.0)
-#         pose.orientation.x = quat[0]
-#         pose.orientation.y = quat[1]
-#         pose.orientation.z = quat[2]
-#         pose.orientation.w = quat[3]
 
-#         pose.position.x = -0.478
-#         pose.position.y = -1.122
-#         pose.position.z = 0.0
-#         pose.orientation.x = 0.0018
-#         pose.orientation.y = 0.001
-#         pose.orientation.z = -0.7134
-#         pose.orientation.w = 0.70075
-
-#         pose.position.x = -1.1574
-#         pose.position.y = -1.1089
-#         pose.position.z = 0.0
-#         pose.orientation.x = 0.0008
-#         pose.orientation.y = 0.001
-#         pose.orientation.z = -0.6965
-#         pose.orientation.w = 0.7175
-
+        # intern desk (around the right marker)
         pose.position.x = -1.06836
         pose.position.y = -1.14624
         pose.position.z = -1e-05
@@ -245,44 +222,23 @@ class MoveBase:
     def MoveToWorkstation(self):
         pose = geometry_msgs.msg.Pose()
 
-#         # pose.position.x = 0.440
-#         # pose.position.y = -1.540
-#         # pose.position.z = 0.0
-#         # quat = quaternion_from_euler(0,0,-0.004)
-#         pose.position.x=-0.234
-#         pose.position.y=-1.541
-#         pose.position.z=0.0
-#         quat = quaternion_from_euler(0,0,0.027)
-#
-#         pose.orientation.x = quat[0]
-#         pose.orientation.y = quat[1]
-#         pose.orientation.z = quat[2]
-#         pose.orientation.w = quat[3]
+        # intern desk (around the left marker)
+#         pose.position.x = -0.56836
+#         pose.position.y = -1.14624
+#         pose.position.z = -1e-05
+#         pose.orientation.x = -0.0017
+#         pose.orientation.y = -0.0002
+#         pose.orientation.z = -0.70305
+#         pose.orientation.w = 0.71114
 
-#         pose.position.x = -0.6574
-#         pose.position.y = -1.1089
-#         pose.position.z = 0.0
-#         pose.orientation.x = 0.0008
-#         pose.orientation.y = 0.001
-#         pose.orientation.z = -0.6965
-#         pose.orientation.w = 0.7175
-
-        pose.position.x = -0.56836
-        pose.position.y = -1.14624
-        pose.position.z = -1e-05
-        pose.orientation.x = -0.0017
-        pose.orientation.y = -0.0002
-        pose.orientation.z = -0.70305
-        pose.orientation.w = 0.71114
-
-# #         pose.position.x = 1.254
-#         pose.position.x = 0.854
-#         pose.position.y = 0.116
-#         pose.position.z = 0.0
-#         pose.orientation.x = 0.0
-#         pose.orientation.y = 0.0
-#         pose.orientation.z = 0.0
-#         pose.orientation.w = 1.0
+        # round table
+        pose.position.x = 0.3012
+        pose.position.y = 0.2188
+        pose.position.z = 0.0
+        pose.orientation.x = 0.001
+        pose.orientation.y = 0.0001
+        pose.orientation.z = 0.89411
+        pose.orientation.w = 0.44785
 
         self.MoveToPose("map", pose)
 

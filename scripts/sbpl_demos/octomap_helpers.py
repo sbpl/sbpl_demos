@@ -46,20 +46,33 @@ class OctomapClient:
         max_in_base.y =  1.0
         max_in_base.z =  2.0
 
-        # compute bounding box in /map frame
-        min_in_base_stamped = PoseStamped()
-        min_in_base_stamped.header.frame_id = "base_footprint"
-        min_in_base_stamped.pose.position = min_in_base
-        min_in_map_stamped = self.tflistener.transformPose("map", min_in_base_stamped)
-        min_in_map = min_in_map_stamped.pose.position
+        rospy.sleep(1)  # to void tf.ExtrapolationException
 
-        max_in_base_stamped = PoseStamped()
-        max_in_base_stamped.header.frame_id = "base_footprint"
-        max_in_base_stamped.pose.position = max_in_base
-        max_in_map_stamped = self.tflistener.transformPose("map", max_in_base_stamped)
-        max_in_map = max_in_map_stamped.pose.position
+        try:
+            # compute bounding box in /map frame
+            min_in_base_stamped = PoseStamped()
+            min_in_base_stamped.header.frame_id = "base_footprint"
+            min_in_base_stamped.pose.position = min_in_base
+            min_in_map_stamped = self.tflistener.transformPose("map", min_in_base_stamped)
+            min_in_map = min_in_map_stamped.pose.position
 
-        self.clearOctomapWorkspace(min_in_map, max_in_map)
+            max_in_base_stamped = PoseStamped()
+            max_in_base_stamped.header.frame_id = "base_footprint"
+            max_in_base_stamped.pose.position = max_in_base
+            max_in_map_stamped = self.tflistener.transformPose("map", max_in_base_stamped)
+            max_in_map = max_in_map_stamped.pose.position
+
+            self.clearOctomapWorkspace(min_in_map, max_in_map)
+
+        except (tf.LookupException):
+            print "tf.LookupException: Cannot find transform between /map and /base_footprint. Octomap will not be cleared!"
+            continue
+        except (tf.ConnectivityException):
+            print "tf.ConnectivityException: Octomap will not be cleared!"
+            continue
+        except (tf.ExtrapolationException):
+            print "tf.ExtrapolationException: Octomap will not be cleared!"
+            continue
 
 
     def clearOctomapWorkspace(self, min_in_map, max_in_map):

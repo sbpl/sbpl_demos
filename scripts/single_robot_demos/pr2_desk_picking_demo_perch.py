@@ -15,8 +15,8 @@ from sbpl_demos.perception_helpers import AR_TYPES
 
 class Demo:
     def __init__(self):
-        self.STATIONARY = True
-#         self.STATIONARY = False
+#         self.STATIONARY = True
+        self.STATIONARY = False
         self.tflistener = tf.TransformListener()
         self.tfbroadcaster = tf.TransformBroadcaster()
         self.GripperCommand = pr2_helpers.GripperCommand()
@@ -112,8 +112,8 @@ class Demo:
             rospy.loginfo('Commanding base to intern desk...')
             self.MoveBase.MoveToInternDesk()
 
-            rospy.loginfo('Commanding Untucking')
 # HACK XXX
+#             rospy.loginfo('Commanding Untucking')
 #             self.TuckArms.UntuckRightArms()
 
 #     def pickingRoutine(self):
