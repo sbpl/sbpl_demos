@@ -43,16 +43,16 @@ if __name__ == "__main__":
     rate = rospy.Rate(10.0)
     while not rospy.is_shutdown():
         
-        # object_pose = PerchClient.getGraspPose("003_cracker_box")
-        # object_pose = PerchClient.getGraspPose("019_pitcher_base")
-        object_pose = PerchClient.getGraspPose("006_mustard_bottle")
-        # object_pose = PerchClient.getGraspPose("010_potted_meat_can")
+        # object_pose = PerchClient.getObjectPose("003_cracker_box")
+        # object_pose = PerchClient.getObjectPose("019_pitcher_base")
+        object_pose = PerchClient.getObjectPose("006_mustard_bottle")
+        # object_pose = PerchClient.getObjectPose("010_potted_meat_can")
 
 
         raw_input("object pose registered, hit enter to get first pose")
 
         try:
-            (pose_base_to_wrist, quat_base_to_wrist) = listener.lookupTransform("r_wrist_roll_link", "base_link", rospy.Time(0))
+            (pose_base_to_wrist, quat_base_to_wrist) = listener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time(0))
         except (tf.LookupException):
             print "lookup exception"
             continue
