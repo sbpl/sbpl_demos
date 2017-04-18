@@ -7,7 +7,6 @@ import rospkg
 import geometry_msgs.msg
 import tf
 import numpy as np
-from sbpl_demos import perch_helpers
 import yaml
 
 roslib.load_manifest('sbpl_demos')
@@ -41,10 +40,10 @@ if __name__ == "__main__":
 			print value[grasp_i_key]['pregrasp']
 			print value[grasp_i_key]['grasp']
 
-			rospy.set_param(grasp_n+'/pregrasp/rot_w_x_y_z', value[grasp_i_key]['pregrasp']['rotation'])
+			rospy.set_param(grasp_n+'/pregrasp/rot_x_y_z_w', value[grasp_i_key]['pregrasp']['rotation'])
 			rospy.set_param(grasp_n+'/pregrasp/trans_x_y_z', value[grasp_i_key]['pregrasp']['translation'])
 
-			rospy.set_param(grasp_n+'/grasp/rot_w_x_y_z', value[grasp_i_key]['grasp']['rotation'])
+			rospy.set_param(grasp_n+'/grasp/rot_x_y_z_w', value[grasp_i_key]['grasp']['rotation'])
 			rospy.set_param(grasp_n+'/grasp/trans_x_y_z', value[grasp_i_key]['grasp']['translation'])
 
 
