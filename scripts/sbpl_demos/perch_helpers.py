@@ -70,13 +70,13 @@ class PerchClient:
 
             # hard-coded grasp poses in object local frame
             if i == 0:
-                #grasp_pos_in_local = (0.0, 0.23, 0.0)
-                grasp_pos_in_local = (0.0, 0.16, 0.0)
+                grasp_pos_in_local = (0.0, 0.23, 0.0)
+#                 grasp_pos_in_local = (0.0, 0.16, 0.0)
                 
                 grasp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
             elif i == 1:
-                #grasp_pos_in_local = (0.0, -0.23, 0.0)
-                grasp_pos_in_local = (0.0, -0.16, 0.0)
+                grasp_pos_in_local = (0.0, -0.23, 0.0)
+#                 grasp_pos_in_local = (0.0, -0.16, 0.0)
                 
                 grasp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
 

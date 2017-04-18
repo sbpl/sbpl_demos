@@ -319,7 +319,12 @@ class MoveitMoveArm:
         use_sbpl_pipeline = True
 
         if use_sbpl_pipeline:
-            self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_manip]")
+            self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_manip]")  # slow; robust but sometimes rotating the wrist; initial plan can be found within a second, so just reduce allowed_planning_time
+#             self.moveit_planning_group.set_planner_id("right_arm[larastar_bfs_manip]")  # not faster; similar motion
+#             self.moveit_planning_group.set_planner_id("right_arm[mhastar_bfs_manip]")  # not faster; similar motion
+#             self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_workspace]")   # faster; weird suboptimal path
+#             self.moveit_planning_group.set_planner_id("right_arm[arastar_euclid_workspace]")  # slow; wrist orientation converges early
+#             self.moveit_planning_group.set_planner_id("right_arm[larastar_euclid_workspace]")   # not faster, abrupt motions!
 
             self.moveit_planning_group.set_planning_time(rospy.get_param("move_group/allowed_planning_time"))
             self.moveit_planning_group.allow_replanning(True)
