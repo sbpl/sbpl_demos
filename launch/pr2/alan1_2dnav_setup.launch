@@ -1,8 +1,12 @@
 <launch>
   <include file="$(find pr2_machine)/$(env ROBOT).machine" />
-  <include file="$(find pr2_navigation_global)/amcl_node.xml" />
-  <include file="$(find pr2_navigation_teleop)/teleop.xml" />
-  <include file="$(find pr2_navigation_perception)/lasers_and_filters.xml" />
-  <include file="$(find pr2_navigation_perception)/ground_plane.xml" />
-  <include file="$(find pr2_navigation_global)/move_base.xml" />
+<!--   <include file="$(find pr2_navigation_global)/amcl_node.xml" /> -->
+<!--   <include file="$(find pr2_navigation_teleop)/teleop.xml" /> -->
+<!--   <include file="$(find pr2_navigation_perception)/lasers_and_filters.xml" /> -->
+<!--   <include file="$(find pr2_navigation_perception)/ground_plane.xml" /> -->
+  <include file="$(find sbpl_demos)/config/pr2/navigation/amcl_node.xml" />
+  <include file="$(find sbpl_demos)/config/pr2/navigation/teleop.xml" />
+  <include file="$(find sbpl_demos)/config/pr2/navigation/lasers_and_filters.xml" />
+  <include file="$(find sbpl_demos)/config/pr2/navigation/ground_plane.xml" />
+  <include file="$(find sbpl_demos)/config/pr2/navigation/move_base_2dnav.xml" />
 </launch>

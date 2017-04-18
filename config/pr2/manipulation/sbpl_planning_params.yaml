@@ -1,0 +1,16 @@
+move_group:
+    allowed_planning_time: 15.0
+    tip_link: r_wrist_roll_link
+    workspace_frame: base_footprint
+    workspace_min:
+        x: -2.0
+        y: -2.0
+        z: 0.0
+    workspace_max:
+        x: 2.0
+        y: 2.0
+        z: 2.0
+    tolerance:
+        position: 0.03
+        orientation: 5.0
+        joint: 5.0

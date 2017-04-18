@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="topic_tools" type="throttle" name="kinect_throttle" args="messages /kinect_head/depth_registered/points 1.0 /kinect_throttled" machine="c1" output="screen"/>
+</launch>

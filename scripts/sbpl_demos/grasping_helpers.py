@@ -67,6 +67,13 @@ class ARGrasping:
             self.request.roll_interval = [math.pi/2.0]
             self.request.pitch_interval = [-math.pi/2.0, math.pi/2.0]
             self.request.yaw_interval = [-math.pi/2.0]
+        if(artype == AR_TYPES.GENERAL_OBJ):
+            self.request.x_interval = [0]
+            self.request.y_interval = [0]
+            self.request.z_interval = [0]
+            self.request.roll_interval = [0]
+            self.request.pitch_interval = [0]
+            self.request.yaw_interval = [0]
 
         res = self.client(self.request)
         return res.valid_poses
@@ -107,7 +114,7 @@ class ARGrasping:
 class RomanARGrasping(ARGrasping):
     def __init__(self):
         planning_group = "right_arm_and_torso"
-        reference_frame = "map"
+        reference_frame = "odom_combined"
         joint_names = ["torso_joint1",
                        "limb_right_joint1",
                        "limb_right_joint2",
@@ -129,7 +136,7 @@ class RomanARGrasping(ARGrasping):
 class PR2ARGrasping(ARGrasping):
     def __init__(self):
         planning_group = "right_arm"
-        reference_frame = "map"
+        reference_frame = "odom_combined"
         joint_names = ["r_elbow_flex_joint",
                        "r_forearm_roll_joint",
                        "r_shoulder_lift_joint", 

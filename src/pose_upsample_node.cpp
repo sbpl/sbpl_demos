@@ -66,6 +66,7 @@ Eigen::Affine3d affineFromPose(const geometry_msgs::Pose &p){
 }
 
 geometry_msgs::Pose poseFromAffine(const Eigen::Affine3d &A){
+
     geometry_msgs::Pose P;
     P.position.x = A.translation()[0];
     P.position.y = A.translation()[1];
@@ -230,14 +231,14 @@ void PoseUpsampler::generatePoses(const geometry_msgs::Pose& Pobject, std::vecto
     int count = 0;
     vecPout.clear();
     Eigen::Affine3d Aobject;
-    Eigen::Affine3d Apertubation;
+    Eigen::Affine3d Aperturbation;
     Eigen::Affine3d Aoutput;
     Aobject = util::affineFromPose(Pobject);
     geometry_msgs::Pose Pout;
 
     for(auto it = APerturbations_.begin(); it != APerturbations_.end(); it++){
-        Apertubation = *it;
-        Aoutput = Aobject * Apertubation * Arobot_;
+        Aperturbation = *it;
+        Aoutput = Aobject * Aperturbation * Arobot_;
         Pout = util::poseFromAffine(Aoutput);
         vecPout.push_back(Pout);
 

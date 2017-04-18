@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(sbpl_demos)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x") 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_BUILD_TYPE Release) 
 
@@ -31,6 +31,7 @@ add_message_files(
 add_service_files(
   FILES 
   PoseUpsample.srv 
+  ReturnJointStates.srv
 )
 add_action_files(
   FILES
@@ -70,3 +71,7 @@ target_link_libraries(pr2_rocon_marker_publisher ${catkin_LIBRARIES} )
 add_executable(pose_upsample_node src/pose_upsample_node.cpp)
 add_dependencies(pose_upsample_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pose_upsample_node ${catkin_LIBRARIES} )
+
+add_executable(pose_upsample_node_perchEnabled src/pose_upsample_node_perchEnabled.cpp)
+add_dependencies(pose_upsample_node_perchEnabled ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pose_upsample_node_perchEnabled ${catkin_LIBRARIES} )

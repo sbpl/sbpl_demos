@@ -1,0 +1,48 @@
+#BEGIN VOXEL STUFF
+# NOTE due to a conflict in obstacle clearing requirement and point cloud observation filtering (min/max_obstacle_height), a voxel-type obstacle map cannot be cleared properly
+# map_type: voxel
+map_type: costmap
+origin_z: 0.0
+z_voxels: 16
+z_resolution: 0.1125
+unknown_cost_value: 0
+unknown_threshold: 8
+# mark_threshold: 0
+mark_threshold: 0.3
+#END VOXEL STUFF
+
+transform_tolerance: 2.0    # [sec]
+obstacle_range: 2.5
+raytrace_range: 10.0
+# inflation_radius: 0.55
+inflation_radius: 0.10
+
+# BEGIN VOXEL STUFF
+# NOTE set 'expected_update_rate' long enough to avoid 'sensor data is out of date' error
+
+# observation_sources: base_scan_marking base_scan kinect_cloud
+observation_sources: base_scan kinect_cloud
+# observation_sources: base_scan
+
+# base_scan_marking: {sensor_frame: base_laser_link, topic: /base_scan_marking, data_type: PointCloud2, expected_update_rate: 5,
+#     observation_persistence: 0.0, marking: true, clearing: false, min_obstacle_height: 0.08, max_obstacle_height: 2.0}
+#
+# base_scan: {sensor_frame: base_laser_link, topic: /base_scan, data_type: LaserScan, expected_update_rate: 0.5,
+#     observation_persistence: 0.0, marking: false, clearing: true, min_obstacle_height: -0.10, max_obstacle_height: 2.0}
+
+base_scan: {sensor_frame: base_laser_link, topic: /base_scan, data_type: LaserScan, expected_update_rate: 5,
+    observation_persistence: 0.0, marking: true, clearing: true, min_obstacle_height: -0.10, max_obstacle_height: 2.0}
+
+kinect_cloud: {sensor_frame: head_mount_kinect_rgb_link, topic: /kinect_throttled, data_type: PointCloud2, expected_update_rate: 5,
+# kinect_cloud: {sensor_frame: head_mount_kinect_rgb_link, topic: /kinect_head/depth_registered/points, data_type: PointCloud2, expected_update_rate: 5,
+    observation_persistence: 0.0, marking: true, clearing: true, min_obstacle_height: 0.10, max_obstacle_height: 2.0}
+
+## NOTE a launch command 'rosrun pr2_move_base pr2_move_base.py' in move_base.xml should also be uncommented to use /tilt_scan data
+#
+# tilt_scan: {sensor_frame: laser_tilt_link, topic: /tilt_scan_interpolated, data_type: LaserScan, expected_update_rate: 0.2,
+#     observation_persistence: 0.2, marking: false, clearing: true, min_obstacle_height: -20.00, max_obstacle_height: 40.0}
+#
+# ground_object_cloud: {sensor_frame: laser_tilt_link, topic: /ground_object_cloud, data_type: PointCloud2, expected_update_rate: 0.2,
+#     observation_persistence: 4.6, marking: true, clearing: false, min_obstacle_height: -0.10, max_obstacle_height: 2.0}
+
+# END VOXEL STUFF

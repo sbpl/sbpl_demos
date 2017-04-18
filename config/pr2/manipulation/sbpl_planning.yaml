@@ -1,0 +1,245 @@
+right_arm:
+  planner_configs:
+    arastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: RightArmManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    larastar_bfs_manip:
+      search_config: LARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: RightArmManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    mhastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: RightArmManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    arastar_bfs_workspace:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: RightArmWorkspaceLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    arastar_euclid_workspace:
+      search_config: ARAConfigDefault
+      heuristic_config: EuclidDistConfigDefault
+      graph_config: RightArmWorkspaceLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    larastar_euclid_workspace:
+      search_config: LARAConfigDefault
+      heuristic_config: EuclidDistConfigDefault
+      graph_config: RightArmWorkspaceLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    adaptive_planner:
+      search_config: AdaptivePlannerConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: RightArmAdaptiveWorkspaceLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+left_arm:
+  planner_configs:
+    arastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: LeftArmManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    larastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: LeftArmManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    mhastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: LeftArmManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+
+right_arm_and_torso:
+  planner_configs:
+    arastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: RightArmAndTorsoManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    larastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: RightArmAndTorsoManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    mhastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: RightArmAndTorsoManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+
+left_arm_and_torso:
+  planner_configs:
+    arastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: LeftArmAndTorsoManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    larastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: LeftArmAndTorsoManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+    mhastar_bfs_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: BFSConfigDefault
+      graph_config: LeftArmAndTorsoManipLatticeConfigDefault
+      shortcut_config: JointSpaceShortcutConfigDefault
+
+#arms:
+#  planner_configs: {}
+#
+
+base:
+  planner_configs:
+    arastar_joint_dist_manip:
+      search_config: ARAConfigDefault
+      heuristic_config: JointDistConfigDefault
+      graph_config: BaseManipLatticeConfigDefault
+      shortcut_config: PassShortcutConfigDefault
+#
+#head:
+#  planner_configs: {}
+#
+#left_gripper:
+#  planner_configs: {}
+#
+#right_gripper:
+#  planner_configs: {}
+#
+#torso:
+#  planner_configs: {}
+#
+#whole_body:
+#  planner_configs: {}
+
+search_configs:
+  ARAConfigDefault:
+    search: arastar
+    epsilon: 100.0
+  LARAConfigDefault:
+    search: larastar
+    epsilon: 100.0
+  MHAConfigDefault:
+    search: mhastar
+    epsilon: 10.0
+    mha_epsilon: 10.0
+  AdaptivePlannerConfigDefault:
+    search: padastar
+    epsilon_plan: 100.0
+    epsilon_track: 100.0
+
+heuristic_configs:
+  BFSConfigDefault:
+    heuristic: bfs
+    bfs_res_x: 0.015
+    bfs_res_y: 0.015
+    bfs_res_z: 0.015
+    bfs_sphere_radius: 0.02
+  EuclidDistConfigDefault:
+    heuristic: euclid
+  JointDistConfigDefault:
+    heuristic: joint_distance
+
+graph_configs:
+  RightArmManipLatticeConfigDefault:
+    graph: manip
+    discretization:
+      r_shoulder_pan_joint:   0.017453292519943
+      r_shoulder_lift_joint:  0.017453292519943
+      r_upper_arm_roll_joint: 0.017453292519943
+      r_forearm_roll_joint:   0.017453292519943
+      r_elbow_flex_joint:     0.017453292519943
+      r_wrist_flex_joint:     0.017453292519943
+      r_wrist_roll_joint:     0.017453292519943
+    use_xyz_snap_mprim: false
+    use_rpy_snap_mprim: true
+    use_xyzrpy_snap_mprim: true
+    use_short_dist_mprims: true
+    xyz_snap_dist_thresh: 0.0
+    rpy_snap_dist_thresh: 0.04
+    xyzrpy_snap_dist_thresh: 0.2
+    short_dist_mprims_thresh: 0.4
+  RightArmWorkspaceLatticeConfigDefault:
+    graph: workspace
+  RightArmAdaptiveWorkspaceLatticeConfigDefault:
+    graph: adaptive_workspace_lattice
+  RightArmAndTorsoManipLatticeConfigDefault:
+    graph: manip
+    discretization:
+      torso_lift_joint:       0.02
+      r_shoulder_pan_joint:   0.017453292519943
+      r_shoulder_lift_joint:  0.017453292519943
+      r_upper_arm_roll_joint: 0.017453292519943
+      r_forearm_roll_joint:   0.017453292519943
+      r_elbow_flex_joint:     0.017453292519943
+      r_wrist_flex_joint:     0.017453292519943
+      r_wrist_roll_joint:     0.017453292519943
+    use_xyz_snap_mprim: false
+    use_rpy_snap_mprim: true
+    use_xyzrpy_snap_mprim: true
+    use_short_dist_mprims: true
+    xyz_snap_dist_thresh: 0.0
+    rpy_snap_dist_thresh: 0.04
+    xyzrpy_snap_dist_thresh: 0.2
+    short_dist_mprims_thresh: 0.4
+  LeftArmManipLatticeConfigDefault:
+    graph: manip
+    discretization:
+      l_shoulder_pan_joint:   0.017453292519943
+      l_shoulder_lift_joint:  0.017453292519943
+      l_upper_arm_roll_joint: 0.017453292519943
+      l_forearm_roll_joint:   0.017453292519943
+      l_elbow_flex_joint:     0.017453292519943
+      l_wrist_flex_joint:     0.017453292519943
+      l_wrist_roll_joint:     0.017453292519943
+    use_xyz_snap_mprim: false
+    use_rpy_snap_mprim: true
+    use_xyzrpy_snap_mprim: true
+    use_short_dist_mprims: true
+    xyz_snap_dist_thresh: 0.0
+    rpy_snap_dist_thresh: 0.04
+    xyzrpy_snap_dist_thresh: 0.2
+    short_dist_mprims_thresh: 0.4
+  LeftArmAndTorsoManipLatticeConfigDefault:
+    graph: manip
+    discretization:
+      torso_lift_joint:       0.02
+      l_shoulder_pan_joint:   0.017453292519943
+      l_shoulder_lift_joint:  0.017453292519943
+      l_upper_arm_roll_joint: 0.017453292519943
+      l_forearm_roll_joint:   0.017453292519943
+      l_elbow_flex_joint:     0.017453292519943
+      l_wrist_flex_joint:     0.017453292519943
+      l_wrist_roll_joint:     0.017453292519943
+    use_xyz_snap_mprim: false
+    use_rpy_snap_mprim: true
+    use_xyzrpy_snap_mprim: true
+    use_short_dist_mprims: true
+    xyz_snap_dist_thresh: 0.0
+    rpy_snap_dist_thresh: 0.04
+    xyzrpy_snap_dist_thresh: 0.2
+    short_dist_mprims_thresh: 0.4
+  BaseManipLatticeConfigDefault:
+    graph: manip
+    discretization:
+      world_joint_x: 0.02
+      world_joint_y: 0.02
+      world_joint_theta: 0.39269908169872
+    use_xyz_snap_mprim: false
+    use_rpy_snap_mprim: false
+    use_xyzrpy_snap_mprim: false
+    use_short_dist_mprims: false
+
+shortcut_configs:
+  JointSpaceShortcutConfigDefault:
+    shortcutter: joint_space
+    shortcut_path: true
+    interpolate_path: true
+  PassShortcutConfigDefault:
+    shortcutter: joint_space
+    shortcut_path: false
+    interpolate_path: false

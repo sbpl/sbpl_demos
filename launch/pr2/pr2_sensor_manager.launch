@@ -3,7 +3,7 @@
   <!-- This file makes it easy to include the settings for sensor managers -->  
 
   <!-- Set the file describing which sensor(s) to use to build the octomap  -->
-  <arg name="moveit_octomap_sensor_params_file" default="$(find sbpl_demos)/config/pr2/pr2_moveit_sensor_params.yaml" />
+  <arg name="moveit_octomap_sensor_params_file" default="$(find sbpl_demos)/config/pr2/manipulation/pr2_moveit_sensor_params.yaml" />
 
   <!-- Load the robot specific sensor manager; this sets the moveit_sensor_manager ROS parameter -->
   <arg name="moveit_sensor_manager" default="pr2" />

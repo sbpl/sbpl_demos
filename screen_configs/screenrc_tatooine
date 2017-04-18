@@ -1,8 +1,22 @@
 source screenrc.common
 
-screen -t bash
-#stuff "roscore^M"
-stuff "pr2master"
+# screen -t bash
+# #stuff "roscore^M"
+# stuff "pr2master"
+
+screen -t rviz
+stuff "pr2master; ^M"
+stuff "rviz"
+
+screen -t perch
+stuff "pr2master; ^M"
+stuff "source ~/ros/perch_ws/devel/setup.bash; ^M"
+stuff "roslaunch object_recognition_node pr2_object_recognition.launch"
+
+screen -t web
+stuff "pr2master; ^M"
+stuff "roslaunch rosbridge_server rosbridge_websocket.launch;  ^M"
+stuff "# run 'sudo /etc/init.d/apache2 start' if apache2 is not running"
 
 screen -t ar_track
 stuff "pr2master; ^M"
@@ -12,15 +26,13 @@ screen -t moveit
 stuff "pr2master; ^M"
 stuff "roslaunch sbpl_demos tatooine_moveit_setup.launch"
 
-screen -t pose_node
-stuff "pr2master; ^M"
-stuff "rosrun sbpl_demos pose_upsample_node"
+# screen -t pose_node
+# stuff "pr2master; ^M"
+# stuff "rosrun sbpl_demos pose_upsample_node"
 
 screen -t PR2_demo
 stuff "pr2master; ^M"
-stuff "rosrun sbpl_demos pr2_simple_grasp_task.py"
-
-screen -t rviz
-stuff "pr2master; ^M"
-stuff "rviz"
+# stuff "rosrun sbpl_demos pr2_simple_grasp_task.py"
+# stuff "rosrun sbpl_demos pr2_desk_picking_demo.py"
+stuff "rosrun sbpl_demos pr2_desk_picking_demo_perch.py"
 
