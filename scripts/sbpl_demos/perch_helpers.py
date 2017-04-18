@@ -68,23 +68,71 @@ class PerchClient:
         interp_matrices_in_local = []
         for i in range(0,2):
 
+#             # hard-coded grasp poses in object local frame
+#             # 003_cracker_box
+#             grasp_pos_in_local = ()
+#             grasp_quat_in_local = ()
+#             interp_pos_in_local = ()
+#             interp_quat_in_local = ()
+#             if self.requested_object == "003_cracker_box":
+#                 if i == 0:
+#                     grasp_pos_in_local = (0.0, 0.23, 0.0)
+# #                 grasp_pos_in_local = (0.0, 0.16, 0.0)
+#                     grasp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
+#                 elif i == 1:
+#                     grasp_pos_in_local = (0.0, -0.23, 0.0)
+# #                 grasp_pos_in_local = (0.0, -0.16, 0.0)
+#                     grasp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
+#             # 006_mustard_bottle
+#             if self.requested_object == "006_mustard_bottle":
+#                 if i == 0:
+#                     grasp_pos_in_local = (-0.17370368, 0.08040001, -0.01967883)
+#                     grasp_quat_in_local = (-0.00593715, 0.00969645, -0.21896115, 0.97566733)
+#                 elif i == 1:
+#                     grasp_pos_in_local = (0.16134278, -0.06030286, 0.00066045)
+#                     grasp_quat_in_local = (-0.0273408, 0.00288966, 0.98149227, 0.18951796)
+#
+#             # transformation matrix of grasp pose in object local frame
+#             grasp_matrix_in_local = self.tflistener.fromTranslationRotation(grasp_pos_in_local, grasp_quat_in_local)
+#
+#             # add to the database
+#             grasp_matrices_in_local.append(grasp_matrix_in_local)
+#
+#
+#             # hard-coded grasp pose in object local frame
+#             # 003_cracker_box
+#             if self.requested_object == "003_cracker_box":
+#                 if i == 0:
+#                     interp_pos_in_local = (0.0, 0.33, 0.0)
+#                     interp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
+#                 elif i == 1:
+#                     interp_pos_in_local = (0.0, -0.33, 0.0)
+#                     interp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
+#             # 006_mustard_bottle
+#             if self.requested_object == "006_mustard_bottle":
+#                 if i == 0:
+#                     interp_pos_in_local = (-0.23743967, 0.10060774, -0.01100586)
+#                     interp_quat_in_local = (0.00853756, 0.01887509, -0.20440426, 0.97866733)
+#                 elif i == 1:
+#                     interp_pos_in_local = (0.21092159, -0.07302159, 0.00767459)
+#                     interp_quat_in_local = (-0.04094911, -0.00174438, 0.98468821, 0.16943806)
+#
+#             # transformation matrix of pre-grasp pose in object local frame
+#             interp_matrix_in_local = self.tflistener.fromTranslationRotation(interp_pos_in_local, interp_quat_in_local)
+#
+#             # add to the database
+#             interp_matrices_in_local.append(interp_matrix_in_local)
+
             # hard-coded grasp poses in object local frame
             # 003_cracker_box
-#             if i == 0:
-#                 grasp_pos_in_local = (0.0, 0.23, 0.0)
-# #                 grasp_pos_in_local = (0.0, 0.16, 0.0)
-#                 grasp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
-#             elif i == 1:
-#                 grasp_pos_in_local = (0.0, -0.23, 0.0)
-# #                 grasp_pos_in_local = (0.0, -0.16, 0.0)
-#                 grasp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
-            # 006_mustard_bottle
             if i == 0:
-                grasp_pos_in_local = (-0.17370368, 0.08040001, -0.01967883)
-                grasp_quat_in_local = (-0.00593715, 0.00969645, -0.21896115, 0.97566733)
+                grasp_pos_in_local = (0.0, 0.23, 0.0)
+#                 grasp_pos_in_local = (0.0, 0.16, 0.0)
+                grasp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
             elif i == 1:
-                grasp_pos_in_local = (0.16134278, -0.06030286, 0.00066045)
-                grasp_quat_in_local = (-0.0273408, 0.00288966, 0.98149227, 0.18951796)
+                grasp_pos_in_local = (0.0, -0.23, 0.0)
+#                 grasp_pos_in_local = (0.0, -0.16, 0.0)
+                grasp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
 
             # transformation matrix of grasp pose in object local frame
             grasp_matrix_in_local = self.tflistener.fromTranslationRotation(grasp_pos_in_local, grasp_quat_in_local)
@@ -95,20 +143,13 @@ class PerchClient:
 
             # hard-coded grasp pose in object local frame
             # 003_cracker_box
-#             if i == 0:
-#                 interp_pos_in_local = (0.0, 0.33, 0.0)
-#                 interp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
-#             elif i == 1:
-#                 interp_pos_in_local = (0.0, -0.33, 0.0)
-#                 interp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
-            # 006_mustard_bottle
             if i == 0:
-                interp_pos_in_local = (-0.23743967, 0.10060774, -0.01100586)
-                interp_quat_in_local = (0.00853756, 0.01887509, -0.20440426, 0.97866733)
+                interp_pos_in_local = (0.0, 0.33, 0.0)
+                interp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
             elif i == 1:
-                interp_pos_in_local = (0.21092159, -0.07302159, 0.00767459)
-                interp_quat_in_local = (-0.04094911, -0.00174438, 0.98468821, 0.16943806)
-
+                interp_pos_in_local = (0.0, -0.33, 0.0)
+                interp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
+            
             # transformation matrix of pre-grasp pose in object local frame
             interp_matrix_in_local = self.tflistener.fromTranslationRotation(interp_pos_in_local, interp_quat_in_local)
 

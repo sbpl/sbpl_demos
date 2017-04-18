@@ -72,6 +72,20 @@ class OctomapClient:
             print "tf.ExtrapolationException: Octomap will not be cleared!"
 
 
+    def clearOctomapCouch(self):
+        # hard-coded bounding box to be cleared in /base_footprint frame
+        min_in_map = Point()
+        min_in_map.x = -3.0
+        min_in_map.y =  0.5
+        min_in_map.z =  0.0
+
+        max_in_map = Point()
+        max_in_map.x = -1.0
+        max_in_map.y =  3.0
+        max_in_map.z =  2.0
+
+        self.clearOctomapWorkspace(min_in_map, max_in_map)
+
     def clearOctomapWorkspace(self, min_in_map, max_in_map):
         request = BoundingBoxQueryRequest()
         request.min.x = min(min_in_map.x, max_in_map.x)

@@ -190,6 +190,9 @@ class MoveBase:
     def InitializePosePR2(self):
         self.PoseIntializer.setInitialPosePR2()
 
+    def clearOctomapCouch(self):
+        self.OctomapClient.clearOctomapCouch()
+
     def MoveToPose(self, frame, input_pose):
         self.OctomapClient.clearOctomapWorkspacePR2()
 
@@ -232,13 +235,21 @@ class MoveBase:
 #         pose.orientation.w = 0.71114
 
         # round table
-        pose.position.x = 0.3012
-        pose.position.y = 0.2188
+#         pose.position.x = 0.30435
+#         pose.position.y = 0.25051
+#         pose.position.z = 0.0
+#         pose.orientation.x = 0.002
+#         pose.orientation.y = 0.002
+#         pose.orientation.z = 0.91104
+#         pose.orientation.w = 0.41228
+#
+        pose.position.x = 0.368
+        pose.position.y = 0.2744
         pose.position.z = 0.0
-        pose.orientation.x = 0.001
-        pose.orientation.y = 0.0001
-        pose.orientation.z = 0.89411
-        pose.orientation.w = 0.44785
+        pose.orientation.x = 0.002
+        pose.orientation.y = 0.002
+        pose.orientation.z = 0.70195
+        pose.orientation.w = 0.7122
 
         self.MoveToPose("map", pose)
 
@@ -305,6 +316,7 @@ class MoveitMoveArm:
 
         self.tflistener = tf.TransformListener()
         self.inserted_desks = []
+        self.inserted_tables = []
         self.inserted_objects = []
         rospy.loginfo("Connected.")
         rospy.sleep(0.5);
@@ -392,15 +404,17 @@ class MoveitMoveArm:
 
     def MoveRightToExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
-        #pose.position.x = 0.58
-        #pose.position.y = -0.11
+        # HACK
+        pose.position.x = 0.58
+        pose.position.y = -0.11
         pose.position.z += 0.005
         return self.MoveToPose(pose, "base_footprint")
 
     def MoveRightToShortExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
-        #pose.position.x = 0.58
-        #pose.position.y = -0.11
+        # HACK
+        pose.position.x = 0.58
+        pose.position.y = -0.11
         pose.position.z += 0.005
 
         # retract along the x-axis of the r_wrist_roll_link frame
@@ -445,15 +459,38 @@ class MoveitMoveArm:
         quat_norm = math.sqrt(quat_z**2 + quat_w**2)
         pose_in_map.pose.orientation.z = quat_z / quat_norm
         pose_in_map.pose.orientation.w = quat_w / quat_norm
-        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 1.52, 0.7))
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 1.52, 0.7))
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 0.52, 0.7))
 
         rospy.loginfo("Added desk object %s", name)
         self.inserted_desks.append(name)
+
+    def AddTableCollisionObject(self, name, pose_in_map):
+
+        # adjust offset of marker on the table
+        pose_in_map.pose.position.z = 0.36
+
+        pose_in_map.pose.orientation.x = 0
+        pose_in_map.pose.orientation.y = 0
+        quat_z = pose_in_map.pose.orientation.z
+        quat_w = pose_in_map.pose.orientation.w
+        quat_norm = math.sqrt(quat_z**2 + quat_w**2)
+        pose_in_map.pose.orientation.z = quat_z / quat_norm
+        pose_in_map.pose.orientation.w = quat_w / quat_norm
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.90, 0.90, 0.72))
+
+        rospy.loginfo("Added table object %s", name)
+        self.inserted_tables.append(name)
 
     def removeDeskObjects(self):
         for desk in self.inserted_desks:
             self.moveit_planning_scene.remove_world_object(desk)
         self.inserted_desks = []
+
+    def removeTableObjects(self):
+        for table in self.inserted_tables:
+            self.moveit_planning_scene.remove_world_object(table)
+        self.inserted_tables = []
 
     def removeAllObjects(self):
         for obj in self.inserted_objects:
@@ -466,6 +503,7 @@ class MoveitMoveArm:
     def removeAllObjectsAndDesks(self):
         self.removeAllObjects()
         self.removeDeskObjects()
+        self.removeTableObjects()
 
 
 
