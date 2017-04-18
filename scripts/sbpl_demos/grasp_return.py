@@ -3,6 +3,7 @@
 import sys
 import roslib
 import rospy
+import rospkg
 import geometry_msgs.msg
 import tf
 import numpy as np
@@ -16,8 +17,9 @@ roslib.load_manifest('sbpl_demos')
 if __name__ == "__main__":
 
 	rospy.init_node('objects_to_grasps')
-	
-	fid = file('../../data/grasp_database/grasp_database.yaml')
+	# get an instance of RosPack with the default search paths
+	rospack = rospkg.RosPack()
+	fid = file(rospack.get_path('sbpl_demos')+'/data/grasp_database/grasp_database.yaml')
 	print "hello"
 	try:
 		config = yaml.load(fid)

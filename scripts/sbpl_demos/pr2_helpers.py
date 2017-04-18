@@ -15,6 +15,8 @@ from pr2_controllers_msgs.msg import SingleJointPositionAction, SingleJointPosit
 from pr2_common_action_msgs.msg import TuckArmsAction, TuckArmsGoal
 from sbpl_demos.srv import PoseUpsampleRequest, PoseUpsample
 from sbpl_demos.msg import XYZRPY
+from groovy_pr2_controllers_msgs.msg import JointTrajectoryAction, JointTrajectoryGoal
+from groovy_trajectory_msgs.msg import JointTrajectoryPoint
 
 ## for moveit commander
 import copy
@@ -23,6 +25,8 @@ import moveit_msgs.msg
 import geometry_msgs.msg
 from tf.transformations import quaternion_from_euler
 import tf
+
+from sbpl_demos import octomap_helpers
 
 
 class TFLookup:
@@ -139,10 +143,19 @@ class GripperCommand:
     def Command(self, gripper, open):
 
         goal = GripperCommandGoal()
-        if open == 1:
-            goal.command.position = 0.09
-        else:
-            goal.command.position = 0.0
+
+#         if open == 1:
+#             goal.command.position = 0.09
+#         else:
+#             goal.command.position = 0.0
+        if open > 1.0:
+            rospy.logwarn("GripperCommand.Command() only accepts value from 0 (close) to 1 (open)")
+            open = 1.0
+        elif open < 0.0:
+            rospy.logwarn("GripperCommand.Command() only accepts value from 0 (close) to 1 (open)")
+            open = 0.0
+        goal.command.position = (0.09 - 0.0) * open/(1.0 - 0.0) + 0.0
+
         goal.command.max_effort = float(-1.0) 
         
         if gripper == 'l':
@@ -171,7 +184,11 @@ class MoveBase:
         self.client.wait_for_server()
         rospy.loginfo("Connected.")
 
+        self.OctomapClient = octomap_helpers.OctomapClient()
+
     def MoveToPose(self, frame, input_pose):
+        self.OctomapClient.clearOctomapWorkspacePR2()
+
         goal = MoveBaseGoal()
         goal.target_pose.header.stamp = rospy.Time.now()
         goal.target_pose.header.frame_id = frame
@@ -186,31 +203,67 @@ class MoveBase:
 
     def MoveToInternDesk(self):
         pose = geometry_msgs.msg.Pose()
-        pose.position.x = -0.29
-        pose.position.y = -2.5
+#         pose.position.x = -0.29
+#         pose.position.y = -2.5
+#         pose.position.z = 0.0
+#         quat = quaternion_from_euler(0,0,-math.pi/2.0)
+#         pose.orientation.x = quat[0]
+#         pose.orientation.y = quat[1]
+#         pose.orientation.z = quat[2]
+#         pose.orientation.w = quat[3]
+
+#         pose.position.x = -0.478
+#         pose.position.y = -1.122
+#         pose.position.z = 0.0
+#         pose.orientation.x = 0.0018
+#         pose.orientation.y = 0.001
+#         pose.orientation.z = -0.7134
+#         pose.orientation.w = 0.70075
+
+        pose.position.x = -1.1574
+        pose.position.y = -1.1089
         pose.position.z = 0.0
-        quat = quaternion_from_euler(0,0,-math.pi/2.0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+        pose.orientation.x = 0.0008
+        pose.orientation.y = 0.001
+        pose.orientation.z = -0.6965
+        pose.orientation.w = 0.7175
+
         self.MoveToPose("map", pose)
 
     def MoveToWorkstation(self):
         pose = geometry_msgs.msg.Pose()
-        # pose.position.x = 0.440
-        # pose.position.y = -1.540
-        # pose.position.z = 0.0
-        # quat = quaternion_from_euler(0,0,-0.004)
-        pose.position.x=-0.234
-        pose.position.y=-1.541
-        pose.position.z=0.0
-        quat = quaternion_from_euler(0,0,0.027)
 
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+#         # pose.position.x = 0.440
+#         # pose.position.y = -1.540
+#         # pose.position.z = 0.0
+#         # quat = quaternion_from_euler(0,0,-0.004)
+#         pose.position.x=-0.234
+#         pose.position.y=-1.541
+#         pose.position.z=0.0
+#         quat = quaternion_from_euler(0,0,0.027)
+#
+#         pose.orientation.x = quat[0]
+#         pose.orientation.y = quat[1]
+#         pose.orientation.z = quat[2]
+#         pose.orientation.w = quat[3]
+
+#         pose.position.x = -0.6574
+#         pose.position.y = -1.1089
+#         pose.position.z = 0.0
+#         pose.orientation.x = 0.0008
+#         pose.orientation.y = 0.001
+#         pose.orientation.z = -0.6965
+#         pose.orientation.w = 0.7175
+
+#         pose.position.x = 1.254
+        pose.position.x = 0.854
+        pose.position.y = 0.116
+        pose.position.z = 0.0
+        pose.orientation.x = 0.0
+        pose.orientation.y = 0.0
+        pose.orientation.z = 0.0
+        pose.orientation.w = 1.0
+
         self.MoveToPose("map", pose)
 
     def MoveToWayPoint(self):
@@ -242,11 +295,11 @@ class MoveitMoveArm:
 
         # NOTE to switch the planner to ompl, need to set the parameter 'use_sbpl_pipeline' to 'false' in launch/pr2/tatooine_moveit_setup.launch
         # NOTE also make sure to execute 'rosparam delete /move_group' to prevent any possible confusion
-        use_sbpl_pipeline = False
+#         use_sbpl_pipeline = False
+        use_sbpl_pipeline = True
 
         if use_sbpl_pipeline:
-            self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_BFS_ML]")
-            self.moveit_planning_group.set_planner_id("right_arm[right_arm_ARA_JD_ML]")
+            self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_manip]")
 
             self.moveit_planning_group.set_planning_time(rospy.get_param("move_group/allowed_planning_time"))
             self.moveit_planning_group.allow_replanning(True)
@@ -287,7 +340,6 @@ class MoveitMoveArm:
         input_ps = PoseStamped()
         input_ps.pose = pose
         input_ps.header.frame_id = reference_frame
-        # FIXME intensionally set the reference frame to /base_footprint to compensate the effect of bug in moveit?
         correct_ps = self.tflistener.transformPose("odom_combined", input_ps )
 
         self.moveit_planning_group.set_start_state_to_current_state()
@@ -330,11 +382,19 @@ class MoveitMoveArm:
         pose.position.x = 0
         pose.position.y = -0.64
         pose.position.z = 1.05
-        quat = quaternion_from_euler(-3.002, 0.117, 0.130)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+#         quat = quaternion_from_euler(-3.002, 0.117, 0.130)
+#         pose.orientation.x = quat[0]
+#         pose.orientation.y = quat[1]
+#         pose.orientation.z = quat[2]
+#         pose.orientation.w = quat[3]
+#         pose.orientation.x = 0.00129958
+#         pose.orientation.y = 0.0836125
+#         pose.orientation.z = 0.0657168
+#         pose.orientation.w = 0.994329
+        pose.orientation.x = 0.0
+        pose.orientation.y = 0.0
+        pose.orientation.z = 0.0
+        pose.orientation.w = 1.0
         return self.MoveToPose(pose, "base_footprint")
 
     def MoveRightToCarry(self):
@@ -376,11 +436,36 @@ class MoveitMoveArm:
         self.moveit_planning_scene.add_box(name, posestamped, size=input_size)
         self.inserted_objects.append(name)
 
-    def AddDeskCollisionObject(self, name, posestamped):
-        posestamped.pose.position.x += 0.20
-        #posestamped.pose.position.y -= 0.10
-        posestamped.pose.position.z = 0.35
-        self.moveit_planning_scene.add_box(name, posestamped, size=(.67,1.52, .7) )
+#     def AddDeskCollisionObject(self, name, posestamped):
+#         posestamped.pose.position.y -= 0.35
+#         posestamped.pose.position.z = 0.35
+#         self.moveit_planning_scene.add_box(name, posestamped, size=(.67,1.52, .7) )
+#         rospy.loginfo("Added desk object %s", name)
+#         self.inserted_desks.append(name)
+
+    def AddDeskCollisionObject(self, name, pose_in_map):
+
+        # adjust offset of marker on the desk
+        pose_in_map.pose.position.x += -0.44
+        pose_in_map.pose.position.y += -0.30
+        pose_in_map.pose.position.z = 0.35
+
+        # constrain desk orientation
+#         pose_in_map.pose.orientation.x = 0
+#         pose_in_map.pose.orientation.y = 0
+#         pose_in_map.pose.orientation.z = 0
+#         pose_in_map.pose.orientation.w = 1
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.7))
+
+        pose_in_map.pose.orientation.x = 0
+        pose_in_map.pose.orientation.y = 0
+        quat_z = pose_in_map.pose.orientation.z
+        quat_w = pose_in_map.pose.orientation.w
+        quat_norm = math.sqrt(quat_z**2 + quat_w**2)
+        pose_in_map.pose.orientation.z = quat_z / quat_norm
+        pose_in_map.pose.orientation.w = quat_w / quat_norm
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 1.52, 0.7))
+
         rospy.loginfo("Added desk object %s", name)
         self.inserted_desks.append(name)
 
@@ -443,3 +528,44 @@ class RoconMoveArm:
             result = self.client.get_result()
             return result.success
         return False
+
+
+class ArmJointTrajAction:
+    def __init__(self, arm_name):
+        #arm_name should be l_arm or r_arm
+        self.name = arm_name
+        self.jta = actionlib.SimpleActionClient('/'+arm_name+'_controller/joint_trajectory_action',
+                                                JointTrajectoryAction)
+        rospy.loginfo('Waiting for joint trajectory action')
+        self.jta.wait_for_server()
+        rospy.loginfo('Found joint trajectory action!')
+
+    def MoveArmToJoint(self, angles):
+        goal = JointTrajectoryGoal()
+        char = self.name[0]  # either 'r' or 'l'
+        goal.trajectory.joint_names = [char+'_shoulder_pan_joint',
+                                       char+'_shoulder_lift_joint',
+                                       char+'_upper_arm_roll_joint',
+                                       char+'_elbow_flex_joint',
+                                       char+'_forearm_roll_joint',
+                                       char+'_wrist_flex_joint',
+                                       char+'_wrist_roll_joint']
+        point = JointTrajectoryPoint()
+        point.positions = angles
+        point.time_from_start = rospy.Duration(3)
+        goal.trajectory.points.append(point)
+        self.jta.send_goal_and_wait(goal)
+
+class ArmJointCommand:
+    def __init__(self):
+        self.RightArmJointCommand = ArmJointTrajAction('r_arm')
+        self.LeftArmJointCommand = ArmJointTrajAction('l_arm')
+
+    # NOTE current joint values can be read from 'rostopic echo /[r/l]_arm_controller/state'
+
+    def MoveRightArmToWide(self):
+        self.RightArmJointCommand.MoveArmToJoint([-1.6583625690312713, 0.6874497663917372, -0.3591542852171954, -2.0396477595207805, 4.633907864244298, -1.2780054373789036, 2.9439450216806975])
+
+    def MoveLeftArmToWide(self):
+        self.LeftArmJointCommand.MoveArmToJoint([2.050585009506385, 1.168843268710281, 2.0143859931673638, -1.691908510777547, 1.264066293462545, -0.09850362202844609, 0.00586820137944688])
+

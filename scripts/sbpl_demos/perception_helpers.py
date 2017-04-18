@@ -50,7 +50,7 @@ class ARTagListener:
 
         if rospy.Time.now().to_sec() - self.last_reading.to_sec() < 2:        # self.latest_markers expires after 2 sec
             for marker in self.latest_markers.markers:
-                print marker.id
+                # print marker.id
                 if marker.id == AR_TYPES.DESK.value:
                     n_desks += 1
                 elif marker.id == AR_TYPES.CYLINDER.value:

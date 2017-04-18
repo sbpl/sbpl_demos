@@ -1,0 +1,16 @@
+<launch>
+
+  <include file="$(find pr2_machine)/$(env ROBOT).machine" />
+
+  <!-- sensor setting and filtering -->
+<!--   <include file="$(find sbpl_demos)/config/pr2/navigation/lasers_and_filters.xml" /> -->  <!-- not in use -->
+<!--   <include file="$(find sbpl_demos)/config/pr2/navigation/ground_plane.xml" /> -->        <!-- not in use -->
+  <include file="$(find sbpl_demos)/config/pr2/navigation/kinect_and_filters.xml" />
+
+  <!-- launch map servers for 2d costmap and 3d octomap -->
+  <include file="$(find sbpl_demos)/config/pr2/navigation/map_server_nodes.xml" />
+
+  <!-- launch amcl for localization -->
+  <include file="$(find sbpl_demos)/config/pr2/navigation/amcl_node.xml" />
+
+</launch>

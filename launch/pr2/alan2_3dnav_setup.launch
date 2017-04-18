@@ -1,0 +1,10 @@
+<launch>
+
+  <include file="$(find pr2_machine)/$(env ROBOT).machine" />
+
+<!--   <include file="$(find pr2_navigation_teleop)/teleop.xml" /> -->
+  <include file="$(find sbpl_demos)/config/pr2/navigation/teleop.xml" />
+
+  <include file="$(find sbpl_demos)/config/pr2/navigation/move_base_3dnav.xml" />
+
+</launch>
