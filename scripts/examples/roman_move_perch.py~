@@ -136,10 +136,10 @@ if __name__ == "__main__":
     
     test.RMAC.MoveToHome()
     test.RCG.Open()
-    test.moveToPreGrasp(T_w_p)
-    test.moveToGrasp(T_w_p)
+    test.moveToPreGrasp()
+    test.moveToGrasp()
     test.RCG.Close()
-    test.moveToPreGrasp(T_w_p)
+    test.moveToPreGrasp()
     test.moveToPreTable()
     test.moveToTable()
     test.RCG.Open()

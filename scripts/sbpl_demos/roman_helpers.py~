@@ -45,8 +45,6 @@ class RomanMoveArm(object):
 	p.header.stamp = rospy.get_rostime()
     	#p.pose.position.x = 0.531
     	#p.pose.position.y = -0.767
-	p.pose.position.x = 0.0
-    	p.pose.position.y = 0.0
     	p.pose.position.z = 0.74
     	quat = quaternion_from_euler(-math.pi/2,0,0)
     	p.pose.orientation.x = quat[0]
