@@ -100,10 +100,30 @@ class OctomapClient:
             rospy.logwarn("Failed to clear octomap!")
 
 
-class PoseIntializer:
+class CostmapClient:
+
+    def __init__(self):
+        self.tflistener = tf.TransformListener()
+        rospy.sleep(0.5)
+
+        print("Waiting for move_base_node/clear_costmaps...")
+        rospy.wait_for_service('/move_base_node/clear_costmaps')
+        print("Connected.")
+        self.client_all = rospy.ServiceProxy('/move_base_node/clear_costmaps', Empty)
+
+    def clearCostmapAll(self):
+        request = EmptyRequest()
+        if self.client_all(request):
+            rospy.loginfo("Costmap was successfully cleared!")
+        else:
+            rospy.logwarn("Failed to clear costmap!")
+
+
+class PoseInitializer:
 
     def __init__(self):
         self.publisher = rospy.Publisher('/initialpose', PoseWithCovarianceStamped, queue_size=10)
+        # self.publisher = rospy.Publisher('/initialpose', PoseWithCovarianceStamped)    # NOTE for compatibility with Groovy, but not recommended
         rospy.sleep(0.5)
 
     def setInitialPosePR2(self):
@@ -137,11 +157,11 @@ class PoseIntializer:
 #     rospy.loginfo("Clearing all octomap!")
 #     octomap_client.clearOctomapAll()
 
-if __name__ == "__main__":
-
-    rospy.init_node('pose_initializer')
-    pose_initializer = PoseIntializer()
-
-    rospy.loginfo("Setting initial pose of PR2 in front of intern desk!")
-    pose_initializer.setInitialPosePR2()
+# if __name__ == "__main__":
+#
+#     rospy.init_node('pose_initializer')
+#     pose_initializer = PoseInitializer()
+#
+#     rospy.loginfo("Setting initial pose of PR2 in front of intern desk!")
+#     pose_initializer.setInitialPosePR2()
 

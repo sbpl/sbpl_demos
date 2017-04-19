@@ -1,0 +1,12 @@
+<launch>
+
+  <include file="$(find pr2_machine)/$(env ROBOT).machine" />
+
+  <arg name="2dmap_file" default="$(find sbpl_demos)/data/sbpl_full_clean.yaml" />
+  <!--   <arg name="2dmap_file" default="$(find sbpl_demos)/data/lab_costmap_YYYYMMDD.yaml" /> -->	<!-- TODO rename the file -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg 2dmap_file)" />
+
+  <!-- launch amcl for localization -->
+  <include file="$(find sbpl_demos)/config/pr2/navigation/amcl_node.xml" />
+
+</launch>

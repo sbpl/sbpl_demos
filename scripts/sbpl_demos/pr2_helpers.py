@@ -184,11 +184,11 @@ class MoveBase:
         self.client.wait_for_server()
         rospy.loginfo("Connected.")
 
-        self.PoseIntializer = octomap_helpers.PoseIntializer()
+        self.PoseInitializer = octomap_helpers.PoseInitializer()
         self.OctomapClient = octomap_helpers.OctomapClient()
 
     def InitializePosePR2(self):
-        self.PoseIntializer.setInitialPosePR2()
+        self.PoseInitializer.setInitialPosePR2()
 
     def clearOctomapCouch(self):
         self.OctomapClient.clearOctomapCouch()

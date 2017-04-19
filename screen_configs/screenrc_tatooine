@@ -4,7 +4,7 @@ source screenrc.common
 # #stuff "roscore^M"
 # stuff "pr2master"
 
-screen -t multi_master
+screen -t multimaster
 stuff "roslaunch sbpl_multimaster roslaunch sbpl_multimaster sbpl_hub.launch; "
 stuff "roslaunch sbpl_multimaster dagobah_gateway.launch; "
 stuff "rosrun sbpl_demos state_machine.py"

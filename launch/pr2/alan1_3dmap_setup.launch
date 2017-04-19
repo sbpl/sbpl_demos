@@ -10,7 +10,4 @@
   <!-- launch map servers for 2d costmap and 3d octomap -->
   <include file="$(find sbpl_demos)/config/pr2/navigation/map_server_nodes.xml" />
 
-  <!-- launch amcl for localization -->
-  <include file="$(find sbpl_demos)/config/pr2/navigation/amcl_node.xml" />
-
 </launch>
