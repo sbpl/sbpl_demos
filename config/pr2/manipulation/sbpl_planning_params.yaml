@@ -4,12 +4,12 @@ move_group:
     tip_link: r_wrist_roll_link
     workspace_frame: base_footprint
     workspace_min:
-        x: -2.0
-        y: -2.0
+        x: -3.0
+        y: -3.0
         z: 0.0
     workspace_max:
-        x: 2.0
-        y: 2.0
+        x: 3.0
+        y: 3.0
         z: 2.0
     tolerance:
         position: 0.03

@@ -36,10 +36,10 @@
 
     <!--remap from="cloud_in" to="/narrow_stereo_textured/points_filtered_attached2" /-->
     <!--remap from="cloud_in" to="/kinect_head/depth_registered/points" /-->
-<!--     <remap from="cloud_in" to="/kinect_throttled" /> -->
+    <remap from="cloud_in" to="/kinect_throttled" />
 
 	<!-- NOTE the use of this topic will add dependency on tatooine_moveit_setup.launch for alan2_3dnav_setup.launch but provides PR2 self filtering feature -->
-    <remap from="cloud_in" to="/move_group/self_filtered_cloud" />
+<!--     <remap from="cloud_in" to="/move_group/self_filtered_cloud" /> -->
 
   </node>
 

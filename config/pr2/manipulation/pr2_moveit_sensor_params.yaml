@@ -1,7 +1,7 @@
 sensors:
   - sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
-#     point_cloud_topic: /tilt_scan_filtered
-    point_cloud_topic: /kinect_throttled
+    point_cloud_topic: /tilt_scan_filtered
+#     point_cloud_topic: /kinect_throttled     # this is to disable occupancy map for manipulation
     max_range: 5.0
     point_subsample: 1
     padding_offset: 0.1

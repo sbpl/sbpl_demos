@@ -220,7 +220,7 @@ class MoveBase:
         pose.orientation.z = -0.70305
         pose.orientation.w = 0.71114
 
-        self.MoveToPose("map", pose)
+        return self.MoveToPose("map", pose)
 
     def MoveToWorkstation(self):
         pose = geometry_msgs.msg.Pose()
@@ -251,25 +251,8 @@ class MoveBase:
         pose.orientation.z = 0.70195
         pose.orientation.w = 0.7122
 
-        self.MoveToPose("map", pose)
+        return self.MoveToPose("map", pose)
 
-    def MoveToWayPoint(self):
-        # pose = geometry_msgs.msg.Pose()
-        # pose.position.x = 0.005
-        # pose.position.y = -0.257
-        # pose.position.z = 0
-        # quat = quaternion_from_euler(0,0,-1.104)
-        pose = geometry_msgs.msg.Pose()
-        pose.position.x = 0.106
-        pose.position.y = -1.161
-        pose.position.z = 0
-        quat = quaternion_from_euler(0, 0, -0.025)
-
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
-        self.MoveToPose("map", pose)
 
 class MoveitMoveArm:
     def __init__(self):
@@ -405,16 +388,16 @@ class MoveitMoveArm:
     def MoveRightToExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
         # HACK
-        pose.position.x = 0.58
-        pose.position.y = -0.11
+#         pose.position.x = 0.58
+#         pose.position.y = -0.11
         pose.position.z += 0.005
         return self.MoveToPose(pose, "base_footprint")
 
     def MoveRightToShortExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
         # HACK
-        pose.position.x = 0.58
-        pose.position.y = -0.11
+#         pose.position.x = 0.58
+#         pose.position.y = -0.11
         pose.position.z += 0.005
 
         # retract along the x-axis of the r_wrist_roll_link frame
