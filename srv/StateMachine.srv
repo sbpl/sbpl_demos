@@ -1,5 +1,6 @@
 string command
-string request_state
+string request_key
+string request_value
 ---
 bool result
-string result_state
+string result_value
