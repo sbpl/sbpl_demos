@@ -1,0 +1,5 @@
+string command
+string request_state
+---
+bool result
+string result_state
