@@ -6,6 +6,9 @@ screen -t bash
 screen -t dash
 stuff "rosrun pr2_dashboard pr2_dashboard"
 
+screen -t multimaster
+stuff "roslaunch sbpl_multimaster alan1_gateway.launch"
+
 screen -t teleop
 stuff "roslaunch pr2_teleop teleop_keyboard.launch"
 
