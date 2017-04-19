@@ -32,6 +32,7 @@ add_service_files(
   FILES 
   PoseUpsample.srv 
   ReturnJointStates.srv
+  StateMachine.srv
 )
 add_action_files(
   FILES

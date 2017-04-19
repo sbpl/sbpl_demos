@@ -15,8 +15,8 @@ from sbpl_demos.perception_helpers import AR_TYPES
 
 class Demo:
     def __init__(self):
-        self.STATIONARY = True
-#         self.STATIONARY = False
+#         self.STATIONARY = True
+        self.STATIONARY = False
         self.tflistener = tf.TransformListener()
         self.tfbroadcaster = tf.TransformBroadcaster()
         self.GripperCommand = pr2_helpers.GripperCommand()
@@ -27,15 +27,17 @@ class Demo:
         self.MoveitMoveArm = pr2_helpers.MoveitMoveArm()
         self.TorsoCommand = pr2_helpers.TorsoCommand()
 #         self.TuckArms = pr2_helpers.TuckArms()
-        if(not self.STATIONARY):
-            self.MoveBase = pr2_helpers.MoveBase()
+#         if(not self.STATIONARY):
+#             self.MoveBase = pr2_helpers.MoveBase()
+        self.MoveBase = pr2_helpers.MoveBase()
         self.ArmJointCommand = pr2_helpers.ArmJointCommand()
 
         rospy.sleep(1.0)
         rospy.loginfo('All Action clients connected!')
         #rospy.loginfo('Commanding Untucking')
         #self.TuckArms.UntuckArms()
-        self.PointHead.LookAt("base_footprint", 1.25, 0, 0)
+#         self.PointHead.LookAt("base_footprint", 1.25, -0.4, 0)
+        self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
         rospy.loginfo('Commanding torso')
         self.TorsoCommand.MoveTorso(0.2)
 
@@ -112,8 +114,8 @@ class Demo:
             rospy.loginfo('Commanding base to intern desk...')
             self.MoveBase.MoveToInternDesk()
 
-            rospy.loginfo('Commanding Untucking')
 # HACK XXX
+#             rospy.loginfo('Commanding Untucking')
 #             self.TuckArms.UntuckRightArms()
 
 #     def pickingRoutine(self):
@@ -210,7 +212,12 @@ class Demo:
 #         print distances_to_grasp
         print("distances_to_grasp: ", distances_to_grasp)
 
-        # add collision model
+        self.addCollisionModels()
+
+        return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
+
+
+    def addCollisionModels(self):
         (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
         rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
             n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
@@ -223,6 +230,7 @@ class Demo:
                     desk_marker.pose.header.frame_id = "odom_combined"
                     #desk_marker.pose.header.stamp = rospy.Time.now()
                     desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
+#                     desk_marker_in_map = self.tflistener.transformPose("odom_combined", desk_marker.pose)
                     print "desk_marker_in_map"
                     print desk_marker_in_map
                     self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
@@ -236,8 +244,29 @@ class Demo:
                 except (tf.ExtrapolationException):
                     print "tf.ExtrapolationException"
                     continue
-
-        return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
+        if(n_cylinders > 0):
+            rospy.loginfo("Inserting Round Table Collision objects")
+            table_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.CYLINDER)
+            cnt = 0
+            for table_marker in table_markers.markers:
+                try:
+                    table_marker.pose.header.frame_id = "odom_combined"
+                    #table_marker.pose.header.stamp = rospy.Time.now()
+#                     table_marker_in_map = self.tflistener.transformPose("map", table_marker.pose)
+                    table_marker_in_map = self.tflistener.transformPose("odom_combined", table_marker.pose)
+                    print "table_marker_in_map"
+                    print table_marker_in_map
+                    self.MoveitMoveArm.AddTableCollisionObject("table_"+str(cnt), table_marker_in_map)
+                    cnt+=1
+                except (tf.LookupException):
+                    print "tf.LookupException: Cannot find transform between /map and /odom_combined. Desk collision model will not be added!"
+                    continue
+                except (tf.ConnectivityException):
+                    print "tf.ConnectivityException"
+                    continue
+                except (tf.ExtrapolationException):
+                    print "tf.ExtrapolationException"
+                    continue
 
 
     def compensateMoveItOdomToBaseError(self, odom_to_des_pose):
@@ -298,6 +327,10 @@ class Demo:
 
 
     def dropOffObjectRoutine(self, release_pose):
+
+        self.addCollisionModels()
+        rospy.sleep(1)
+
         rospy.loginfo("Moving to extend pose")
         self.MoveitMoveArm.MoveRightToExtend(release_pose)
         rospy.loginfo("Commanding right gripper open")
@@ -316,10 +349,20 @@ class Demo:
 
 #         rospy.loginfo("Moving to wide open")
 #         self.MoveitMoveArm.MoveRightToWide()
+#         self.addCollisionModels()
+#         return
+        if(not self.STATIONARY):
+            rospy.loginfo("Initialize PR2 pose")
+            self.MoveBase.InitializePosePR2()
+            rospy.sleep(1)
 
         rospy.loginfo("Moving arms to wide open")
         self.ArmJointCommand.MoveRightArmToWide()
         self.ArmJointCommand.MoveLeftArmToWide()
+
+        if(not self.STATIONARY):
+            rospy.loginfo("Move to workstation")
+            self.moveToWorkstationRoutine()
 
         while not rospy.is_shutdown():
 
@@ -372,6 +415,9 @@ class Demo:
 
             ## PERCH INSTEAD OF AR TAGS
 
+#             self.PointHead.LookAt("base_footprint", 1.25, -1.0, 0)
+            self.PointHead.LookAt("base_footprint", 1.25, -0.0, 0)
+
 #             object_name = "003_cracker_box"
 #             (grasp_poses, interp_poses, distances_to_grasp) = self.pickingRoutinePerch(object_name)
 
@@ -423,6 +469,9 @@ class Demo:
                 rospy.Time.now(), "grasp_pose_best_rev2", "odom_combined")
 
 
+            self.MoveBase.clearOctomapCouch()
+
+
             # Execute grasp plan
             rospy.loginfo("Moving to interpolated pose")
             success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
@@ -443,15 +492,19 @@ class Demo:
                 rospy.sleep(1)
                 continue
 
-            # grip_success: True when completely closed, False when grasped something
-#             grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
-#             if grip_success:
-#                 rospy.loginfo("Failed to grasp. Going back to identifying object location.")
-#                 self.MoveitMoveArm.MoveRightToWide()
-#                 continue
-#             rospy.loginfo("Succeeded to grasp.")
             grip_success = self.GripperCommand.Command('r', 0.55) #Close Gripper   # HACK for 003_cracker_box
             rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
+#             # grip_success: True when completely closed, False when grasped something
+#             if self.PerchClient.getRequestedObjectName() == "003_cracker_box":
+#                 grip_success = self.GripperCommand.Command('r', 0.55) #Close Gripper   # HACK for 003_cracker_box
+#                 rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
+#             else:
+#                 grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
+#                 if grip_success:
+#                     rospy.loginfo("Failed to grasp. Going back to identifying object location.")
+#                     self.MoveitMoveArm.MoveRightToWide()
+#                     continue
+#                 rospy.loginfo("Succeeded to grasp.")
 
             # retract to interpolate pose
             rospy.loginfo("Moving back to interpolated pose")
@@ -479,7 +532,18 @@ class Demo:
             release_pose = release_pose_stamped.pose
 
             # self.moveToWayPointRoutine()
-            self.moveToWorkstationRoutine()
+#             self.moveToWorkstationRoutine()
+
+
+            if(not self.STATIONARY):
+
+#                 self.PointHead.LookAt("base_footprint", 1.25, -1.0, 0)
+                self.PointHead.LookAt("base_footprint", 1.25, -0.0, 0)
+
+                rospy.loginfo("Move to intern desk")
+                self.moveToInternDeskRoutine()
+
+
             #TODO clear desks, get AR poses for desk, and insert new Desk collision object
 
             # release the object
@@ -488,7 +552,10 @@ class Demo:
 #             self.GripperCommand.Command('r', 0) #Close Gripper
             self.MoveitMoveArm.removeAllObjectsAndDesks()
 
-            self.moveToInternDeskRoutine()
+
+            if(not self.STATIONARY):
+                rospy.loginfo("Move to workstation")
+                self.moveToWorkstationRoutine()
 
         self.MoveitMoveArm.Cleanup()
         print('shutting down...')    

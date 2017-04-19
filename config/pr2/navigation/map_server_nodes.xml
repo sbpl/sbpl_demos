@@ -5,7 +5,8 @@
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg 2dmap_file)" />
 
 
-  <arg name="3dmap_file" default="$(find sbpl_demos)/data/lab_octomap_20170406.bt" />
+<!--   <arg name="3dmap_file" default="$(find sbpl_demos)/data/lab_octomap_20170406.bt" /> -->
+  <arg name="3dmap_file" default="$(find sbpl_demos)/data/lab_octomap_20170418.bt" />
   <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" args="$(arg 3dmap_file)" respawn="false" >
 
     <param name="resolution" value="0.04" />
@@ -17,22 +18,19 @@
     <param name="sensor_model/min" value= "0.12" />
     <param name="sensor_model/max" value= "0.95" />
 
-    <param name="min_x_size" value="25.0" />
-    <param name="min_y_size" value="25.0" />
 
-<!--     <param name="min_z_range" value="0.1" /> -->
-    <param name="min_z_range" value="0.2" />
-    <param name="max_z_range" value="1.8" />
+	<!-- NOTE allow octomap_server to see the ground and segment it for the use of obstacle clearing -->
+    <param name="filter_ground" value="true"/>
+    <param name="ground_filter/distance" value="0.1"/>
+    <param name="ground_filter/plane_distance" value="0.2"/>
 
-<!--     <param name="pointcloud_min_z" value="0.1"/> -->
-    <param name="pointcloud_min_z" value="0.2"/>
+    <param name="pointcloud_min_z" value="0.0"/>
     <param name="pointcloud_max_z" value="1.8"/>
 
-<!--     <param name="occupancy_min_z" value="0.1"/> -->
-    <param name="occupancy_min_z" value="0.2"/>
+    <param name="occupancy_min_z" value="0.0"/>
     <param name="occupancy_max_z" value="1.8"/>
 
-    <param name="filter_ground" value="false"/>
+
     <param name="latch" value="false"/>
 
     <!--remap from="cloud_in" to="/narrow_stereo_textured/points_filtered_attached2" /-->

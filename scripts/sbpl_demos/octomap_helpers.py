@@ -7,6 +7,7 @@ import tf
 from std_srvs.srv import EmptyRequest, Empty
 from octomap_msgs.srv import BoundingBoxQueryRequest, BoundingBoxQuery
 from geometry_msgs.msg import Point, PoseStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped
 
 class OctomapClient:
 
@@ -45,21 +46,45 @@ class OctomapClient:
         max_in_base.y =  1.0
         max_in_base.z =  2.0
 
-        # compute bounding box in /map frame
-        min_in_base_stamped = PoseStamped()
-        min_in_base_stamped.header.frame_id = "base_footprint"
-        min_in_base_stamped.pose.position = min_in_base
-        min_in_map_stamped = self.tflistener.transformPose("map", min_in_base_stamped)
-        min_in_map = min_in_map_stamped.pose.position
+        rospy.sleep(1)  # to void tf.ExtrapolationException
 
-        max_in_base_stamped = PoseStamped()
-        max_in_base_stamped.header.frame_id = "base_footprint"
-        max_in_base_stamped.pose.position = max_in_base
-        max_in_map_stamped = self.tflistener.transformPose("map", max_in_base_stamped)
-        max_in_map = max_in_map_stamped.pose.position
+        try:
+            # compute bounding box in /map frame
+            min_in_base_stamped = PoseStamped()
+            min_in_base_stamped.header.frame_id = "base_footprint"
+            min_in_base_stamped.pose.position = min_in_base
+            min_in_map_stamped = self.tflistener.transformPose("map", min_in_base_stamped)
+            min_in_map = min_in_map_stamped.pose.position
+
+            max_in_base_stamped = PoseStamped()
+            max_in_base_stamped.header.frame_id = "base_footprint"
+            max_in_base_stamped.pose.position = max_in_base
+            max_in_map_stamped = self.tflistener.transformPose("map", max_in_base_stamped)
+            max_in_map = max_in_map_stamped.pose.position
+
+            self.clearOctomapWorkspace(min_in_map, max_in_map)
+
+        except (tf.LookupException):
+            print "tf.LookupException: Cannot find transform between /map and /base_footprint. Octomap will not be cleared!"
+        except (tf.ConnectivityException):
+            print "tf.ConnectivityException: Octomap will not be cleared!"
+        except (tf.ExtrapolationException):
+            print "tf.ExtrapolationException: Octomap will not be cleared!"
+
+
+    def clearOctomapCouch(self):
+        # hard-coded bounding box to be cleared in /base_footprint frame
+        min_in_map = Point()
+        min_in_map.x = -3.0
+        min_in_map.y =  0.5
+        min_in_map.z =  0.0
+
+        max_in_map = Point()
+        max_in_map.x = -1.0
+        max_in_map.y =  3.0
+        max_in_map.z =  2.0
 
         self.clearOctomapWorkspace(min_in_map, max_in_map)
-
 
     def clearOctomapWorkspace(self, min_in_map, max_in_map):
         request = BoundingBoxQueryRequest()
@@ -75,15 +100,48 @@ class OctomapClient:
             rospy.logwarn("Failed to clear octomap!")
 
 
+class PoseIntializer:
+
+    def __init__(self):
+        self.publisher = rospy.Publisher('/initialpose', PoseWithCovarianceStamped, queue_size=10)
+        rospy.sleep(0.5)
+
+    def setInitialPosePR2(self):
+        initial_pose = PoseWithCovarianceStamped()
+        initial_pose.header.stamp = rospy.Time.now()
+        initial_pose.header.frame_id = "map"
+        # pose in front of intern desk (around the right marker)
+        initial_pose.pose.pose.position.x = -1.06836
+        initial_pose.pose.pose.position.y = -1.14624
+        initial_pose.pose.pose.position.z = -1e-05
+        initial_pose.pose.pose.orientation.x = -0.0017
+        initial_pose.pose.pose.orientation.y = -0.0002
+        initial_pose.pose.pose.orientation.z = -0.70305
+        initial_pose.pose.pose.orientation.w = 0.71114
+#         initial_pose.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891945200942]
+        initial_pose.pose.covariance = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.publisher.publish(initial_pose)
+        print("published /initialpose for PR2")
+
+
+# if __name__ == "__main__":
+#
+#     rospy.init_node('octomap_client')
+#     octomap_client = OctomapClient()
+#
+#     rospy.loginfo("Clearing partial octomap in front of PR2!")
+#     octomap_client.clearOctomapWorkspacePR2()
+#
+#     rospy.sleep(2)
+#
+#     rospy.loginfo("Clearing all octomap!")
+#     octomap_client.clearOctomapAll()
+
 if __name__ == "__main__":
-    rospy.init_node('octomap_client')
-    octomap_client = OctomapClient()
 
-    rospy.loginfo("Clearing partial octomap in front of PR2!")
-    octomap_client.clearOctomapWorkspacePR2()
+    rospy.init_node('pose_initializer')
+    pose_initializer = PoseIntializer()
 
-    rospy.sleep(2)
-
-    rospy.loginfo("Clearing all octomap!")
-    octomap_client.clearOctomapAll()
+    rospy.loginfo("Setting initial pose of PR2 in front of intern desk!")
+    pose_initializer.setInitialPosePR2()
 

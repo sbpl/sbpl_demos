@@ -4,6 +4,11 @@ source screenrc.common
 # #stuff "roscore^M"
 # stuff "pr2master"
 
+screen -t multi_master
+stuff "roslaunch sbpl_multimaster roslaunch sbpl_multimaster sbpl_hub.launch; "
+stuff "roslaunch sbpl_multimaster dagobah_gateway.launch; "
+stuff "rosrun sbpl_demos state_machine.py"
+
 screen -t rviz
 stuff "pr2master; ^M"
 stuff "rviz"
