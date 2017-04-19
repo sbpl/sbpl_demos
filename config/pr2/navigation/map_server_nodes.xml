@@ -1,8 +1,9 @@
 <launch>
 
-  <arg name="2dmap_file" default="$(find sbpl_demos)/data/sbpl_full_clean.yaml" />
-  <!--   <arg name="2dmap_file" default="$(find sbpl_demos)/data/lab_costmap_YYYYMMDD.yaml" /> -->	<!-- TODO rename the file -->
-  <node name="map_server" pkg="map_server" type="map_server" args="$(arg 2dmap_file)" />
+	<!-- NOTE moved to launch/pr2/alan1_amcl_setup.launch -->
+<!--   <arg name="2dmap_file" default="$(find sbpl_demos)/data/sbpl_full_clean.yaml" /> -->
+<!--   <!&#45;&#45;   <arg name="2dmap_file" default="$(find sbpl_demos)/data/lab_costmap_YYYYMMDD.yaml" /> &#45;&#45;>	<!&#45;&#45; TODO rename the file &#45;&#45;> -->
+<!--   <node name="map_server" pkg="map_server" type="map_server" args="$(arg 2dmap_file)" /> -->
 
 
 <!--   <arg name="3dmap_file" default="$(find sbpl_demos)/data/lab_octomap_20170406.bt" /> -->
@@ -35,7 +36,10 @@
 
     <!--remap from="cloud_in" to="/narrow_stereo_textured/points_filtered_attached2" /-->
     <!--remap from="cloud_in" to="/kinect_head/depth_registered/points" /-->
-    <remap from="cloud_in" to="/kinect_throttled" />
+<!--     <remap from="cloud_in" to="/kinect_throttled" /> -->
+
+	<!-- NOTE the use of this topic will add dependency on tatooine_moveit_setup.launch for alan2_3dnav_setup.launch but provides PR2 self filtering feature -->
+    <remap from="cloud_in" to="/move_group/self_filtered_cloud" />
 
   </node>
 

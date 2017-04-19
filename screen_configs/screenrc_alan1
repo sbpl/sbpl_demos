@@ -22,7 +22,7 @@ stuff "# make sure to kill kinect before (re-)launching alan1_3dnav_setup.launch
 screen -t amcl
 stuff "roslaunch sbpl_demos alan1_amcl_setup.launch"
 
-screen -t 3dmap
+screen -t octomap
 stuff "rosrun sbpl_demos demo_initializer.py; "
 stuff "roslaunch sbpl_demos alan1_3dmap_setup.launch"
 
