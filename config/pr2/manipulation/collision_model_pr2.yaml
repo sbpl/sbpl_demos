@@ -1,5 +1,6 @@
 world_collision_model:
-  frame: odom_combined    # it makes more sense to set this to /map, but this is just to separate manipulation pipeline from map_server stuffs
+  frame: map
+#   frame: odom_combined    # it should be /map, but this is just to separate manipulation pipeline from map_server stuffs; this may result in wrong visualization of the collision model
   size_x: 10.0
   size_y: 10.0
   size_z: 2.0
