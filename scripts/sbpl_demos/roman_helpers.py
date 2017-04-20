@@ -65,6 +65,16 @@ class RomanMoveArm(object):
         pose.orientation.w = quat[3]
         return self.MoveToPose(pose, "base_footprint")
 
+    def moveToHome_jointgoal(self):
+        joint_goal = JointState()
+        joint_goal.header.frame_id = "base_footprint"
+        joint_goal.header.stamp = rospy.Time.now()
+        joint_goal.name = ['limb_right_joint1', 'limb_right_joint2', 'limb_right_joint3', 'limb_right_joint4', 'limb_right_joint5', 'limb_right_joint6', 'limb_right_joint7', 'torso_joint1']
+        joint_goal.position = [0.5661353269134606, 0.4692864095056042, -0.3136810029425956, -0.3174383113709873, -0.2514111373486396, 1.6025123702213988, 0.17182068670395123, 0.008224544748877419] # to fill in the values for a valid joint goal
+        joint_goal.velocity = []
+        joint_goal.effort = []
+        self.RMAC.MoveToPose_jointgoal(joint_goal, "base_footprint")
+
     def addcollisiontable(self):
         p = PoseStamped()
         p.header.frame_id = "base_footprint"
@@ -141,6 +151,48 @@ class RomanMoveArm(object):
         correct_ps = self.tflistener.transformPose("map", input_ps )
 
         goal.goal_pose = correct_ps.pose
+        rospy.loginfo("sending robot to pose: ")
+        print goal.goal_pose
+        goal.execute_path = True
+
+        rospy.loginfo("Sending goal to action Server")
+        self.client.send_goal(goal)
+        #result = self.client.wait_for_result()
+        self.client.wait_for_result()
+        result =  self.client.get_result()
+        rospy.loginfo("Finished pose goal - result is %s", result.success)
+        if result.success:
+            return True
+        else:
+            return False
+
+    def MoveToPose_jointgoal(self, desired_jointgoal, reference_frame="map"):
+        goal=MoveArmGoal()
+        '''
+        # goal 
+        uint8 EndEffectorGoal = 0
+        uint8 JointGoal = 1
+        uint8 CartesianGoal = 2
+        uint8 type
+        geometry_msgs/Pose goal_pose
+        sensor_msgs/JointState goal_joint_state
+        moveit_msgs/RobotState start_state
+        octomap_msgs/Octomap octomap
+        bool execute_path
+        moveit_msgs/PlanningOptions planning_options
+        '''
+
+        goal.type = 1 # jointgoal
+
+        if(    not self.tflistener.frameExists(reference_frame) or not self.tflistener.frameExists("map")):
+            rospy.logwarn("Warning: could not look up provided reference frame")
+            return False
+        #input_ps = PoseStamped()
+        #input_ps.pose = desired_pose
+        #input_ps.header.frame_id = reference_frame
+        #correct_ps = self.tflistener.transformPose("map", input_ps )
+
+        goal.goal_pose = desired_jointgoal
         rospy.loginfo("sending robot to pose: ")
         print goal.goal_pose
         goal.execute_path = True
