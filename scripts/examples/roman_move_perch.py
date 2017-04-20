@@ -15,9 +15,11 @@ from sbpl_demos.perch_helpers import PerchClient
 import json
 import numpy as np
 from tf import transformations as tr
-
+from rospkg import RosPack
 
 from sbpl_demos.srv import StateMachine, StateMachineRequest
+pkg = RosPack()
+db_file = os.path.join(pkg.get_path("sbpl_demos"), "data/grasp_database/roman_grasp_db.json")
 
 class RomanMove:
     def __init__(self):
@@ -54,10 +56,26 @@ class RomanMove:
         StateMachineRequest.request_value = "DONE"
         self.res = StateMachineClient(StateMachineRequest())
 
-    def loadGraspDatabase(self, db_file):
+    def graspDatabaseToJSON(db):
+        db = { key : [ { state : value.tolist() for state,value in grasp.iteritems() } for grasp in grasps ] for key, grasps in db.iteritems()}
+        return json.dumps(db, indent=4,sort_keys=True, separators=(',',': '))
+
+    def loadGraspDatabase():
+        if not os.path.exists(db_file):
+            print "No db file detected. Creating a new one"
+            return dict()
         with open(db_file,'r') as f:
-            serialized = json.load(f)
-            self.db = { key : [ { state : np.array(value) for state,value in grasp.iteritems() } for grasp in grasps ] for key, grasps in serialized.iteritems()}
+            try:
+                serialized = json.load(f)
+            except:
+                print("Unable to deserialize json (creating new dict):", sys.exc_info()[0])
+                return dict()
+            try:
+                db = { key : [ { state : np.array(value) for state,value in grasp.iteritems() } for grasp in grasps ] for key, grasps in serialized.iteritems()}
+            except:
+                print("Unable to parse json (creating new dict):", sys.exc_info()[0])
+                return dict()
+            return db
 
 
     def moveToGrasp(self,T_w_p):
