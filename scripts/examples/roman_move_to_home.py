@@ -58,7 +58,8 @@ class RomanMove:
         #pose.orientation.w = 0.6782
         pose.position.x = 0.8077
         pose.position.y = -0.3721
-        pose.position.z = 0.5642
+        #pose.position.z = 0.5642
+	pose.position.z = 1.7901
         pose.orientation.w = 0.7576
         pose.orientation.x = 0.4476
         pose.orientation.y = 0.4109
@@ -80,7 +81,9 @@ class RomanMove:
         pose = Pose()
         pose.position.x = 0.36589
         pose.position.y = -0.830991
-        pose.position.z = 0.96672
+        #pose.position.z = 0.96672
+	pose.position.z = 1.96672
+
         pose.orientation.w = 0.596323
         pose.orientation.x = 0.608277
         pose.orientation.y = -0.23037
@@ -91,14 +94,15 @@ if __name__ == "__main__":
     rospy.init_node('roman_move_to_home')
     test = RomanMove()
     #test.RMAC.addcollisiontable()
-    test.RMAC.MoveToHome()
-    test.RCG.Open()
-    test.moveToPreGrasp()
-    test.moveToGrasp()
-    test.RCG.Close()
+   
+    #test.RMAC.MoveToHome()
+    #test.RCG.Open()
+    #test.moveToPreGrasp()
+    #test.moveToGrasp()
+    #test.RCG.Close()
     test.moveToPreGrasp()
     test.moveToPreTable()
-    test.moveToTable()
-    test.RCG.Open()
-    test.moveToPreTable()
-    test.RMAC.MoveToHome()
+    #test.moveToTable()
+    #test.RCG.Open()
+    #test.moveToPreTable()
+    #test.RMAC.MoveToHome()"""

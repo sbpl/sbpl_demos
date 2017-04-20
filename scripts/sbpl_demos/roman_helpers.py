@@ -150,6 +150,7 @@ class RomanMoveArm(object):
         else:
             return False
 
+
 class RomanCommandGripper(object):
     def __init__(self):
 

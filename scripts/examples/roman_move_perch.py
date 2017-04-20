@@ -15,6 +15,10 @@ from sbpl_demos.perch_helpers import PerchClient
 import json
 import numpy as np
 from tf import transformations as tr
+
+
+from sbpl_demos.srv import StateMachine, StateMachineRequest
+
 class RomanMove:
     def __init__(self):
         self.perch = PerchClient()
@@ -24,7 +28,31 @@ class RomanMove:
         self.RCG = RomanCommandGripper()
         self.db = None
         self.loadGraspDatabase("roman_grasp_db.json")
+        self.res = ""
 
+    def roconclient_getobject(self):
+        print "waiting for object request"
+
+        while not rospy.is_shutdown():
+            StateMachineRequest.command = "Get"
+            StateMachineReqeust.request_key = "requested_object"
+            StateMachineRequest.request_value = ""
+            self.res = StateMachineClient(StateMachineRequest())
+
+            if (res.result_value != ""):
+                objresult = res.result_value
+                break
+
+            else:
+                rospy.sleep(1)
+        print objresult, " requested"
+
+    def roconclient_send_complete(self):
+        print "sending ROMAN_STATE to rocon"
+        StateMachineRequest.command = "Set"
+        StateMachineRequest.request_key = "ROMAN_STATE"
+        StateMachineRequest.request_value = "DONE"
+        self.res = StateMachineClient(StateMachineRequest())
 
     def loadGraspDatabase(self, db_file):
         with open(db_file,'r') as f:
@@ -125,27 +153,29 @@ class RomanMove:
 
 
 if __name__ == "__main__":
+
     rospy.init_node('roman_move_to_home')
     test = RomanMove()
+    #test.roconclient_getobject()
 
     T_w_p = test.computeTransformWithPerch("006_mustard_bottle")
     print T_w_p
     pregrasp = test.computePreGraspPose("006_mustard_bottle",T_w_p)
     print pregrasp
-
     
-    test.RMAC.MoveToHome()
-    test.RCG.Open()
+    #test.RMAC.MoveToHome()
+    #test.RCG.Open()
     test.moveToPreGrasp(T_w_p)
     test.moveToGrasp(T_w_p)
-    test.RCG.Close()
-    test.moveToPreGrasp(T_w_p)
-    test.moveToPreTable()
-    test.moveToTable()
-    test.RCG.Open()
-    test.moveToPreTable()
-    test.RMAC.MoveToHome()
-    
+    #test.RCG.Close()
+    #test.moveToPreGrasp(T_w_p)
+    #test.moveToPreTable()
+    #test.moveToTable()
+    #test.RCG.Open()
+    #test.moveToPreTable()
+    #test.RMAC.MoveToHome()
 
+    #test.roconclient_send_complete()
+    
     rospy.signal_shutdown("Shutdown Cleanly")
     rospy.spin()
