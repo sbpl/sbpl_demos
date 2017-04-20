@@ -1,0 +1,15 @@
+source screenrc.common
+
+# screen -t bash
+# #stuff "roscore^M"
+
+screen -t amcl
+stuff "roslaunch sbpl_demos alan1_amcl_setup.launch"
+
+screen -t octomap
+stuff "rosrun sbpl_demos demo_initializer.py; "
+stuff "roslaunch sbpl_demos alan1_3dmap_setup.launch"
+
+screen -t 3dnav@alan2
+stuff "roslaunch sbpl_demos alan2_3dnav_setup.launch"
+ 
