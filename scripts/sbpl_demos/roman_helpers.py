@@ -30,20 +30,26 @@ class RomanMoveArm(object):
         self.jointstate_sub = rospy.Subscriber("/joint_states", JointState, self.__jointstatecallback__ )
         self.romanstate_sub = rospy.Subscriber("/roman_state", RomanState, self.__romanstatecallback__ )
         self.addtable = moveit_commander.PlanningSceneInterface()
-        self.ikproxy = rospy.ServiceProxy("/compute_ik", GetPositionIK) 
-        pose = Pose()
-        pose.position.x = 0.468
-        pose.position.y = -0.767
-        pose.position.z = 1.170
-        quat = quaternion_from_euler(-math.pi/2,0,0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
-        self.HOME = pose
+        self.ikproxy = rospy.ServiceProxy("/compute_ik", GetPositionIK)
     def __romanstatecallback__(self, romanstate):
-        self.romanstate = romanstate    
+        self.romanstate = romanstate
 
+    def CheckForErrors(self):
+        fault = False
+        if self.romanstate.in_fault > 0:
+            print "In fault with state:" + self.romanstate.in_fault
+            fault = True
+        if self.romanstate.ctrl_fault_status != "OK" :
+            print "Control in fault with:" + self.romanstate.ctrl_fault_status
+            fault = True
+        for (i,s) in zip(range(0,4),self.romanstate.mech_fault_status):
+            if s != "OK":
+                print "Mechanism " + i + " in fault with status:" + s
+                fault = True
+        if self.romanstate.right_hand_state.in_fault > 0:
+            print "Gripper in fault with " + self.romanstate.right_hand_state.in_fault
+            fault = True
+        return fault
     def __jointstatecallback__(self, jointstate):
         self.jointstate = jointstate
 
