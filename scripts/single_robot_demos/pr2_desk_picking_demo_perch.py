@@ -17,19 +17,24 @@ from sbpl_demos.srv import StateMachine, StateMachineRequest
 
 class Demo:
     def __init__(self):
-#         self.STATIONARY = True
-        self.STATIONARY = False
+
+        self.STATIONARY = True
+#         self.STATIONARY = False
+
+#         self.LARM_IN_USE = False    # manipulation with right arm
+        self.LARM_IN_USE = True    # manipulation with left arm
+
         self.tflistener = tf.TransformListener()
         self.tfbroadcaster = tf.TransformBroadcaster()
-        self.GripperCommand = pr2_helpers.GripperCommand()
+        self.GripperCommand = pr2_helpers.GripperCommand(self.LARM_IN_USE)
         self.PointHead = pr2_helpers.PointHead()
         self.ARTagListener = perception_helpers.ARTagListener()
-        self.PerchClient = perch_helpers.PerchClient()
-        self.MoveitMoveArm = pr2_helpers.MoveitMoveArm()
+        self.PerchClient = perch_helpers.PerchClient(self.LARM_IN_USE)
+        self.MoveitMoveArm = pr2_helpers.MoveitMoveArm(self.LARM_IN_USE)
         self.TorsoCommand = pr2_helpers.TorsoCommand()
         if(not self.STATIONARY):
             self.MoveBase = pr2_helpers.MoveBase()
-        self.ArmJointCommand = pr2_helpers.ArmJointCommand()
+        self.ArmJointCommand = pr2_helpers.ArmJointCommand(self.LARM_IN_USE)
 
         print "waiting for state_machine server..."
         rospy.wait_for_service('state_machine')
@@ -245,6 +250,16 @@ class Demo:
 
     def graspObjectRoutine(self):
 
+        # wait for a while to make Perch use the lastest/static observation
+        rospy.sleep(3)
+        rospy.loginfo('Asking PERCH to detect the object')
+
+
+        ### OPEN_GRIPPER
+        rospy.loginfo('Commanding gripper open')
+        self.GripperCommand.CommandGripperInUse(1) #open grigger
+
+
         ### DETECT_OBJECT
         # look at the object
         self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
@@ -269,17 +284,12 @@ class Demo:
         success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
         if not success:
             rospy.logwarn("Could not move to pregrasp pose, now moving back to wide pose")
-            success = self.MoveitMoveArm.MoveRightToWide()
+            success = self.MoveitMoveArm.MoveArmInUseToWide()
             if not success:
                 rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-                self.ArmJointCommand.MoveRightArmToWide()
+                self.ArmJointCommand.MoveArmInUseToWide()
             self.MoveitMoveArm.removeAllObjectsAndDesks()
             return False
-
-
-        ### OPEN_GRIPPER
-        rospy.loginfo('Commanding right gripper open')
-        self.GripperCommand.Command('r', 1) #open grigger
 
 
         ### MOVE_ARM_TO_GRASP
@@ -289,29 +299,29 @@ class Demo:
         success = self.MoveitMoveArm.MoveToPose(grasp_pose, "odom_combined")
         if not success:
             rospy.logwarn("Could not move to grasp pose, now moving back to wide pose")
-            success = self.MoveitMoveArm.MoveRightToWide()
+            success = self.MoveitMoveArm.MoveArmInUseToWide()
             if not success:
                 rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-                self.ArmJointCommand.MoveRightArmToWide()
+                self.ArmJointCommand.MoveArmInUseToWide()
             self.MoveitMoveArm.removeAllObjectsAndDesks()
             return False
 
 
         ### CLOSE_GRIPPER
         if self.PerchClient.getRequestedObjectName() == "003_cracker_box":
-            rospy.loginfo('Commanding right gripper close')
-            grip_success = self.GripperCommand.Command('r', 0.55) #close Gripper   # HACK for 003_cracker_box
+            rospy.loginfo('Commanding gripper close')
+            grip_success = self.GripperCommand.CommandGripperInUse(0.55) #close Gripper   # HACK for 003_cracker_box
             rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
         else:
-            rospy.loginfo('Commanding right gripper close')
+            rospy.loginfo('Commanding gripper close')
             # grip_success: True when completely closed, False when grasped something
-            grip_success = self.GripperCommand.Command('r', 0) #close Gripper
+            grip_success = self.GripperCommand.CommandGripperInUse(0) #close Gripper
             if grip_success:
                 rospy.loginfo("Failed to grasp, now moving back to wide pose")
-                success = self.MoveitMoveArm.MoveRightToWide()
+                success = self.MoveitMoveArm.MoveArmInUseToWide()
                 if not success:
                     rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-                    self.ArmJointCommand.MoveRightArmToWide()
+                    self.ArmJointCommand.MoveArmInUseToWide()
                 self.MoveitMoveArm.removeAllObjectsAndDesks()
                 return False
             rospy.loginfo("Succeeded to grasp.")
@@ -327,19 +337,19 @@ class Demo:
             success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
             if not success:
                 rospy.logwarn("Could not move to pregrasp pose, now moving back to wide pose")
-                success = self.MoveitMoveArm.MoveRightToWide()
+                success = self.MoveitMoveArm.MoveArmInUseToWide()
                 if not success:
                     rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-                    self.ArmJointCommand.MoveRightArmToWide()
+                    self.ArmJointCommand.MoveArmInUseToWide()
                     # NOTE we won't return False and just proceed to the next step
 
 
         ### MOVE_ARM_TO_WIDE
         rospy.loginfo("Moving back to wide pose")
-        success = self.MoveitMoveArm.MoveRightToWide()
+        success = self.MoveitMoveArm.MoveArmInUseToWide()
         if not success:
             rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-            self.ArmJointCommand.MoveRightArmToWide()
+            self.ArmJointCommand.MoveArmInUseToWide()
             # NOTE we won't return False and just proceed to the next step
 
         # remove all collision models
@@ -354,13 +364,13 @@ class Demo:
         self.addCollisionModels()
         rospy.sleep(1)
         rospy.loginfo("Moving to release pose")
-        success = self.MoveitMoveArm.MoveRightToExtend(release_pose)
+        success = self.MoveitMoveArm.MoveArmInUseToExtend(release_pose)
         if not success:
             rospy.logwarn("Could not move to release pose, now moving back to wide pose")
-            success = self.MoveitMoveArm.MoveRightToWide()
+            success = self.MoveitMoveArm.MoveArmInUseToWide()
             if not success:
                 rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-                self.ArmJointCommand.MoveRightArmToWide()
+                self.ArmJointCommand.MoveArmInUseToWide()
             self.MoveitMoveArm.removeAllObjectsAndDesks()
 
             # escape from this state
@@ -375,40 +385,40 @@ class Demo:
             rospy.sleep(1)
             rospy.logerr("Let me drop the object after 1 second!!!!")
             rospy.sleep(1)
-            rospy.loginfo("Commanding right gripper open")
-            self.GripperCommand.Command('r', 1) #open gripper
+            rospy.loginfo("Commanding gripper open")
+            self.GripperCommand.CommandGripperInUse(1) #open gripper
             return False
 
 
         ### OPEN_GRIPPER
-        rospy.loginfo("Commanding right gripper open")
-        self.GripperCommand.Command('r', 1) #open gripper
+        rospy.loginfo("Commanding gripper open")
+        self.GripperCommand.CommandGripperInUse(1) #open gripper
 
 
         ### MOVE_ARM_TO_POSTRELEASE
-        rospy.loginfo("Commanding right gripper open")
-        success = self.MoveitMoveArm.MoveRightToShortExtend(release_pose)
+        rospy.loginfo("Commanding gripper open")
+        success = self.MoveitMoveArm.MoveArmInUseToShortExtend(release_pose)
         if not success:
             rospy.logwarn("Could not move to post-release pose, now moving back to wide pose")
-            success = self.MoveitMoveArm.MoveRightToWide()
+            success = self.MoveitMoveArm.MoveArmInUseToWide()
             if not success:
                 rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-                self.ArmJointCommand.MoveRightArmToWide()
+                self.ArmJointCommand.MoveArmInUseToWide()
                 # NOTE we won't return False and just proceed to the next step
 
 
         ### MOVE_ARM_TO_WIDE
         rospy.loginfo("Moving to wide open")
-        success = self.MoveitMoveArm.MoveRightToWide()
+        success = self.MoveitMoveArm.MoveArmInUseToWide()
         if not success:
             rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-            self.ArmJointCommand.MoveRightArmToWide()
+            self.ArmJointCommand.MoveArmInUseToWide()
             # NOTE we won't return False and just proceed to the next step
 
 
         ### CLOSE_GRIPPER
-        rospy.loginfo('Commanding right gripper close')
-        grip_success = self.GripperCommand.Command('r', 0) #close Gripper
+        rospy.loginfo('Commanding gripper close')
+        grip_success = self.GripperCommand.CommandGripperInUse(0) #close Gripper
 
         # remove all collision models
         self.MoveitMoveArm.removeAllObjectsAndDesks()
@@ -454,10 +464,12 @@ class Demo:
                 rospy.sleep(1)
 
 
-        ### MOVE_ARM_TO_WIDE
+        ### MOVE_ARM_TO_WIDE + CLOSE_GRIPPER
         rospy.loginfo("Moving arms to wide open")
-        self.ArmJointCommand.MoveRightArmToWide()
-        self.ArmJointCommand.MoveLeftArmToWide()
+        self.ArmJointCommand.MoveArmInUseToWide()
+        self.ArmJointCommand.MoveArmNotInUseToSide()
+        self.GripperCommand.CommandGripperInUse(0) #close grigger
+        self.GripperCommand.CommandGripperNotInUse(0) #close grigger
 
 
         #################### THE BEGINNING OF ONE CYCLE ####################
@@ -473,7 +485,7 @@ class Demo:
 
         while initialized and (not rospy.is_shutdown()):
 
-            ### DETECT_OBJECT + SELECT_GRASP_POSE + OPEN_GRIPPER + MOVE_ARM_TO_PREGRASP + MOVE_ARM_TO_GRASP + CLOSE_GRIPPER + MOVE_ARM_TO_PREGRASP + MOVE_ARM_TO_WIDE
+            ### OPEN_GRIPPER + DETECT_OBJECT + SELECT_GRASP_POSE + MOVE_ARM_TO_PREGRASP + MOVE_ARM_TO_GRASP + CLOSE_GRIPPER + MOVE_ARM_TO_PREGRASP + MOVE_ARM_TO_WIDE
             if (not self.graspObjectRoutine()):
                 rospy.logerr("Falied to graspObjectRoutine()! Restart from object detection again after 3 seconds!")
                 rospy.sleep(3)

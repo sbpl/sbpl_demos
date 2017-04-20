@@ -28,18 +28,18 @@ def getGraspsFromDatabase():
 			rospy.delete_param(str_namespace)
 
 	for key,value in config.items():
-		print "\nItem: "+str(key)
+# 		print "\nItem: "+str(key)
 		str_item = str_namespace+str('/')+str(key)
-		print str_item
-		print "Num_graps: "+str(len(config[key].items()))
+# 		print str_item
+# 		print "Num_graps: "+str(len(config[key].items()))
 		rospy.set_param(str_item+'/num_grasps', len(config[key].items()))
 
 		for grasp_i_key, grasp_i_value in config[key].items():
 			grasp_index = str(grasp_i_key)[-1]
 			grasp_n = str_item+'/'+grasp_index
-			print "Grasp No: "+str(grasp_i_key)[-1]
-			print value[grasp_i_key]['pregrasp']
-			print value[grasp_i_key]['grasp']
+# 			print "Grasp No: "+str(grasp_i_key)[-1]
+# 			print value[grasp_i_key]['pregrasp']
+# 			print value[grasp_i_key]['grasp']
 
 			rospy.set_param(grasp_n+'/pregrasp/rot_x_y_z_w', value[grasp_i_key]['pregrasp']['rotation'])
 			rospy.set_param(grasp_n+'/pregrasp/trans_x_y_z', value[grasp_i_key]['pregrasp']['translation'])

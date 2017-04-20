@@ -132,7 +132,10 @@ class TuckArms:
         self.client.wait_for_result(rospy.Duration(30.0))
 
 class GripperCommand:
-    def __init__(self):
+    def __init__(self, LARM_IN_USE):
+
+        self.LARM_IN_USE = LARM_IN_USE    # True: manipulation with left arm, False: with right arm
+
         self.left_client = actionlib.SimpleActionClient('l_gripper_controller/gripper_action', GripperCommandAction)
         self.right_client = actionlib.SimpleActionClient('r_gripper_controller/gripper_action', GripperCommandAction)
         rospy.loginfo("waiting for gripper actions...")
@@ -176,6 +179,19 @@ class GripperCommand:
                 return False
             else:
                 return False
+
+    def CommandGripperInUse(self, open):
+        if self.LARM_IN_USE:
+            return self.Command('l',open)
+        else:
+            return self.Command('r',open)
+
+    def CommandGripperNotInUse(self, open):
+        if self.LARM_IN_USE:
+            return self.Command('r',open)
+        else:
+            return self.Command('l',open)
+
 
 class MoveBase:
     def __init__(self):
@@ -255,13 +271,19 @@ class MoveBase:
 
 
 class MoveitMoveArm:
-    def __init__(self):
+    def __init__(self, LARM_IN_USE):
+
+        self.LARM_IN_USE = LARM_IN_USE    # True: manipulation with left arm, False: with right arm
+
         rospy.loginfo("bringing up move_arm...")
         moveit_commander.roscpp_initialize(sys.argv)
         self.moveit_robot_commander = moveit_commander.RobotCommander()
         self.moveit_planning_scene = moveit_commander.PlanningSceneInterface()
         
-        self.moveit_planning_group = moveit_commander.MoveGroupCommander("right_arm")
+        if self.LARM_IN_USE:
+            self.moveit_planning_group = moveit_commander.MoveGroupCommander("left_arm")
+        else:
+            self.moveit_planning_group = moveit_commander.MoveGroupCommander("right_arm")
 
         # NOTE to switch the planner to ompl, need to set the parameter 'use_sbpl_pipeline' to 'false' in launch/pr2/tatooine_moveit_setup.launch
         # NOTE also make sure to execute 'rosparam delete /move_group' to prevent any possible confusion
@@ -269,12 +291,15 @@ class MoveitMoveArm:
         use_sbpl_pipeline = True
 
         if use_sbpl_pipeline:
-            self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_manip]")  # slow; robust but sometimes rotating the wrist; initial plan can be found within a second, so just reduce allowed_planning_time
-#             self.moveit_planning_group.set_planner_id("right_arm[larastar_bfs_manip]")  # not faster; similar motion
-#             self.moveit_planning_group.set_planner_id("right_arm[mhastar_bfs_manip]")  # not faster; similar motion
-#             self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_workspace]")   # faster; weird suboptimal path
-#             self.moveit_planning_group.set_planner_id("right_arm[arastar_euclid_workspace]")  # slow; wrist orientation converges early
-#             self.moveit_planning_group.set_planner_id("right_arm[larastar_euclid_workspace]")   # not faster, abrupt motions!
+            if self.LARM_IN_USE:
+                self.moveit_planning_group.set_planner_id("left_arm[arastar_bfs_manip]")  # slow; robust but sometimes rotating the wrist; initial plan can be found within a second, so just reduce allowed_planning_time
+            else:
+                self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_manip]")  # slow; robust but sometimes rotating the wrist; initial plan can be found within a second, so just reduce allowed_planning_time
+#                 self.moveit_planning_group.set_planner_id("right_arm[larastar_bfs_manip]")  # not faster; similar motion
+#                 self.moveit_planning_group.set_planner_id("right_arm[mhastar_bfs_manip]")  # not faster; similar motion
+#                 self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_workspace]")   # faster; weird suboptimal path
+#                 self.moveit_planning_group.set_planner_id("right_arm[arastar_euclid_workspace]")  # slow; wrist orientation converges early
+#                 self.moveit_planning_group.set_planner_id("right_arm[larastar_euclid_workspace]")   # not faster, abrupt motions!
 
             self.moveit_planning_group.set_planning_time(rospy.get_param("move_group/allowed_planning_time"))
             self.moveit_planning_group.allow_replanning(True)
@@ -329,44 +354,35 @@ class MoveitMoveArm:
         return True
 
 
-    def MoveToHandoff(self):
-        pose = geometry_msgs.msg.Pose()
-        pose.position.x = 0.62
-        pose.position.y = 0
-        pose.position.z = 0.93
-        quat = quaternion_from_euler(math.pi/2,0,0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
-        return self.MoveToPose(pose, "base_footprint")
+#     def MoveToHandoff(self):
+#         pose = geometry_msgs.msg.Pose()
+#         pose.position.x = 0.62
+#         pose.position.y = 0
+#         pose.position.z = 0.93
+#         quat = quaternion_from_euler(math.pi/2,0,0)
+#         pose.orientation.x = quat[0]
+#         pose.orientation.y = quat[1]
+#         pose.orientation.z = quat[2]
+#         pose.orientation.w = quat[3]
+#         return self.MoveToPose(pose, "base_footprint")
 
-    def MoveToHome(self):
-        pose = geometry_msgs.msg.Pose()
-        pose.position.x = 0.09
-        pose.position.y = -0.75
-        pose.position.z = 0.89
-        quat = quaternion_from_euler(0,0,0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
-        return self.MoveToPose(pose, "base_footprint")
+#     def MoveToHome(self):
+#         pose = geometry_msgs.msg.Pose()
+#         pose.position.x = 0.09
+#         pose.position.y = -0.75
+#         pose.position.z = 0.89
+#         quat = quaternion_from_euler(0,0,0)
+#         pose.orientation.x = quat[0]
+#         pose.orientation.y = quat[1]
+#         pose.orientation.z = quat[2]
+#         pose.orientation.w = quat[3]
+#         return self.MoveToPose(pose, "base_footprint")
 
     def MoveRightToWide(self):
         pose = geometry_msgs.msg.Pose()
         pose.position.x = 0
         pose.position.y = -0.64
         pose.position.z = 1.05
-#         quat = quaternion_from_euler(-3.002, 0.117, 0.130)
-#         pose.orientation.x = quat[0]
-#         pose.orientation.y = quat[1]
-#         pose.orientation.z = quat[2]
-#         pose.orientation.w = quat[3]
-#         pose.orientation.x = 0.00129958
-#         pose.orientation.y = 0.0836125
-#         pose.orientation.z = 0.0657168
-#         pose.orientation.w = 0.994329
         pose.orientation.x = 0.0
         pose.orientation.y = 0.0
         pose.orientation.z = 0.0
@@ -400,15 +416,96 @@ class MoveitMoveArm:
 #         pose.position.y = -0.11
         pose.position.z += 0.005
 
-        # retract along the x-axis of the r_wrist_roll_link frame
+        # retract along the x-axis of the r/l_wrist_roll_link frame
         factor_wrist_x = -0.15
-        (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time())
+        if self.LARM_IN_USE:
+            rospy.logwarn("It doesn't make to MoveRightToShortExtend() when LARM_IN_USE is True, but I will just proceed...")
+            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "l_wrist_roll_link", rospy.Time())
+        else:
+            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time())
         wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
         wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
         pose.position.x += wrist_offset_x[0]
         pose.position.y += wrist_offset_x[1]
         pose.position.z += wrist_offset_x[2]
         return self.MoveToPose(pose, "base_footprint")
+
+    def MoveLeftToWide(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = 0
+        pose.position.y = 0.64
+        pose.position.z = 1.05
+        quat = quaternion_from_euler(math.pi,0,0)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        return self.MoveToPose(pose, "base_footprint")
+
+    def MoveLeftToCarry(self):
+        pose = geometry_msgs.msg.Pose()
+        pose.position.x = -0.32
+        pose.position.y = 0.608
+        pose.position.z = 1.244
+        quat = quaternion_from_euler(-1.679, -1.479, 1.154)
+        pose.orientation.x = quat[0]
+        pose.orientation.y = quat[1]
+        pose.orientation.z = quat[2]
+        pose.orientation.w = quat[3]
+        return self.MoveToPose(pose, "base_footprint")
+
+    def MoveLeftToExtend(self, release_pose):
+        pose = copy.deepcopy(release_pose)
+        # HACK
+#         pose.position.x = 0.58
+#         pose.position.y = -0.11
+        pose.position.z += 0.005
+        return self.MoveToPose(pose, "base_footprint")
+
+    def MoveLeftToShortExtend(self, release_pose):
+        pose = copy.deepcopy(release_pose)
+        # HACK
+#         pose.position.x = 0.58
+#         pose.position.y = -0.11
+        pose.position.z += 0.005
+
+        # retract along the x-axis of the r/l_wrist_roll_link frame
+        factor_wrist_x = -0.15
+        if self.LARM_IN_USE:
+            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "l_wrist_roll_link", rospy.Time())
+        else:
+            rospy.logwarn("It doesn't make sense to MoveLefToShortExtend() when LARM_IN_USE is False, but I will just proceed...")
+            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time())
+        wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
+        wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
+        pose.position.x += wrist_offset_x[0]
+        pose.position.y += wrist_offset_x[1]
+        pose.position.z += wrist_offset_x[2]
+        return self.MoveToPose(pose, "base_footprint")
+
+    def MoveArmInUseToWide(self):
+        if self.LARM_IN_USE:
+            return self.MoveLeftToWide()
+        else:
+            return self.MoveRightToWide()
+
+    def MoveArmInUseToCarry(self):
+        if self.LARM_IN_USE:
+            return self.MoveLeftToCarry()
+        else:
+            return self.MoveRightToCarry()
+
+    def MoveArmInUseToExtend(self, release_pose):
+        if self.LARM_IN_USE:
+            return self.MoveLeftToExtend(release_pose)
+        else:
+            return self.MoveRightToExtend(release_pose)
+
+    def MoveArmInUseToShortExtend(self, release_pose):
+        if self.LARM_IN_USE:
+            return self.MoveLeftToShortExtend(release_pose)
+        else:
+            return self.MoveRightToShortExtend(release_pose)
 
     def AddCollisionObject(self, name, posestamped, input_size):
         self.moveit_planning_scene.add_box(name, posestamped, size=input_size)
@@ -559,7 +656,10 @@ class ArmJointTrajAction:
         self.jta.send_goal_and_wait(goal)
 
 class ArmJointCommand:
-    def __init__(self):
+    def __init__(self, LARM_IN_USE):
+
+        self.LARM_IN_USE = LARM_IN_USE    # True: manipulation with left arm, False: with right arm
+
         self.RightArmJointCommand = ArmJointTrajAction('r_arm')
         self.LeftArmJointCommand = ArmJointTrajAction('l_arm')
 
@@ -568,6 +668,36 @@ class ArmJointCommand:
     def MoveRightArmToWide(self):
         self.RightArmJointCommand.MoveArmToJoint([-1.6583625690312713, 0.6874497663917372, -0.3591542852171954, -2.0396477595207805, 4.633907864244298, -1.2780054373789036, 2.9439450216806975])
 
+    def MoveRightArmToSide(self):
+        self.RightArmJointCommand.MoveArmToJoint([-2.134992712216583, 1.046132240354625, -2.2202324000660947, -1.9038528322430315, -2.7226797245193337, -0.10465688013304186, 4.67507793460336])
+
     def MoveLeftArmToWide(self):
+        self.LeftArmJointCommand.MoveArmToJoint([1.6327356580271766, 0.16224827869037478, 0.13903629877154455, -1.794550945148468, 1.5893983104724974, -1.3209737500667504, -0.03455158539307579])
+
+    def MoveLeftArmToSide(self):
         self.LeftArmJointCommand.MoveArmToJoint([2.050585009506385, 1.168843268710281, 2.0143859931673638, -1.691908510777547, 1.264066293462545, -0.09850362202844609, 0.00586820137944688])
+
+    def MoveArmInUseToWide(self):
+        if self.LARM_IN_USE:
+            self.MoveLeftArmToWide()
+        else:
+            self.MoveRightArmToWide()
+
+    def MoveArmInUseToSide(self):
+        if self.LARM_IN_USE:
+            self.MoveLeftArmToSide()
+        else:
+            self.MoveRightArmToSide()
+
+    def MoveArmNotInUseToWide(self):
+        if self.LARM_IN_USE:
+            self.MoveRightArmToWide()
+        else:
+            self.MoveLeftArmToWide()
+
+    def MoveArmNotInUseToSide(self):
+        if self.LARM_IN_USE:
+            self.MoveRightArmToSide()
+        else:
+            self.MoveLeftArmToSide()
 

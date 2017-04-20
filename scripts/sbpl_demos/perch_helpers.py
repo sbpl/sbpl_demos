@@ -14,7 +14,9 @@ from sbpl_demos import grasp_return
 
 class PerchClient:
 
-    def __init__(self):
+    def __init__(self, LARM_IN_USE):
+
+        self.LARM_IN_USE = LARM_IN_USE    # True: manipulation with left arm, False: with right arm
 
         self.locked = True
         self.requested = True    # just for information
@@ -145,7 +147,10 @@ class PerchClient:
 
 
         # get current end-effector position
-        (ee_position, ee_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
+        if self.LARM_IN_USE:
+            (ee_position, ee_quat) = self.tflistener.lookupTransform("odom_combined", "l_wrist_roll_link", rospy.Time())
+        else:
+            (ee_position, ee_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
 
         # compute grasp poses from the given data
         for idx_grasp in range(0, len(grasp_matrices_in_local)):
@@ -186,12 +191,12 @@ class PerchClient:
 
         self.locked = True
 
-#         self.requested_object = String("006_mustard_bottle")
-#         self.requested_object = String("011_banana")
-#         self.requested_object = String("019_pitcher_base")
-#         self.requested_object = String("024_bowl")
+#         self.requested_object = "006_mustard_bottle"
+#         self.requested_object = "011_banana"
+#         self.requested_object = "019_pitcher_base"
+#         self.requested_object = "024_bowl"
 
-        self.requested_object = String(requested_object)
+        self.requested_object = requested_object
 
         self.send_request()
         tic = rospy.Time.now()
@@ -259,9 +264,9 @@ class PerchClient:
 
     def send_request(self):
 
-        self.publisher.publish(self.requested_object)
-        rospy.sleep(3)
+        self.publisher.publish(String(self.requested_object))
         self.locked = True
+        rospy.sleep(1)
 
 
     def perch_callback(self, data):
