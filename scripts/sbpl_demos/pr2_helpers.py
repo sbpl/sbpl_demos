@@ -269,13 +269,13 @@ class MoveBase:
 #         pose.orientation.w = 0.7122
 
         # (lower) workstation
-        pose.position.x = 0.0866
-        pose.position.y = 0.3732
+        pose.position.x = 0.2889
+        pose.position.y = 0.4328
         pose.position.z = 0.0
-        pose.orientation.x = 0.001
-        pose.orientation.y = 0.003
-        pose.orientation.z = 0.72049
-        pose.orientation.w = 0.69345
+        pose.orientation.x = 0.002
+        pose.orientation.y = 0.0003
+        pose.orientation.z = 0.69345
+        pose.orientation.w = 0.72049
 
         return self.MoveToPose("map", pose)
 
@@ -411,48 +411,6 @@ class MoveitMoveArm:
         pose.orientation.w = quat[3]
         return self.MoveToPose(pose, "base_footprint")
 
-    def MoveRightToExtend(self, release_pose):
-        pose = copy.deepcopy(release_pose)
-
-        # HACK assuming that we picked up the object from table and put it down on desk
-        table_height = 0.39
-        desk_height = 0.70
-        pose.position.z += desk_height - table_height
-
-        # HACK
-#         pose.position.x = 0.58
-#         pose.position.y = -0.11
-        pose.position.z += 0.005
-
-        return self.MoveToPose(pose, "base_footprint")
-
-    def MoveRightToShortExtend(self, release_pose):
-        pose = copy.deepcopy(release_pose)
-
-        # HACK assuming that we picked up the object from table and put it down on desk
-        table_height = 0.39
-        desk_height = 0.70
-        pose.position.z += desk_height - table_height
-
-        # HACK
-#         pose.position.x = 0.58
-#         pose.position.y = -0.11
-        pose.position.z += 0.005
-
-        # retract along the x-axis of the r/l_wrist_roll_link frame
-        factor_wrist_x = -0.15
-        if self.LARM_IN_USE:
-            rospy.logwarn("It doesn't make to MoveRightToShortExtend() when LARM_IN_USE is True, but I will just proceed...")
-            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "l_wrist_roll_link", rospy.Time())
-        else:
-            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time())
-        wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
-        wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
-        pose.position.x += wrist_offset_x[0]
-        pose.position.y += wrist_offset_x[1]
-        pose.position.z += wrist_offset_x[2]
-        return self.MoveToPose(pose, "base_footprint")
-
     def MoveLeftToWide(self):
         pose = geometry_msgs.msg.Pose()
         pose.position.x = 0
@@ -477,48 +435,6 @@ class MoveitMoveArm:
         pose.orientation.w = quat[3]
         return self.MoveToPose(pose, "base_footprint")
 
-    def MoveLeftToExtend(self, release_pose):
-        pose = copy.deepcopy(release_pose)
-
-        # HACK assuming that we picked up the object from table and put it down on desk
-        table_height = 0.39
-        desk_height = 0.70
-        pose.position.z += desk_height - table_height
-
-        # HACK
-#         pose.position.x = 0.58
-#         pose.position.y = -0.11
-        pose.position.z += 0.005
-
-        return self.MoveToPose(pose, "base_footprint")
-
-    def MoveLeftToShortExtend(self, release_pose):
-        pose = copy.deepcopy(release_pose)
-
-        # HACK assuming that we picked up the object from table and put it down on desk
-        table_height = 0.39
-        desk_height = 0.70
-        pose.position.z += desk_height - table_height
-
-        # HACK
-#         pose.position.x = 0.58
-#         pose.position.y = -0.11
-        pose.position.z += 0.005
-
-        # retract along the x-axis of the r/l_wrist_roll_link frame
-        factor_wrist_x = -0.15
-        if self.LARM_IN_USE:
-            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "l_wrist_roll_link", rospy.Time())
-        else:
-            rospy.logwarn("It doesn't make sense to MoveLefToShortExtend() when LARM_IN_USE is False, but I will just proceed...")
-            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time())
-        wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
-        wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
-        pose.position.x += wrist_offset_x[0]
-        pose.position.y += wrist_offset_x[1]
-        pose.position.z += wrist_offset_x[2]
-        return self.MoveToPose(pose, "base_footprint")
-
     def MoveArmInUseToWide(self):
         if self.LARM_IN_USE:
             return self.MoveLeftToWide()
@@ -531,17 +447,62 @@ class MoveitMoveArm:
         else:
             return self.MoveRightToCarry()
 
+    def MoveRightToExtend(self, release_pose):
+        return self.MoveToPose(release_pose, "base_footprint")
+
+    def MoveRightToShortExtend(self, release_pose):
+        return self.MoveToPose(release_pose, "base_footprint")
+
+    def MoveLeftToExtend(self, release_pose):
+        return self.MoveToPose(release_pose, "base_footprint")
+
+    def MoveLeftToShortExtend(self, release_pose):
+        return self.MoveToPose(release_pose, "base_footprint")
+
     def MoveArmInUseToExtend(self, release_pose):
+        release_pose_rev = copy.deepcopy(release_pose)
+
+        # HACK assuming that we picked up the object from table and put it down on desk
+        table_height = 0.39
+        desk_height = 0.70
+        release_pose_rev.position.z += desk_height - table_height
+
+        # HACK to allow more margin with desk
+        release_pose_rev.position.z += 0.005
+
         if self.LARM_IN_USE:
-            return self.MoveLeftToExtend(release_pose)
+            return self.MoveLeftToExtend(release_pose_rev)
         else:
-            return self.MoveRightToExtend(release_pose)
+            return self.MoveRightToExtend(release_pose_rev)
 
     def MoveArmInUseToShortExtend(self, release_pose):
+        release_pose_rev = copy.deepcopy(release_pose)
+
+        # HACK assuming that we picked up the object from table and put it down on desk
+        table_height = 0.39
+        desk_height = 0.70
+        release_pose_rev.position.z += desk_height - table_height
+
+        # HACK to allow more margin with desk
+        release_pose_rev.position.z += 0.005
+
+        # retract along the x-axis of the r/l_wrist_roll_link frame
+        factor_wrist_x = -0.15
         if self.LARM_IN_USE:
-            return self.MoveLeftToShortExtend(release_pose)
+            rospy.logwarn("It doesn't make to MoveRightToShortExtend() when LARM_IN_USE is True, but I will just proceed...")
+            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "l_wrist_roll_link", rospy.Time())
         else:
-            return self.MoveRightToShortExtend(release_pose)
+            (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time())
+        wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
+        wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
+        release_pose_rev.position.x += wrist_offset_x[0]
+        release_pose_rev.position.y += wrist_offset_x[1]
+        release_pose_rev.position.z += wrist_offset_x[2]
+
+        if self.LARM_IN_USE:
+            return self.MoveLeftToShortExtend(release_pose_rev)
+        else:
+            return self.MoveRightToShortExtend(release_pose_rev)
 
     def AddCollisionObject(self, name, posestamped, input_size):
         self.moveit_planning_scene.add_box(name, posestamped, size=input_size)

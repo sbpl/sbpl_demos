@@ -292,6 +292,8 @@ class Demo:
 
 
         # wait for a while to make Perch use the lastest/static observation
+        rospy.loginfo('Commanding torso go down')
+        self.TorsoCommand.MoveTorso(0.0)
         rospy.sleep(3)
         rospy.loginfo('Asking PERCH to detect the object')
 
@@ -303,8 +305,8 @@ class Demo:
 
         ### DETECT_OBJECT
         # look at the object
-        rospy.loginfo("Move head to look forward")
-        self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
+        rospy.loginfo("Move head to look left")
+        self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
         # get candidate grasp poses
         # (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerchSpin()   # PR2-alone
         (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerch(self.PerchClient.getRequestedObjectName())     # PR2 + ROMAN
@@ -570,6 +572,28 @@ class Demo:
 
         ####################### THE END OF ONE CYCLE #######################
 
+
+            ### WAIT_FOR_WEB
+            rospy.loginfo("Waiting for user's object selection!")
+            requested_object = self.PerchClient.getRequestedObjectNameSpin()
+            self.StateMachineRequest.command = "Set"
+            self.StateMachineRequest.request_key = "requested_object"
+            self.StateMachineRequest.request_value = requested_object
+            res = self.StateMachineClient(self.StateMachineRequest)
+            rospy.loginfo("Updated 'requested_object' on /state_machine!")
+
+            ### WAIT_FOR_ROMAN
+            rospy.loginfo("Waiting for Roman!")
+            while not rospy.is_shutdown():
+                self.StateMachineRequest.command = "Get"
+                self.StateMachineRequest.request_key = "ROMAN_STATE"
+                self.StateMachineRequest.request_value = ""
+                res = self.StateMachineClient(self.StateMachineRequest)
+                if res.result_value == "DONE":
+                    rospy.loginfo("Was told that Roman is done!")
+                    break
+                else:
+                    rospy.sleep(1)
 
             ### MOVE_BASE_TO_TABLE
             if (not self.moveToWorkstationRoutine()):
