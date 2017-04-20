@@ -26,6 +26,7 @@ def call_return_joint_states(joint_names):
             print "joint %s not found!"%joint_name
     return (resp.position, resp.velocity, resp.effort)
 
+
 #pretty-print list to string
 def pplist(list):
     return ' '.join(['%2.3f'%x for x in list])
@@ -41,9 +42,9 @@ if __name__ == "__main__":
     
     rate = rospy.Rate(10.0)
 
-    object_pose = PerchClient.getObjectPose("003_cracker_box")
+    # object_pose = PerchClient.getObjectPose("003_cracker_box")
     # object_pose = PerchClient.getObjectPose("019_pitcher_base")
-    # object_pose = PerchClient.getObjectPose("010_potted_meat_can")
+    object_pose = PerchClient.getObjectPose("010_potted_meat_can")
     
     # object_pose = PerchClient.getObjectPose("006_mustard_bottle")
     

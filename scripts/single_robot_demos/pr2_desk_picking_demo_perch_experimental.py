@@ -9,7 +9,7 @@ import numpy
 import signal
 from geometry_msgs.msg import Pose, PoseStamped
 from sbpl_demos import perception_helpers
-from sbpl_demos import perch_helpers
+from sbpl_demos import perch_helpers_experimental
 from sbpl_demos import grasping_helpers
 from sbpl_demos import pr2_helpers
 from sbpl_demos.perception_helpers import AR_TYPES
@@ -17,20 +17,19 @@ from sbpl_demos.srv import StateMachine, StateMachineRequest
 
 class Demo:
     def __init__(self):
-#         self.STATIONARY = True
-        self.STATIONARY = False
+        self.STATIONARY = True
+        # self.STATIONARY = False
         self.tflistener = tf.TransformListener()
         self.tfbroadcaster = tf.TransformBroadcaster()
         self.GripperCommand = pr2_helpers.GripperCommand()
         self.PointHead = pr2_helpers.PointHead()
         self.ARTagListener = perception_helpers.ARTagListener()
-        self.PerchClient = perch_helpers.PerchClient()
+        self.PerchClient = perch_helpers_experimental.PerchClient()
         self.MoveitMoveArm = pr2_helpers.MoveitMoveArm()
         self.TorsoCommand = pr2_helpers.TorsoCommand()
         if(not self.STATIONARY):
             self.MoveBase = pr2_helpers.MoveBase()
         self.ArmJointCommand = pr2_helpers.ArmJointCommand()
-
         print "waiting for state_machine server..."
         rospy.wait_for_service('state_machine')
         print ("Connected.")
@@ -72,6 +71,7 @@ class Demo:
         #print grasp_poses_perch
         #print interp_poses_perch
         #print distances_to_grasp
+        
         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
 
 
@@ -441,17 +441,18 @@ class Demo:
 
 
         ### WAIT_FOR_ROMAN
-        rospy.loginfo("Waiting for Roman!")
-        while not rospy.is_shutdown():
-            self.StateMachineRequest.command = "Get"
-            self.StateMachineRequest.request_key = "ROMAN_STATE"
-            self.StateMachineRequest.request_value = ""
-            res = self.StateMachineClient(self.StateMachineRequest)
-            if res.result_value == "DONE":
-                rospy.loginfo("Was told that Roman is done!")
-                break
-            else:
-                rospy.sleep(1)
+        # rospy.loginfo("Waiting for Roman!")
+        # while not rospy.is_shutdown():
+        #     self.StateMachineRequest.command = "Get"
+        #     self.StateMachineRequest.request_key = "ROMAN_STATE"
+        #     self.StateMachineRequest.request_value = ""
+        #     res = self.StateMachineClient(self.StateMachineRequest)
+
+        #     if res.result_value == "DONE":
+        #         rospy.loginfo("Was told that Roman is done!")
+        #         break
+        #     else:
+        #         rospy.sleep(1)
 
 
         ### MOVE_ARM_TO_WIDE

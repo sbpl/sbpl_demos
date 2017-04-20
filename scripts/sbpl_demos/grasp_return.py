@@ -8,24 +8,25 @@ import geometry_msgs.msg
 import tf
 import numpy as np
 import yaml
-
+import pdb
 roslib.load_manifest('sbpl_demos')
 
 
+def getGraspsFromDatabase():
 
-if __name__ == "__main__":
-
-	rospy.init_node('objects_to_grasps')
 	# get an instance of RosPack with the default search paths
 	rospack = rospkg.RosPack()
 	fid = file(rospack.get_path('sbpl_demos')+'/data/grasp_database/grasp_database.yaml')
-	print "hello"
+	
 	try:
 		config = yaml.load(fid)
 	except yaml.YAMLError, exc:
 		print "Error in configuration file:", exc
 
 	str_namespace = '/grasps'
+	if rospy.has_param(str_namespace):
+			rospy.delete_param(str_namespace)
+
 	for key,value in config.items():
 		print "\nItem: "+str(key)
 		str_item = str_namespace+str('/')+str(key)
@@ -45,5 +46,10 @@ if __name__ == "__main__":
 
 			rospy.set_param(grasp_n+'/grasp/rot_x_y_z_w', value[grasp_i_key]['grasp']['rotation'])
 			rospy.set_param(grasp_n+'/grasp/trans_x_y_z', value[grasp_i_key]['grasp']['translation'])
+
+
+if __name__ == "__main__":
+	rospy.init_node('grasps_database_populator')
+	getGraspsFromDatabase()
 
 

@@ -6,14 +6,12 @@ import rospy
 import actionlib
 import tf
 import numpy
-import signal
 from geometry_msgs.msg import Pose, PoseStamped
 from sbpl_demos import perception_helpers
 from sbpl_demos import perch_helpers
 from sbpl_demos import grasping_helpers
 from sbpl_demos import pr2_helpers
 from sbpl_demos.perception_helpers import AR_TYPES
-from sbpl_demos.srv import StateMachine, StateMachineRequest
 
 class Demo:
     def __init__(self):
@@ -30,16 +28,6 @@ class Demo:
         if(not self.STATIONARY):
             self.MoveBase = pr2_helpers.MoveBase()
         self.ArmJointCommand = pr2_helpers.ArmJointCommand()
-
-        print "waiting for state_machine server..."
-        rospy.wait_for_service('state_machine')
-        print ("Connected.")
-        self.StateMachineClient = rospy.ServiceProxy('state_machine', StateMachine)
-        self.StateMachineRequest = StateMachineRequest()
-
-#         signal.signal(signal.SIGINT, self.signal_handler)
-#         print('Press Ctrl+C')
-#         signal.pause()
 
         rospy.sleep(1.0)
         rospy.loginfo('All Action clients connected!')
@@ -249,8 +237,7 @@ class Demo:
         # look at the object
         self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
         # get candidate grasp poses
-        # (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerchSpin()   # PR2-alone
-        (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerch(self.PerchClient.getRequestedObjectName())     # PR2 + ROMAN
+        (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerchSpin()
         if not len(grasp_poses) > 0:
             rospy.logwarn("No grasp poses found")
             self.MoveitMoveArm.removeAllObjectsAndDesks()
@@ -416,11 +403,6 @@ class Demo:
         return True
 
 
-#     def signal_handler(signal, frame):
-#         print('You pressed Ctrl+C!')
-#         sys.exit(0)
-
-
     def runDemo(self):
 
         ### INITIALIZATION
@@ -428,31 +410,6 @@ class Demo:
             rospy.loginfo("Initialize PR2 pose")
             self.MoveBase.InitializePosePR2()
             rospy.sleep(1)
-
-
-        ### WAIT_FOR_WEB
-        rospy.loginfo("Waiting for user's object selection!")
-        requested_object = self.PerchClient.getRequestedObjectNameSpin()
-        self.StateMachineRequest.command = "Set"
-        self.StateMachineRequest.request_key = "requested_object"
-        self.StateMachineRequest.request_value = requested_object
-        res = self.StateMachineClient(self.StateMachineRequest)
-        rospy.loginfo("Updated 'requested_object' on /state_machine!")
-
-
-        ### WAIT_FOR_ROMAN
-        rospy.loginfo("Waiting for Roman!")
-        while not rospy.is_shutdown():
-            self.StateMachineRequest.command = "Get"
-            self.StateMachineRequest.request_key = "ROMAN_STATE"
-            self.StateMachineRequest.request_value = ""
-            res = self.StateMachineClient(self.StateMachineRequest)
-            if res.result_value == "DONE":
-                rospy.loginfo("Was told that Roman is done!")
-                break
-            else:
-                rospy.sleep(1)
-
 
         ### MOVE_ARM_TO_WIDE
         rospy.loginfo("Moving arms to wide open")
@@ -506,17 +463,6 @@ class Demo:
 
         ### DESTRUCTION
         self.MoveitMoveArm.Cleanup()
-
-        self.StateMachineRequest.command = "Set"
-        self.StateMachineRequest.request_key = "requested_object"
-        self.StateMachineRequest.request_value = ""
-        res = self.StateMachineClient(self.StateMachineRequest)
-
-        self.StateMachineRequest.command = "Set"
-        self.StateMachineRequest.request_key = "ROMAN_STATE"
-        self.StateMachineRequest.request_value = "IDLE"
-        res = self.StateMachineClient(self.StateMachineRequest)
-
         print('Shutting down...')
 
 

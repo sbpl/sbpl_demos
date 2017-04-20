@@ -28,7 +28,6 @@ class PerchClient:
 
         #Clean up and Populate grasp database
         grasp_return.getGraspsFromDatabase()
-
         rospy.Subscriber("/perch_pose", Pose, self.perch_callback)
         rospy.Subscriber("/requested_object", String, self.web_callback)    # just for information
         rospy.sleep(1)
@@ -45,11 +44,46 @@ class PerchClient:
         object_pose_in_base = self.getObjectPoseSpin()
         return self.compute_grasp_pose_in_odom(object_pose_in_base)
 
+    # def getGraspsFromDatabase():
+
+    #     # get an instance of RosPack with the default search paths
+    #     rospack = rospkg.RosPack()
+    #     fid = file(rospack.get_path('sbpl_demos')+'/data/grasp_database/grasp_database.yaml')
+        
+    #     try:
+    #         config = yaml.load(fid)
+    #     except yaml.YAMLError, exc:
+    #         print "Error in configuration file:", exc
+
+    #     str_namespace = '/grasps'
+    #     if rospy.has_param(str_namespace):
+    #             rospy.delete_param(str_namespace)
+
+    #     for key,value in config.items():
+    #         print "\nItem: "+str(key)
+    #         str_item = str_namespace+str('/')+str(key)
+    #         print str_item
+    #         print "Num_graps: "+str(len(config[key].items()))
+    #         rospy.set_param(str_item+'/num_grasps', len(config[key].items()))
+
+    #         for grasp_i_key, grasp_i_value in config[key].items():
+    #             grasp_index = str(grasp_i_key)[-1]
+    #             grasp_n = str_item+'/'+grasp_index
+    #             print "Grasp No: "+str(grasp_i_key)[-1]
+    #             print value[grasp_i_key]['pregrasp']
+    #             print value[grasp_i_key]['grasp']
+
+    #             rospy.set_param(grasp_n+'/pregrasp/rot_x_y_z_w', value[grasp_i_key]['pregrasp']['rotation'])
+    #             rospy.set_param(grasp_n+'/pregrasp/trans_x_y_z', value[grasp_i_key]['pregrasp']['translation'])
+
+    #             rospy.set_param(grasp_n+'/grasp/rot_x_y_z_w', value[grasp_i_key]['grasp']['rotation'])
+    #             rospy.set_param(grasp_n+'/grasp/trans_x_y_z', value[grasp_i_key]['grasp']['translation'])
+
 
     def compute_grasp_pose_in_odom(self, object_pose_in_base):
 
         # TODO provide multiple candidate poses
-
+        # self.GraspReturn = grasp_return.GetGraspsFromDatabase()
 
         # transformation matrix of object in /base_footprint frame
         object_pos_in_base = (object_pose_in_base.position.x, object_pose_in_base.position.y, object_pose_in_base.position.z)
@@ -94,18 +128,41 @@ class PerchClient:
             grasp_matrices_in_local.append(grasp_matrix_in_local)
 
         # if self.requested_object == "003_cracker_box":
-        #     for idx_grasp in range(0,2):
+        #     for idx_grasp in range(1):
         #         # hard-coded grasp data for multiple grasp poses
         #         if idx_grasp == 0:
-        #             interp_pos_in_local = (0.0, 0.33, 0.0)
-        #             interp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
-        #             grasp_pos_in_local = (0.0, 0.23, 0.0)
-        #             grasp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
+        #             # interp_pos_in_local = (-0.07186082, -0.32603487,  0.06163173)
+        #             # interp_quat_in_local = (-0.11012889,  0.03911699,  0.60143071,  0.79033068)
+        #             # grasp_pos_in_local = (-0.04971018, -0.22475378,  0.02199482)
+        #             # grasp_quat_in_local = (-0.05106686,  0.02021765,  0.62407797,  0.77942935)
+
+
+        #             # interp_pos_in_local = (0.0, 0.33, 0.0)
+        #             # interp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
+        #             # grasp_pos_in_local = (0.0, 0.23, 0.0)
+        #             # grasp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
+        #             interp_pos_in_local = (-0.0337354,   0.32518866,  0.33009632)
+        #             interp_quat_in_local = (0.37145278,  0.33149848, -0.56646793,  0.65669298)
+        #             grasp_pos_in_local = (-0.02731046,  0.2078597,   0.05684458)
+        #             grasp_quat_in_local = (0.03516512,  0.03270248, -0.68649274,  0.72554923)
         #         elif idx_grasp == 1:
-        #             interp_pos_in_local = (0.0, -0.33, 0.0)
-        #             interp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
-        #             grasp_pos_in_local = (0.0, -0.23, 0.0)
-        #             grasp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
+        #             # interp_pos_in_local = (0.0, -0.33, 0.0)
+        #             # interp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
+        #             # grasp_pos_in_local = (0.0, -0.23, 0.0)
+        #             # grasp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
+        #             interp_pos_in_local = (-0.25214457, -0.39110131,  0.05872603)
+        #             interp_quat_in_local = (0.45390299,  0.8782439, -0.09746262,  0.11472036)
+        #             grasp_pos_in_local = (-0.30422981, -0.33671074,  0.04042232)
+        #             grasp_quat_in_local = (0.50179907,  0.84884832, -0.09401019,  0.13717255)
+        #         else:
+        #             # interp_quat_in_local = (0.45390299,  0.8782439, -0.09746262,  0.11472036)
+        #             # interp_pos_in_local = (-0.25214457, -0.39110131,  0.05872603)
+        #             # grasp_quat_in_local = (0.50179907,  0.84884832, -0.09401019,  0.13717255)
+        #             # grasp_pos_in_local = (-0.30422981, -0.33671074,  0.04042232)
+        #             interp_pos_in_local = (-0.04484351,  0.01072501,  0.31117956)
+        #             interp_quat_in_local = (-0.55224775,  0.47379804,  0.41835077,  0.54361794)
+        #             grasp_pos_in_local = (-0.03179835,  0.00880004,  0.24242511)
+        #             grasp_quat_in_local = (-0.53407185,  0.50486571,  0.43946319,  0.51647845)      
 
         #         # transformation matrix of grasp pose in object local frame
         #         interp_matrix_in_local = self.tflistener.fromTranslationRotation(interp_pos_in_local, interp_quat_in_local)
@@ -136,6 +193,13 @@ class PerchClient:
         #         # add to the database
         #         interp_matrices_in_local.append(interp_matrix_in_local)
         #         grasp_matrices_in_local.append(grasp_matrix_in_local)
+        # elif self.requested_object == "010_potted meat_can":
+        #     for idx_grasp in range(0,2):
+        #         if idx_grasp == 0:
+
+        #         elif idx_grasp ==1:
+
+        #         else:
 
 
         # check for data validity
@@ -186,12 +250,12 @@ class PerchClient:
 
         self.locked = True
 
-#         self.requested_object = String("006_mustard_bottle")
-#         self.requested_object = String("011_banana")
-#         self.requested_object = String("019_pitcher_base")
-#         self.requested_object = String("024_bowl")
+#         self.requested_object = "006_mustard_bottle"
+#         self.requested_object = "011_banana"
+#         self.requested_object = "019_pitcher_base"
+#         self.requested_object = "024_bowl"
 
-        self.requested_object = String(requested_object)
+        self.requested_object = requested_object
 
         self.send_request()
         tic = rospy.Time.now()
@@ -243,6 +307,9 @@ class PerchClient:
 
         tic = rospy.Time.now()
 
+        # self.requested_object = "003_cracker_box"
+        # self.requested_object = "010_potted_meat_can"
+
         while not rospy.is_shutdown():
             if self.requested_object != "":
                 rospy.loginfo("Received requested_object name from web: %s", self.requested_object)
@@ -259,7 +326,7 @@ class PerchClient:
 
     def send_request(self):
 
-        self.publisher.publish(self.requested_object)
+        self.publisher.publish(String(self.requested_object))
         rospy.sleep(3)
         self.locked = True
 
