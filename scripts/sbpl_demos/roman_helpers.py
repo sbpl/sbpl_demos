@@ -16,13 +16,14 @@ from roman_client_ros_utils.msg import RobotiqSimpleCmd, RobotiqActivate, Roboti
 import copy
 import moveit_commander
 import moveit_msgs.msg
-from moveit_msgs.msg import PositionIKRequest
-from moveit_msgs.srv import GetPositionIK
+from moveit_msgs.msg import PositionIKRequest, MotionPlanRequest, MotionPlanResponse, DisplayRobotState
+from moveit_msgs.srv import GetPositionIK, GetMotionPlan
 
 class RomanMoveArm(object):
     def __init__(self):
         self.client=actionlib.SimpleActionClient('/move_arm', MoveArmAction)
         self.tflistener = tf.TransformListener()
+        self.visualizer_pub = rospy.Publisher("/visualize_ik", DisplayRobotState, queue_size=1)
         rospy.loginfo("Waiting for action /move_arm...")
         self.client.wait_for_server()
         rospy.loginfo("Connected to action /move_arm!")
@@ -124,6 +125,17 @@ class RomanMoveArm(object):
         ikreq.attempts = numAttempts
         return self.ikproxy(ikreq)
 
+    def VisualizeState(self, state):
+        msg = DisplayRobotState()
+        if state is RobotState:
+            msg.state = state
+        elif state is JointState:
+            msg.state.jointstate = state
+        else:
+            rospy.logwarn("Cannot visualize state with this object %s", str(state))
+            pass
+       self.visualizer_pub.publish(msg)
+
     def MoveToPose(self, desired_pose, reference_frame="map"):
         goal=MoveArmGoal()
         '''
@@ -207,8 +219,6 @@ class RomanMoveArm(object):
             return True
         else:
             return False
-
-
 class RomanCommandGripper(object):
     def __init__(self):
 
