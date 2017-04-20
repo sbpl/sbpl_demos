@@ -9,8 +9,9 @@ from tf.transformations import quaternion_from_euler
 from rcta.msg import MoveArmGoal, MoveArmAction
 from geometry_msgs.msg import Pose, PoseStamped
 from moveit_msgs.msg import RobotState
+from trajectory_msgs.msg import JointTrajectoryPoint
 from sensor_msgs.msg import JointState
-from control_msgs.msg import GripperCommandAction, GripperCommandGoal
+from control_msgs.msg import GripperCommandAction, GripperCommandGoal, FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from roman_client_ros_utils.msg import RobotiqSimpleCmd, RobotiqActivate, RobotiqGenericCmd,RomanState
 
 import copy
@@ -31,6 +32,13 @@ class RomanMoveArm(object):
         self.romanstate_sub = rospy.Subscriber("/roman_state", RomanState, self.__romanstatecallback__ )
         self.addtable = moveit_commander.PlanningSceneInterface()
         self.ikproxy = rospy.ServiceProxy("/compute_ik", GetPositionIK)
+
+        self.jta = actionlib.SimpleActionClient('/right_limb/follow_joint_trajectory',
+                                                FollowJointTrajectoryAction)
+        rospy.loginfo('Waiting for joint trajectory action')
+        self.jta.wait_for_server()
+        rospy.loginfo('Found joint trajectory action!')
+
     def __romanstatecallback__(self, romanstate):
         self.romanstate = romanstate
 
@@ -63,7 +71,7 @@ class RomanMoveArm(object):
         pose.orientation.y = quat[1]
         pose.orientation.z = quat[2]
         pose.orientation.w = quat[3]
-        return self.MoveToPose(pose, "base_footprint")
+        #return self.MoveToPose(pose, "base_footprint")
 
     def moveToHome_jointgoal(self):
         joint_goal = JointState()
@@ -73,7 +81,7 @@ class RomanMoveArm(object):
         joint_goal.position = [0.5661353269134606, 0.4692864095056042, -0.3136810029425956, -0.3174383113709873, -0.2514111373486396, 1.6025123702213988, 0.17182068670395123, 0.008224544748877419] # to fill in the values for a valid joint goal
         joint_goal.velocity = []
         joint_goal.effort = []
-        self.RMAC.MoveToPose_jointgoal(joint_goal, "base_footprint")
+        self.MoveToPose_jointgoal(joint_goal, "base_footprint")
 
     def addcollisiontable(self):
         p = PoseStamped()
@@ -108,6 +116,7 @@ class RomanMoveArm(object):
         if(    not self.tflistener.frameExists(reference_frame) or not self.tflistener.frameExists("map")):
             rospy.logwarn("Warning: could not look up provided reference frame")
             return False
+        rospy.wait_for_service("/compute_ik")
         input_ps = PoseStamped()
         input_ps.pose = desired_pose
         input_ps.header.frame_id = reference_frame
@@ -116,6 +125,8 @@ class RomanMoveArm(object):
         tip_link = "limb_right_link7"
         ikreq = PositionIKRequest()
         ikreq.group_name = group_name
+	while not self.jointstate:
+		pass
         ikreq.robot_state.joint_state = self.jointstate
         ikreq.avoid_collisions = False
         ikreq.ik_link_name = "limb_right_link7"
@@ -123,6 +134,116 @@ class RomanMoveArm(object):
         ikreq.timeout = rospy.Duration(duration)
         ikreq.attempts = numAttempts
         return self.ikproxy(ikreq)
+
+        def unravel_roman_joint_values(current_state, target_state):
+            '''
+            current_state and seed_state are sequences of 8 doubles for joints variables
+            in the order 'limb_right_joint1', 'limb_right_joint2', 'limb_right_joint3',
+            'limb_right_joint4', 'limb_right_joint5', 'limb_right_joint6',
+            'limb_right_joint7', 'torso_joint1'.
+        
+            Returns a sequence of joint variables equivalent to the target state such that
+            the resulting values are the nearest 2*pi equivalent to the current state.
+        
+            The torso joint is ignored.
+            '''
+            min_limits = [
+                -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi,
+                -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi,
+            ]
+        
+            max_limits = [
+                2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi,
+                2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi,
+            ]
+        
+            close_joint_values = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            for i in range(len(current_state)):
+                if i == 7: # skip the torso joint
+                    close_joint_values[i] = target_state[i]
+                    continue
+        
+                spos = target_state[i]
+                vdiff = current_state[i] - spos
+                twopi_hops = int(abs(vdiff / (2.0 * math.pi)))
+        
+                print 'twopi_hops: {0}'.format(twopi_hops)
+        
+                npos = spos + 2.0 * math.pi * twopi_hops * copysign(1.0, vdiff)
+                if abs(npos - current_state[i]) > math.pi:
+                    npos = npos + 2.0 * math.pi * copysign(1.0, vdiff)
+        
+                if npos < min_limits[i] or npos > max_limits[i]:
+                    npos = spos
+        
+                close_joint_values[i] = npos
+        
+            return close_joint_values
+
+    def extract_joint_variables(joint_state, joint_names):
+        '''Extract the variables for a subset of joints from a JointState.
+        '''
+        jvals = {}
+        for i in range(len(joint_state.name)):
+            jvals[joint_state.name[i]] = joint_state.position[i]
+    
+        joint_values = []
+        for joint_name in joint_names:
+        joint_values.append(jvals[joint_name])
+    
+        return joint_values
+
+
+    def MoveToPoseBlind(self, desired_pose, reference_frame="map"):
+        sol = self.GenerateIK(desired_pose, reference_frame=reference_frame)
+
+        joint_names = [
+            'limb_right_joint1', 'limb_right_joint2', 'limb_right_joint3',
+            'limb_right_joint4', 'limb_right_joint5', 'limb_right_joint6',
+            'limb_right_joint7', 'torso_joint1'
+        ]
+        current_joint_values = self.extract_joint_variables(self.jointstate, joint_names)
+        target_joint_values = self.extract_joint_variables(sol.solution.joint_state, joint_names)
+    
+        target_angles = self.unravel_roman_joint_values(current_joint_values, target_joint_values)
+
+        goal = FollowJointTrajectoryGoal()
+        goal.trajectory.header.frame_id = 'map'
+        goal.trajectory.joint_names = [
+            'limb_right_joint1',
+            'limb_right_joint2',
+            'limb_right_joint3',
+            'limb_right_joint4',
+            'limb_right_joint5',
+            'limb_right_joint6',
+            'limb_right_joint7',
+            'torso_joint1'
+        ]
+        '''
+        point1 = JointTrajectoryPoint()
+        point1.positions(1) = self.jointstate(1)
+
+        point1.positions = angles
+        point1.time_from_start = rospy.Duration(5)
+        goal.trajectory.points.append(copy.deepcopy(point1))
+
+        point1.time_from_start = rospy.Duration(10)
+        goal.trajectory.points.append(copy.deepcopy(point1))
+
+        self.jta.send_goal_and_wait(goal)
+        '''
+
+        current = JointTrajectoryPoint()
+        current.positions = current_joint_values
+        current.time_from_start = rospy.Duration(0)
+        goal.trajectory.points.append(current)
+
+        target = JointTrajectoryPoint()
+        target.positions = target_angles
+        target.time_from_start = rospy.Duration(5)
+        goal.trajectory.points.append(target)
+
+        self.jta.send_goal_and_wait(goal)
 
     def MoveToPose(self, desired_pose, reference_frame="map"):
         goal=MoveArmGoal()
@@ -157,9 +278,9 @@ class RomanMoveArm(object):
 
         rospy.loginfo("Sending goal to action Server")
         self.client.send_goal(goal)
-        #result = self.client.wait_for_result()
         self.client.wait_for_result()
         result =  self.client.get_result()
+        
         rospy.loginfo("Finished pose goal - result is %s", result.success)
         if result.success:
             return True
@@ -192,14 +313,54 @@ class RomanMoveArm(object):
         #input_ps.header.frame_id = reference_frame
         #correct_ps = self.tflistener.transformPose("map", input_ps )
 
-        goal.goal_pose = desired_jointgoal
+        goal.goal_joint_state = desired_jointgoal
+        rospy.loginfo("sending robot to pose: ")
+        print goal.goal_joint_state
+        goal.execute_path = True
+
+        rospy.loginfo("Sending goal to action Server")
+        self.client.send_goal(goal)
+        self.client.wait_for_result()
+        result =  self.client.get_result()
+        rospy.loginfo("Finished pose goal - result is %s", result.success)
+        if result.success:
+            return True
+        else:
+            return False
+
+    def MoveFromPre(self, desired_pose, reference_frame="map"):
+        goal=MoveArmGoal()
+        '''
+        # goal 
+        uint8 EndEffectorGoal = 0
+        uint8 JointGoal = 1
+        uint8 CartesianGoal = 2
+        uint8 type
+        geometry_msgs/Pose goal_pose
+        sensor_msgs/JointState goal_joint_state
+        moveit_msgs/RobotState start_state
+        octomap_msgs/Octomap octomap
+        bool execute_path
+        moveit_msgs/PlanningOptions planning_options
+        '''
+
+        goal.type = 2 # Cartesiangoal
+
+        if(    not self.tflistener.frameExists(reference_frame) or not self.tflistener.frameExists("map")):
+            rospy.logwarn("Warning: could not look up provided reference frame")
+            return False
+        input_ps = PoseStamped()
+        input_ps.pose = desired_pose
+        input_ps.header.frame_id = reference_frame
+        correct_ps = self.tflistener.transformPose("map", input_ps )
+
+        goal.goal_pose = correct_ps.pose
         rospy.loginfo("sending robot to pose: ")
         print goal.goal_pose
         goal.execute_path = True
 
         rospy.loginfo("Sending goal to action Server")
         self.client.send_goal(goal)
-        #result = self.client.wait_for_result()
         self.client.wait_for_result()
         result =  self.client.get_result()
         rospy.loginfo("Finished pose goal - result is %s", result.success)
