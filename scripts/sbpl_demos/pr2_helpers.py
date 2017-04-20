@@ -258,14 +258,24 @@ class MoveBase:
 #         pose.orientation.y = 0.002
 #         pose.orientation.z = 0.91104
 #         pose.orientation.w = 0.41228
-#
-        pose.position.x = 0.368
-        pose.position.y = 0.2744
+
+        # round table (a little to the right)
+#         pose.position.x = 0.368
+#         pose.position.y = 0.2744
+#         pose.position.z = 0.0
+#         pose.orientation.x = 0.002
+#         pose.orientation.y = 0.002
+#         pose.orientation.z = 0.70195
+#         pose.orientation.w = 0.7122
+
+        # (lower) workstation
+        pose.position.x = 0.0866
+        pose.position.y = 0.3732
         pose.position.z = 0.0
-        pose.orientation.x = 0.002
-        pose.orientation.y = 0.002
-        pose.orientation.z = 0.70195
-        pose.orientation.w = 0.7122
+        pose.orientation.x = 0.001
+        pose.orientation.y = 0.003
+        pose.orientation.z = 0.72049
+        pose.orientation.w = 0.69345
 
         return self.MoveToPose("map", pose)
 
@@ -403,14 +413,27 @@ class MoveitMoveArm:
 
     def MoveRightToExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
+
+        # HACK assuming that we picked up the object from table and put it down on desk
+        table_height = 0.39
+        desk_height = 0.70
+        pose.position.z += desk_height - table_height
+
         # HACK
 #         pose.position.x = 0.58
 #         pose.position.y = -0.11
         pose.position.z += 0.005
+
         return self.MoveToPose(pose, "base_footprint")
 
     def MoveRightToShortExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
+
+        # HACK assuming that we picked up the object from table and put it down on desk
+        table_height = 0.39
+        desk_height = 0.70
+        pose.position.z += desk_height - table_height
+
         # HACK
 #         pose.position.x = 0.58
 #         pose.position.y = -0.11
@@ -456,14 +479,27 @@ class MoveitMoveArm:
 
     def MoveLeftToExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
+
+        # HACK assuming that we picked up the object from table and put it down on desk
+        table_height = 0.39
+        desk_height = 0.70
+        pose.position.z += desk_height - table_height
+
         # HACK
 #         pose.position.x = 0.58
 #         pose.position.y = -0.11
         pose.position.z += 0.005
+
         return self.MoveToPose(pose, "base_footprint")
 
     def MoveLeftToShortExtend(self, release_pose):
         pose = copy.deepcopy(release_pose)
+
+        # HACK assuming that we picked up the object from table and put it down on desk
+        table_height = 0.39
+        desk_height = 0.70
+        pose.position.z += desk_height - table_height
+
         # HACK
 #         pose.position.x = 0.58
 #         pose.position.y = -0.11
@@ -557,8 +593,39 @@ class MoveitMoveArm:
         quat_norm = math.sqrt(quat_z**2 + quat_w**2)
         pose_in_map.pose.orientation.z = quat_z / quat_norm
         pose_in_map.pose.orientation.w = quat_w / quat_norm
-        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.90, 0.90, 0.72))
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.90, 0.90, 0.72))    # round table
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))      # (lower) workstation
 
+        rospy.loginfo("Added table object %s", name)
+        self.inserted_tables.append(name)
+
+    def AddDeskCollisionObjectInMap(self):
+        pose_in_map = PoseStamped()
+        pose_in_map.header.frame_id = "map"
+        pose_in_map.pose.position.x = -0.75
+        pose_in_map.pose.position.y = -2.0
+        pose_in_map.pose.position.z = 0.35
+        pose_in_map.pose.orientation.x = 0
+        pose_in_map.pose.orientation.y = 0
+        pose_in_map.pose.orientation.z = 0
+        pose_in_map.pose.orientation.w = 1
+        name = "desk_0"
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.7))
+        rospy.loginfo("Added desk object %s", name)
+        self.inserted_desks.append(name)
+
+    def AddTableCollisionObjectInMap(self):
+        pose_in_map = PoseStamped()
+        pose_in_map.header.frame_id = "map"
+        pose_in_map.pose.position.x = 0.0
+        pose_in_map.pose.position.y = 1.2
+        pose_in_map.pose.position.z = 0.195
+        pose_in_map.pose.orientation.x = 0
+        pose_in_map.pose.orientation.y = 0
+        pose_in_map.pose.orientation.z = 0
+        pose_in_map.pose.orientation.w = 1
+        name = "table_0"
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))
         rospy.loginfo("Added table object %s", name)
         self.inserted_tables.append(name)
 

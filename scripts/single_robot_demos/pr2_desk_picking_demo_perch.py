@@ -12,14 +12,14 @@ from sbpl_demos import perception_helpers
 from sbpl_demos import perch_helpers
 from sbpl_demos import grasping_helpers
 from sbpl_demos import pr2_helpers
-from sbpl_demos.perception_helpers import AR_TYPES
+# from sbpl_demos.perception_helpers import AR_TYPES
 from sbpl_demos.srv import StateMachine, StateMachineRequest
 
 class Demo:
     def __init__(self):
 
-        self.STATIONARY = True
-#         self.STATIONARY = False
+#         self.STATIONARY = True
+        self.STATIONARY = False
 
 #         self.LARM_IN_USE = False    # manipulation with right arm
         self.LARM_IN_USE = True    # manipulation with left arm
@@ -28,7 +28,7 @@ class Demo:
         self.tfbroadcaster = tf.TransformBroadcaster()
         self.GripperCommand = pr2_helpers.GripperCommand(self.LARM_IN_USE)
         self.PointHead = pr2_helpers.PointHead()
-        self.ARTagListener = perception_helpers.ARTagListener()
+#         self.ARTagListener = perception_helpers.ARTagListener()
         self.PerchClient = perch_helpers.PerchClient(self.LARM_IN_USE)
         self.MoveitMoveArm = pr2_helpers.MoveitMoveArm(self.LARM_IN_USE)
         self.TorsoCommand = pr2_helpers.TorsoCommand()
@@ -48,23 +48,49 @@ class Demo:
 
         rospy.sleep(1.0)
         rospy.loginfo('All Action clients connected!')
+        rospy.loginfo("Move head to look forward")
         self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
-        rospy.loginfo('Commanding torso')
-        self.TorsoCommand.MoveTorso(0.2)
 
 
     def moveToWorkstationRoutine(self):
+
+        ### UPDATE_PR2_STATE
+        rospy.loginfo("Updating PR2's state!")
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "MOVE_BASE"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
+
         if (not self.STATIONARY):
+            rospy.loginfo('Commanding torso go up')
+            self.TorsoCommand.MoveTorso(0.2)
+            rospy.loginfo("Move head to look forward")
             self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
             rospy.loginfo("Move to round table")
-            return self.MoveBase.MoveToWorkstation()
+            res = self.MoveBase.MoveToWorkstation()
+            rospy.loginfo('Commanding torso go down')
+            self.TorsoCommand.MoveTorso(0.0)
+            return res
         else:
             return True
 
 
     def moveToInternDeskRoutine(self):
+
+        ### UPDATE_PR2_STATE
+        rospy.loginfo("Updating PR2's state!")
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "MOVE_BASE"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
+
         if (not self.STATIONARY):
+            rospy.loginfo("Move head to look forward")
             self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
+            rospy.loginfo('Commanding torso go up')
+            self.TorsoCommand.MoveTorso(0.2)
             rospy.loginfo("Move to intern desk")
             return self.MoveBase.MoveToInternDesk()
         else:
@@ -91,58 +117,64 @@ class Demo:
         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
 
 
-    def addCollisionModels(self):
-        (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
-        rospy.loginfo("Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
-            n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
-        # collision model for intern desk
-        if(n_desks > 0):
-            rospy.loginfo("Inserting Desk Collision objects")
-            desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
-            cnt = 0
-            for desk_marker in desk_markers.markers:
-                try:
-                    desk_marker.pose.header.frame_id = "odom_combined"
-                    #desk_marker.pose.header.stamp = rospy.Time.now()
-                    desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
-                    #print "desk_marker_in_map"
-                    #print desk_marker_in_map
-                    self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
-                    cnt+=1
-                except (tf.LookupException):
-                    print "tf.LookupException: Cannot find transform between /map and /odom_combined. Desk collision model will not be added!"
-                    continue
-                except (tf.ConnectivityException):
-                    print "tf.ConnectivityException"
-                    continue
-                except (tf.ExtrapolationException):
-                    print "tf.ExtrapolationException"
-                    continue
-        # collision model for round table
-        if(n_cylinders > 0):
-            rospy.loginfo("Inserting Round Table Collision objects")
-            table_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.CYLINDER)
-            cnt = 0
-            for table_marker in table_markers.markers:
-                try:
-                    table_marker.pose.header.frame_id = "odom_combined"
-                    #table_marker.pose.header.stamp = rospy.Time.now()
-#                     table_marker_in_map = self.tflistener.transformPose("map", table_marker.pose)
-                    table_marker_in_map = self.tflistener.transformPose("odom_combined", table_marker.pose)
-                    #print "table_marker_in_map"
-                    #print table_marker_in_map
-                    self.MoveitMoveArm.AddTableCollisionObject("table_"+str(cnt), table_marker_in_map)
-                    cnt+=1
-                except (tf.LookupException):
-                    print "tf.LookupException: Cannot find transform between /map and /odom_combined. Desk collision model will not be added!"
-                    continue
-                except (tf.ConnectivityException):
-                    print "tf.ConnectivityException"
-                    continue
-                except (tf.ExtrapolationException):
-                    print "tf.ExtrapolationException"
-                    continue
-        return True
+#     def addCollisionModels(self):
+#         (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
+#         rospy.loginfo("Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
+#             n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
+#         # collision model for intern desk
+#         if(n_desks > 0):
+#             rospy.loginfo("Inserting Desk Collision objects")
+#             desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
+#             cnt = 0
+#             for desk_marker in desk_markers.markers:
+#                 try:
+#                     desk_marker.pose.header.frame_id = "odom_combined"
+#                     #desk_marker.pose.header.stamp = rospy.Time.now()
+#                     desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
+#                     #print "desk_marker_in_map"
+#                     #print desk_marker_in_map
+#                     self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
+#                     cnt+=1
+#                 except (tf.LookupException):
+#                     print "tf.LookupException: Cannot find transform between /map and /odom_combined. Desk collision model will not be added!"
+#                     continue
+#                 except (tf.ConnectivityException):
+#                     print "tf.ConnectivityException"
+#                     continue
+#                 except (tf.ExtrapolationException):
+#                     print "tf.ExtrapolationException"
+#                     continue
+#         # collision model for round table
+#         if(n_cylinders > 0):
+#             rospy.loginfo("Inserting Round Table Collision objects")
+#             table_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.CYLINDER)
+#             cnt = 0
+#             for table_marker in table_markers.markers:
+#                 try:
+#                     table_marker.pose.header.frame_id = "odom_combined"
+#                     #table_marker.pose.header.stamp = rospy.Time.now()
+# #                     table_marker_in_map = self.tflistener.transformPose("map", table_marker.pose)
+#                     table_marker_in_map = self.tflistener.transformPose("odom_combined", table_marker.pose)
+#                     #print "table_marker_in_map"
+#                     #print table_marker_in_map
+#                     self.MoveitMoveArm.AddTableCollisionObject("table_"+str(cnt), table_marker_in_map)
+#                     cnt+=1
+#                 except (tf.LookupException):
+#                     print "tf.LookupException: Cannot find transform between /map and /odom_combined. Desk collision model will not be added!"
+#                     continue
+#                 except (tf.ConnectivityException):
+#                     print "tf.ConnectivityException"
+#                     continue
+#                 except (tf.ExtrapolationException):
+#                     print "tf.ExtrapolationException"
+#                     continue
+#         return True
+
+
+    def addCollisionModelsInMap(self):
+        if (not self.STATIONARY):
+            self.MoveitMoveArm.AddDeskCollisionObjectInMap()
+            self.MoveitMoveArm.AddTableCollisionObjectInMap()
 
 
     def compensateMoveItOdomToBaseError(self, odom_to_des_pose):
@@ -250,6 +282,15 @@ class Demo:
 
     def graspObjectRoutine(self):
 
+        ### UPDATE_PR2_STATE
+        rospy.loginfo("Updating PR2's state!")
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "MOVE_ARM"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
+
+
         # wait for a while to make Perch use the lastest/static observation
         rospy.sleep(3)
         rospy.loginfo('Asking PERCH to detect the object')
@@ -262,6 +303,7 @@ class Demo:
 
         ### DETECT_OBJECT
         # look at the object
+        rospy.loginfo("Move head to look forward")
         self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
         # get candidate grasp poses
         # (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerchSpin()   # PR2-alone
@@ -271,7 +313,7 @@ class Demo:
             self.MoveitMoveArm.removeAllObjectsAndDesks()
             return False
         # add collision models for detected AR markers
-        self.addCollisionModels()
+        self.addCollisionModelsInMap()
 
 
         ### SELECT_GRASP_POSE
@@ -360,8 +402,17 @@ class Demo:
 
     def releaseObjectRoutine(self, release_pose):
 
+        ### UPDATE_PR2_STATE
+        rospy.loginfo("Updating PR2's state!")
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "MOVE_ARM"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
+
+
         ### MOVE_ARM_TO_RELEASE
-        self.addCollisionModels()
+        self.addCollisionModelsInMap()
         rospy.sleep(1)
         rospy.loginfo("Moving to release pose")
         success = self.MoveitMoveArm.MoveArmInUseToExtend(release_pose)
@@ -439,6 +490,12 @@ class Demo:
             self.MoveBase.InitializePosePR2()
             rospy.sleep(1)
 
+        ### MOVE_ARM_TO_WIDE + CLOSE_GRIPPER
+        rospy.loginfo("Moving arms to wide open")
+        self.ArmJointCommand.MoveArmInUseToWide()
+        self.ArmJointCommand.MoveArmNotInUseToSide()
+        self.GripperCommand.CommandGripperInUse(0) #close grigger
+        self.GripperCommand.CommandGripperNotInUse(0) #close grigger
 
         ### WAIT_FOR_WEB
         rospy.loginfo("Waiting for user's object selection!")
@@ -448,7 +505,6 @@ class Demo:
         self.StateMachineRequest.request_value = requested_object
         res = self.StateMachineClient(self.StateMachineRequest)
         rospy.loginfo("Updated 'requested_object' on /state_machine!")
-
 
         ### WAIT_FOR_ROMAN
         rospy.loginfo("Waiting for Roman!")
@@ -462,14 +518,6 @@ class Demo:
                 break
             else:
                 rospy.sleep(1)
-
-
-        ### MOVE_ARM_TO_WIDE + CLOSE_GRIPPER
-        rospy.loginfo("Moving arms to wide open")
-        self.ArmJointCommand.MoveArmInUseToWide()
-        self.ArmJointCommand.MoveArmNotInUseToSide()
-        self.GripperCommand.CommandGripperInUse(0) #close grigger
-        self.GripperCommand.CommandGripperNotInUse(0) #close grigger
 
 
         #################### THE BEGINNING OF ONE CYCLE ####################
@@ -503,6 +551,22 @@ class Demo:
             if (not self.releaseObjectRoutine(self.release_pose)):
                 rospy.logerr("Falied to releaseObjectRoutine()! Restart from moving to round table again after 3 seconds!")
                 rospy.sleep(3)
+
+            ### UPDATE_OBJECT_STATE
+            rospy.loginfo("Resetting for user's object selection!")
+            self.StateMachineRequest.command = "Set"
+            self.StateMachineRequest.request_key = "requested_object"
+            self.StateMachineRequest.request_value = ""
+            res = self.StateMachineClient(self.StateMachineRequest)
+            rospy.loginfo("Updated 'requested_object' on /state_machine!")
+
+            ### UPDATE_PR2_STATE
+            rospy.loginfo("Updating PR2's state!")
+            self.StateMachineRequest.command = "Set"
+            self.StateMachineRequest.request_key = "PR2_STATE"
+            self.StateMachineRequest.request_value = "IDLE"
+            res = self.StateMachineClient(self.StateMachineRequest)
+            rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
 
         ####################### THE END OF ONE CYCLE #######################
 
