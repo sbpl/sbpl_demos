@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
 	rospy.init_node("grasp_testing")
 
-	rot = rospy.get_param("/grasps/006_mustard_bottle/2/pregrasp/rot_w_x_y_z")
+	rot = rospy.get_param("/grasps/006_mustard_bottle/2/pregrasp/rot_x_y_z_w")
 	trans = rospy.get_param("/grasps/006_mustard_bottle/2/pregrasp/trans_x_y_z")
 	rotMat = tf.transformations.quaternion_matrix(rot)
 
