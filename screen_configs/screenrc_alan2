@@ -10,6 +10,6 @@ screen -t octomap
 stuff "rosrun sbpl_demos demo_initializer.py; "
 stuff "roslaunch sbpl_demos alan1_3dmap_setup.launch"
 
-screen -t 3dnav@alan2
+screen -t 3dnav
 stuff "roslaunch sbpl_demos alan2_3dnav_setup.launch"
  
