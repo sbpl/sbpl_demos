@@ -339,6 +339,11 @@ class Demo:
         (grasp_pose, interp_pose) = self.selectGraspPose(grasp_poses, interp_poses, distances_to_grasp)
 
 
+        ### OPEN_GRIPPER
+        rospy.loginfo('Commanding gripper open')
+        self.GripperCommand.CommandGripperInUse(1) #open grigger
+
+
         ### MOVE_ARM_TO_PREGRASP
         rospy.loginfo("Moving to pregrasp pose")
         success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
