@@ -1,7 +1,8 @@
 move_group:
 #     allowed_planning_time: 15.0
     allowed_planning_time: 5.0
-    tip_link: r_wrist_roll_link
+#     tip_link: r_wrist_roll_link
+    tip_link: l_wrist_roll_link
     workspace_frame: base_footprint
     workspace_min:
         x: -3.0
@@ -13,5 +14,7 @@ move_group:
         z: 2.0
     tolerance:
         position: 0.03
-        orientation: 5.0
-        joint: 5.0
+#         orientation: 5.0
+#         joint: 5.0
+        orientation: 0.1
+        joint: 0.1

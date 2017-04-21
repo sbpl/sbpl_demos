@@ -201,6 +201,7 @@ class Demo:
             self.MoveitMoveArm.AddDeskCollisionObjectInMap()
             self.MoveitMoveArm.AddTableCollisionObjectInMap()
             self.MoveitMoveArm.AddRomanCollisionObjectInMap()
+#         i = 0
 
 
     def compensateMoveItOdomToBaseError(self, odom_to_des_pose):
@@ -286,8 +287,8 @@ class Demo:
         #    rospy.Time.now(), "grasp_pose_best_rev", "odom_combined")
 
         # compensate Kinect calibration error
-        #interp_pose = self.compensateKinectCalibrationError(interp_pose)
-        #grasp_pose = self.compensateKinectCalibrationError(grasp_pose)
+        interp_pose = self.compensateKinectCalibrationError(interp_pose)
+        grasp_pose = self.compensateKinectCalibrationError(grasp_pose)
         # for visualization
         self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
             (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
@@ -299,7 +300,7 @@ class Demo:
         # compute and save a release pose in base_footprint frame
         grasp_pose_stamped = PoseStamped()
         grasp_pose_stamped.header.frame_id = "odom_combined"
-        grasp_pose_stamped.pose = grasp_pose
+        grasp_pose_stamped.pose = copy.deepcopy(grasp_pose)
         release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
         self.release_pose = release_pose_stamped.pose
         print self.release_pose
@@ -360,8 +361,23 @@ class Demo:
         ### MOVE_ARM_TO_GRASP
         #rospy.loginfo("Removing collision objects and moving to final grasp pose")
         #self.MoveitMoveArm.removeAllObjects()   # CHECK is it safe to do this?
+#         rospy.loginfo("Moving to grasp pose")
+#         success = self.MoveitMoveArm.MoveToPose(grasp_pose, "odom_combined")
+#         if not success:
+#             rospy.logwarn("Could not move to grasp pose, now moving back to wide pose")
+#             success = self.MoveitMoveArm.MoveArmInUseToWide()
+#             if not success:
+#                 rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+#                 self.ArmJointCommand.MoveArmInUseToWide()
+#             self.MoveitMoveArm.removeAllObjectsAndDesks()
+#             return False
         rospy.loginfo("Moving to grasp pose")
-        success = self.MoveitMoveArm.MoveToPose(grasp_pose, "odom_combined")
+        interp_pose2 = copy.deepcopy(interp_pose)
+#         interp_pose2.position.z -= 0.12
+        interp_pose2.position.z -= 0.08
+#         interp_pose2.position.z -= 0.02
+#         interp_pose2.position.z -= 0.05
+        success = self.MoveitMoveArm.MoveToPose(interp_pose2, "odom_combined")
         if not success:
             rospy.logwarn("Could not move to grasp pose, now moving back to wide pose")
             success = self.MoveitMoveArm.MoveArmInUseToWide()
@@ -528,7 +544,8 @@ class Demo:
         ### MOVE_ARM_TO_WIDE + CLOSE_GRIPPER
         rospy.loginfo("Moving arms to wide open")
         self.ArmJointCommand.MoveArmInUseToWide()
-        self.ArmJointCommand.MoveArmNotInUseToSide()
+#         self.ArmJointCommand.MoveArmNotInUseToSide()
+        self.ArmJointCommand.MoveArmNotInUseToWide()
         self.GripperCommand.CommandGripperInUse(0) #close grigger
         self.GripperCommand.CommandGripperNotInUse(0) #close grigger
 

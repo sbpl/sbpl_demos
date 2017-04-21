@@ -48,5 +48,5 @@ stuff "rosservice call /state_machine \"Set\" \"ROMAN_STATE\" \"DONE\""
 
 screen -t octomap_clear
 stuff "pr2master; ^M"
-stuff "rosrun sbpl_demos octomap_clearer.py"
+stuff "rosrun sbpl_demos path_octomap_clearer.py"
 

@@ -358,7 +358,12 @@ class MoveitMoveArm:
         input_ps = PoseStamped()
         input_ps.pose = pose
         input_ps.header.frame_id = reference_frame
-        correct_ps = self.tflistener.transformPose("odom_combined", input_ps )
+        if reference_frame != 'odom_combined':
+            correct_ps = self.tflistener.transformPose("odom_combined", input_ps )
+            rospy.logwarn("different tf")
+        else:
+            correct_ps = input_ps
+            rospy.logwarn("same tf")
 
         self.moveit_planning_group.set_start_state_to_current_state()
 
@@ -367,6 +372,7 @@ class MoveitMoveArm:
         plan=self.moveit_planning_group.plan()
         if not plan.joint_trajectory.points:
             return False
+        rospy.sleep(3)
         self.moveit_planning_group.go(wait=True)
         return True
 
@@ -743,7 +749,8 @@ class ArmJointCommand:
     # NOTE current joint values can be read from 'rostopic echo /[r/l]_arm_controller/state'
 
     def MoveRightArmToWide(self):
-        self.RightArmJointCommand.MoveArmToJoint([-1.6583625690312713, 0.6874497663917372, -0.3591542852171954, -2.0396477595207805, 4.633907864244298, -1.2780054373789036, 2.9439450216806975])
+#         self.RightArmJointCommand.MoveArmToJoint([-1.6583625690312713, 0.6874497663917372, -0.3591542852171954, -2.0396477595207805, 4.633907864244298, -1.2780054373789036, 2.9439450216806975])
+        self.RightArmJointCommand.MoveArmToJoint([-1.903766156407949, 0.33815732889344396, -0.9407612404607727, -2.1215879821638572, -1.6462611305433035, -0.6481703100171754, -3.101335781467295])
 
     def MoveRightArmToSide(self):
         self.RightArmJointCommand.MoveArmToJoint([-2.134992712216583, 1.046132240354625, -2.2202324000660947, -1.9038528322430315, -2.7226797245193337, -0.10465688013304186, 4.67507793460336])
