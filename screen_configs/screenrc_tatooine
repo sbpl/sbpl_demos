@@ -42,7 +42,11 @@ stuff "pr2master; ^M"
 # stuff "rosrun sbpl_demos pr2_desk_picking_demo.py"
 stuff "rosrun sbpl_demos pr2_desk_picking_demo_perch.py; rosservice call /state_machine \"Set\" \"requested_object\" \"\"; rosservice call /state_machine \"Set\" \"PR2_STATE\" \"IDLE\"; rosservice call /state_machine \"Set\" \"ROMAN_STATE\" \"IDLE\" "
 
-screen -t PR2_demo
+screen -t roman_done
 stuff "pr2master; ^M"
 stuff "rosservice call /state_machine \"Set\" \"ROMAN_STATE\" \"DONE\""
+
+screen -t octomap_clear
+stuff "pr2master; ^M"
+stuff "rosrun sbpl_demos octomap_clearer.py"
 
