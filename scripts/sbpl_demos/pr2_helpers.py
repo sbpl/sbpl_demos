@@ -229,7 +229,8 @@ class MoveBase:
 
         # intern desk (around the right marker)
         pose.position.x = -1.06836
-        pose.position.y = -1.14624
+#         pose.position.y = -1.14624
+        pose.position.y = -1.24624
         pose.position.z = -1e-05
         pose.orientation.x = -0.0017
         pose.orientation.y = -0.0002
@@ -563,14 +564,15 @@ class MoveitMoveArm:
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
         pose_in_map.pose.position.x = -0.75
-        pose_in_map.pose.position.y = -2.0
+        pose_in_map.pose.position.y = -2.20
         pose_in_map.pose.position.z = 0.35
         pose_in_map.pose.orientation.x = 0
         pose_in_map.pose.orientation.y = 0
         pose_in_map.pose.orientation.z = 0
         pose_in_map.pose.orientation.w = 1
         name = "desk_0"
-        self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.7))
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.7))
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.60))
         rospy.loginfo("Added desk object %s", name)
         self.inserted_desks.append(name)
 
@@ -578,14 +580,15 @@ class MoveitMoveArm:
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
         pose_in_map.pose.position.x = 0.0
-        pose_in_map.pose.position.y = 1.2
+        pose_in_map.pose.position.y = 1.40
         pose_in_map.pose.position.z = 0.195
         pose_in_map.pose.orientation.x = 0
         pose_in_map.pose.orientation.y = 0
         pose_in_map.pose.orientation.z = 0
         pose_in_map.pose.orientation.w = 1
         name = "table_0"
-        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.30))
         rospy.loginfo("Added table object %s", name)
         self.inserted_tables.append(name)
 
@@ -727,4 +730,30 @@ class ArmJointCommand:
             self.MoveRightArmToSide()
         else:
             self.MoveLeftArmToSide()
+
+    def MoveRightArmToPreRelease(self):
+        rospy.logerr("MoveRightArmToPreRelease() is not yet supported!")
+        # self.RightArmJointCommand.MoveArmToJoint([])
+
+    def MoveRightArmToRelease(self):
+        rospy.logerr("MoveRightArmToRelease() is not yet supported!")
+        # self.RightArmJointCommand.MoveArmToJoint([])
+
+    def MoveLeftArmToPreRelease(self):
+        self.LeftArmJointCommand.MoveArmToJoint([0.3728037940530639, -0.03705736014372039, 1.45603048774742, -0.4882848163348973, 7.963510974467809, -1.5628833458204952, -6.2780816196848725])
+
+    def MoveLeftArmToRelease(self):
+        self.LeftArmJointCommand.MoveArmToJoint([0.42014347256390283, 0.06462573742783409, 1.4170642649395377, -0.5162255636319181, 7.971956649162592, -1.5152845872315392, -6.2752100309583])
+
+    def MoveArmInUseToPreRelease(self):
+        if self.LARM_IN_USE:
+            self.MoveLeftArmToPreRelease()
+        else:
+            self.MoveRightArmToPreRelease()
+
+    def MoveArmInUseToRelease(self):
+        if self.LARM_IN_USE:
+            self.MoveLeftArmToRelease()
+        else:
+            self.MoveRightArmToRelease()
 

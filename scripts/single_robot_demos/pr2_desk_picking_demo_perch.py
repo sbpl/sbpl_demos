@@ -294,7 +294,13 @@ class Demo:
         # wait for a while to make Perch use the lastest/static observation
         rospy.loginfo('Commanding torso go down')
         self.TorsoCommand.MoveTorso(0.0)
-        rospy.sleep(3)
+        # look at the object
+        rospy.loginfo("Move head to look left")
+        self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
+        rospy.loginfo("20 sec left!")
+        rospy.sleep(10)
+        rospy.loginfo("10 sec left!")
+        rospy.sleep(10)
         rospy.loginfo('Asking PERCH to detect the object')
 
 
@@ -304,9 +310,6 @@ class Demo:
 
 
         ### DETECT_OBJECT
-        # look at the object
-        rospy.loginfo("Move head to look left")
-        self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
         # get candidate grasp poses
         # (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerchSpin()   # PR2-alone
         (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerch(self.PerchClient.getRequestedObjectName())     # PR2 + ROMAN
@@ -417,30 +420,37 @@ class Demo:
         self.addCollisionModelsInMap()
         rospy.sleep(1)
         rospy.loginfo("Moving to release pose")
-        success = self.MoveitMoveArm.MoveArmInUseToExtend(release_pose)
-        if not success:
-            rospy.logwarn("Could not move to release pose, now moving back to wide pose")
-            success = self.MoveitMoveArm.MoveArmInUseToWide()
-            if not success:
-                rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-                self.ArmJointCommand.MoveArmInUseToWide()
-            self.MoveitMoveArm.removeAllObjectsAndDesks()
-
-            # escape from this state
-            rospy.logerr("I got stuck...")
-            rospy.logerr("Let me drop the object after 5 seconds!!!")
-            rospy.sleep(1)
-            rospy.logerr("Let me drop the object after 4 seconds!!!")
-            rospy.sleep(1)
-            rospy.logerr("Let me drop the object after 3 seconds!!!")
-            rospy.sleep(1)
-            rospy.logerr("Let me drop the object after 2 seconds!!!")
-            rospy.sleep(1)
-            rospy.logerr("Let me drop the object after 1 second!!!!")
-            rospy.sleep(1)
-            rospy.loginfo("Commanding gripper open")
-            self.GripperCommand.CommandGripperInUse(1) #open gripper
-            return False
+        success_release = self.MoveitMoveArm.MoveArmInUseToExtend(release_pose)
+        if not success_release:
+#             rospy.logwarn("Could not move to release pose, now moving back to wide pose")
+#             success = self.MoveitMoveArm.MoveArmInUseToWide()
+#             if not success:
+#                 rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+#                 self.ArmJointCommand.MoveArmInUseToWide()
+#             self.MoveitMoveArm.removeAllObjectsAndDesks()
+#
+#             # escape from this state
+#             rospy.logerr("I got stuck...")
+#             rospy.logerr("Let me drop the object after 5 seconds!!!")
+#             rospy.sleep(1)
+#             rospy.logerr("Let me drop the object after 4 seconds!!!")
+#             rospy.sleep(1)
+#             rospy.logerr("Let me drop the object after 3 seconds!!!")
+#             rospy.sleep(1)
+#             rospy.logerr("Let me drop the object after 2 seconds!!!")
+#             rospy.sleep(1)
+#             rospy.logerr("Let me drop the object after 1 second!!!!")
+#             rospy.sleep(1)
+#             rospy.loginfo("Commanding gripper open")
+#             self.GripperCommand.CommandGripperInUse(1) #open gripper
+#             return False
+            rospy.logwarn("Could not move to release pose, now move to pre-release pose forcefully!")
+            self.ArmJointCommand.MoveArmInUseToPreRelease()
+            rospy.sleep(10)
+            rospy.logwarn("And now move to release pose forcefully!")
+            self.ArmJointCommand.MoveArmInUseToPreRelease()
+            rospy.sleep(5)
+            # NOTE we won't return False and just proceed to the next step
 
 
         ### OPEN_GRIPPER
@@ -449,15 +459,20 @@ class Demo:
 
 
         ### MOVE_ARM_TO_POSTRELEASE
-        rospy.loginfo("Commanding gripper open")
-        success = self.MoveitMoveArm.MoveArmInUseToShortExtend(release_pose)
-        if not success:
-            rospy.logwarn("Could not move to post-release pose, now moving back to wide pose")
-            success = self.MoveitMoveArm.MoveArmInUseToWide()
+        if success_release:
+            rospy.loginfo("Commanding gripper open")
+            success = self.MoveitMoveArm.MoveArmInUseToShortExtend(release_pose)
             if not success:
-                rospy.logwarn("Could not move to wide pose, now do it forcefully!")
-                self.ArmJointCommand.MoveArmInUseToWide()
-                # NOTE we won't return False and just proceed to the next step
+                rospy.logwarn("Could not move to post-release pose, now moving back to wide pose")
+                success = self.MoveitMoveArm.MoveArmInUseToWide()
+                if not success:
+                    rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+                    self.ArmJointCommand.MoveArmInUseToWide()
+                    # NOTE we won't return False and just proceed to the next step
+        else:
+            rospy.logwarn("And now move to post-release pose forcefully!")
+            self.ArmJointCommand.MoveArmInUseToPreRelease()
+            rospy.sleep(5)
 
 
         ### MOVE_ARM_TO_WIDE
