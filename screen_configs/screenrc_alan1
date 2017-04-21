@@ -19,5 +19,8 @@ screen -t kinect
 stuff "roslaunch sbpl_demos alan1_kinect_setup.launch;  "
 stuff "# make sure to kill kinect before (re-)launching alan1_3dnav_setup.launch"
 
+screen -t sound_play
+stuff "rosrun sound_play say.py ‘Here is your spam'"
+
 screen -t htop
 stuff "htop "
