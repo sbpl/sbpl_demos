@@ -13,6 +13,7 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 from sensor_msgs.msg import JointState
 from control_msgs.msg import GripperCommandAction, GripperCommandGoal, FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from roman_client_ros_utils.msg import RobotiqSimpleCmd, RobotiqActivate, RobotiqGenericCmd,RomanState
+from nav_msgs.msg import Odometry
 
 import copy
 import moveit_commander
@@ -24,6 +25,7 @@ class RomanMoveArm(object):
     def __init__(self):
         self.client=actionlib.SimpleActionClient('/move_arm', MoveArmAction)
         self.tflistener = tf.TransformListener()
+        self.visualizer_pub2 = rospy.Publisher("visualize_ik2", DisplayRobotState, queue_size=1)
         self.visualizer_pub = rospy.Publisher("/visualize_ik", DisplayRobotState, queue_size=1)
         rospy.loginfo("Waiting for action /move_arm...")
         self.client.wait_for_server()
@@ -33,6 +35,7 @@ class RomanMoveArm(object):
         self.romanstate_sub = rospy.Subscriber("/roman_state", RomanState, self.__romanstatecallback__ )
         self.addtable = moveit_commander.PlanningSceneInterface()
         self.ikproxy = rospy.ServiceProxy("/compute_ik", GetPositionIK)
+        self.debug_odom_pub = rospy.Publisher('odom_debug_markers', Odometry, queue_size=1)
 
         self.jta = actionlib.SimpleActionClient('/right_limb/follow_joint_trajectory',
                                                 FollowJointTrajectoryAction)
@@ -61,6 +64,7 @@ class RomanMoveArm(object):
         return fault
     def __jointstatecallback__(self, jointstate):
         self.jointstate = jointstate
+        #print self.jointstate.position
 
     def MoveToHome(self):
         pose = Pose()
@@ -78,8 +82,11 @@ class RomanMoveArm(object):
         joint_goal = JointState()
         joint_goal.header.frame_id = "base_footprint"
         joint_goal.header.stamp = rospy.Time.now()
-        joint_goal.name = ['limb_right_joint1', 'limb_right_joint2', 'limb_right_joint3', 'limb_right_joint4', 'limb_right_joint5', 'limb_right_joint6', 'limb_right_joint7', 'torso_joint1']
-        joint_goal.position = [0.5661353269134606, 0.4692864095056042, -0.3136810029425956, -0.3174383113709873, -0.2514111373486396, 1.6025123702213988, 0.17182068670395123, 0.008224544748877419] # to fill in the values for a valid joint goal
+        #joint_goal.name = ['limb_right_joint1', 'limb_right_joint2', 'limb_right_joint3', 'limb_right_joint4', 'limb_right_joint5', 'limb_right_joint6', 'limb_right_joint7', 'torso_joint1']
+        #joint_goal.position = [0.5661353269134606, 0.4692864095056042, -0.3136810029425956, -0.3174383113709873, -0.2514111373486396, 1.6025123702213988, 0.17182068670395123, 0.008224544748877419] # to fill in the values for a valid joint goal
+        joint_goal.name = ['torso_joint1','limb_right_joint1','limb_right_joint2','limb_right_joint3','limb_right_joint4','limb_right_joint5','limb_right_joint6','limb_right_joint7']
+        joint_goal.position = [0.0,0.548185669,1.411449137,-0.313652164,-0.317403704,-0.251327471,1.602561437,0.171757221]
+
         joint_goal.velocity = []
         joint_goal.effort = []
         self.MoveToPose_jointgoal(joint_goal, "base_footprint")
@@ -122,10 +129,20 @@ class RomanMoveArm(object):
         input_ps.pose = desired_pose
         input_ps.header.frame_id = reference_frame
         correct_ps = self.tflistener.transformPose("map", input_ps )
-        group_name = "right_arm_and_torso"
+        print "correct_ps", correct_ps
+
+        # PUT ME BACK IN WHEN THE TORSO IS ONLINE, OR REMOVE ME HWEN THE TORSO DIES
+        group_name = "right_arm_and_torso" 
         tip_link = "limb_right_link7"
         ikreq = PositionIKRequest()
         ikreq.group_name = group_name
+
+        debug_marker = Odometry();
+        debug_marker.header.frame_id = reference_frame
+        debug_marker.child_frame_id = 'limb_right_link7'
+        debug_marker.pose.pose = desired_pose
+        self.debug_odom_pub.publish(debug_marker)
+
 	while not self.jointstate:
 		pass
         ikreq.robot_state.joint_state = self.jointstate
@@ -136,64 +153,70 @@ class RomanMoveArm(object):
         ikreq.attempts = numAttempts
         return self.ikproxy(ikreq)
 
-        def unravel_roman_joint_values(current_state, target_state):
-            '''
-            current_state and seed_state are sequences of 8 doubles for joints variables
-            in the order 'limb_right_joint1', 'limb_right_joint2', 'limb_right_joint3',
-            'limb_right_joint4', 'limb_right_joint5', 'limb_right_joint6',
-            'limb_right_joint7', 'torso_joint1'.
-        
-            Returns a sequence of joint variables equivalent to the target state such that
-            the resulting values are the nearest 2*pi equivalent to the current state.
-        
-            The torso joint is ignored.
-            '''
-            min_limits = [
-                -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi,
-                -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi,
-            ]
-        
-            max_limits = [
-                2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi,
-                2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi,
-            ]
-        
-            close_joint_values = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-            for i in range(len(current_state)):
-                if i == 7: # skip the torso joint
-                    close_joint_values[i] = target_state[i]
-                    continue
-        
-                spos = target_state[i]
-                vdiff = current_state[i] - spos
-                twopi_hops = int(abs(vdiff / (2.0 * math.pi)))
-        
-                print 'twopi_hops: {0}'.format(twopi_hops)
-        
-                npos = spos + 2.0 * math.pi * twopi_hops * copysign(1.0, vdiff)
-                if abs(npos - current_state[i]) > math.pi:
-                    npos = npos + 2.0 * math.pi * copysign(1.0, vdiff)
-        
-                if npos < min_limits[i] or npos > max_limits[i]:
-                    npos = spos
-        
-                close_joint_values[i] = npos
-        
-            return close_joint_values
+    def copysign(self, val, thing):
+        if thing < 0:
+            return -val
+        else:
+            return val;
 
-    def extract_joint_variables(joint_state, joint_names):
+    def unravel_roman_joint_values(self, current_state, target_state):
+        '''
+        current_state and seed_state are sequences of 8 doubles for joints variables
+        in the order 'limb_right_joint1', 'limb_right_joint2', 'limb_right_joint3',
+        'limb_right_joint4', 'limb_right_joint5', 'limb_right_joint6',
+        'limb_right_joint7', 'torso_joint1'.
+    
+        Returns a sequence of joint variables equivalent to the target state such that
+        the resulting values are the nearest 2*pi equivalent to the current state.
+    
+        The torso joint is ignored.
+        '''
+        min_limits = [
+            -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi,
+            -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi, -2.0 * math.pi,
+        ]
+    
+        max_limits = [
+            2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi,
+            2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi, 2.0 * math.pi,
+        ]
+    
+        close_joint_values = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+        for i in range(len(current_state)):
+            if i == 7: # skip the torso joint
+                close_joint_values[i] = target_state[i]
+                continue
+    
+            spos = target_state[i]
+            vdiff = current_state[i] - spos
+            twopi_hops = int(abs(vdiff / (2.0 * math.pi)))
+    
+            npos = spos + 2.0 * math.pi * twopi_hops * self.copysign(1.0, vdiff)
+            if abs(npos - current_state[i]) > math.pi:
+                npos = npos + 2.0 * math.pi * self.copysign(1.0, vdiff)
+    
+            if npos < min_limits[i] or npos > max_limits[i]:
+                npos = spos
+    
+            close_joint_values[i] = npos
+    
+        return close_joint_values
+
+    def extract_joint_variables(self, joint_state, joint_names):
         '''Extract the variables for a subset of joints from a JointState.
         '''
         jvals = {}
         for i in range(len(joint_state.name)):
             jvals[joint_state.name[i]] = joint_state.position[i]
+
+#        print jvals
     
         joint_values = []
         for joint_name in joint_names:
-        joint_values.append(jvals[joint_name])
+            #print joint_name
+            joint_values.append(jvals[joint_name])
     
         return joint_values
-
 
     def MoveToPoseBlind(self, desired_pose, reference_frame="map"):
         sol = self.GenerateIK(desired_pose, reference_frame=reference_frame)
@@ -203,10 +226,14 @@ class RomanMoveArm(object):
             'limb_right_joint4', 'limb_right_joint5', 'limb_right_joint6',
             'limb_right_joint7', 'torso_joint1'
         ]
+
         current_joint_values = self.extract_joint_variables(self.jointstate, joint_names)
         target_joint_values = self.extract_joint_variables(sol.solution.joint_state, joint_names)
-    
+
         target_angles = self.unravel_roman_joint_values(current_joint_values, target_joint_values)
+
+        print current_joint_values
+        print target_angles
 
         goal = FollowJointTrajectoryGoal()
         goal.trajectory.header.frame_id = 'map'
@@ -220,19 +247,6 @@ class RomanMoveArm(object):
             'limb_right_joint7',
             'torso_joint1'
         ]
-        '''
-        point1 = JointTrajectoryPoint()
-        point1.positions(1) = self.jointstate(1)
-
-        point1.positions = angles
-        point1.time_from_start = rospy.Duration(5)
-        goal.trajectory.points.append(copy.deepcopy(point1))
-
-        point1.time_from_start = rospy.Duration(10)
-        goal.trajectory.points.append(copy.deepcopy(point1))
-
-        self.jta.send_goal_and_wait(goal)
-        '''
 
         current = JointTrajectoryPoint()
         current.positions = current_joint_values
@@ -244,17 +258,21 @@ class RomanMoveArm(object):
         target.time_from_start = rospy.Duration(5)
         goal.trajectory.points.append(target)
 
+        self.VisualizeState(self.visualizer_pub2, self.jointstate)
+        self.VisualizeState(self.visualizer_pub, sol.solution.joint_state)
+
         self.jta.send_goal_and_wait(goal)
-    def VisualizeState(self, state):
+
+    def VisualizeState(self, pub, state):
         msg = DisplayRobotState()
-        if state is RobotState:
+        if type(state) is RobotState:
             msg.state = state
-        elif state is JointState:
-            msg.state.jointstate = state
+        elif type(state) is JointState:
+            msg.state.joint_state = state
         else:
             rospy.logwarn("Cannot visualize state with this object %s", str(state))
             pass
-       self.visualizer_pub.publish(msg)
+        pub.publish(msg)
 
     def MoveToPose(self, desired_pose, reference_frame="map"):
         goal=MoveArmGoal()
