@@ -64,26 +64,24 @@ class Demo:
 
         res = False
         if (not self.STATIONARY):
-            rospy.loginfo('Commanding torso go up')
-            self.TorsoCommand.MoveTorso(0.2)
             rospy.loginfo("Move head to look forward")
             self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
-            rospy.loginfo("Move to round table")
-            res = self.MoveBase.MoveToWorkstation()
             rospy.loginfo('Commanding torso go down')
             self.TorsoCommand.MoveTorso(0.0)
+            rospy.loginfo("wait for 10 sec!")
+            rospy.sleep(10)
+            rospy.loginfo("Move to round table")
+            res = self.MoveBase.MoveToWorkstation()
         else:
             res = True
 
 
         # wait for a while to make Perch use the lastest/static observation
-        rospy.loginfo('Commanding torso go down')
-        self.TorsoCommand.MoveTorso(0.0)
         # look at the object
         rospy.loginfo("Move head to look left")
         self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
-        rospy.loginfo("20 sec left!")
-        rospy.sleep(10)
+#         rospy.loginfo("20 sec left!")
+#         rospy.sleep(10)
         rospy.loginfo("10 sec left!")
         rospy.sleep(10)
         rospy.loginfo('Asking PERCH to detect the object')
@@ -109,10 +107,17 @@ class Demo:
         if (not self.STATIONARY):
             rospy.loginfo("Move head to look forward")
             self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
+            rospy.loginfo('Commanding torso go down')
+            self.TorsoCommand.MoveTorso(0.0)
+            rospy.loginfo("wait for 10 sec!")
+            rospy.sleep(10)
+            rospy.loginfo("Move to intern desk")
+            res = self.MoveBase.MoveToInternDesk()
             rospy.loginfo('Commanding torso go up')
             self.TorsoCommand.MoveTorso(0.2)
-            rospy.loginfo("Move to intern desk")
-            return self.MoveBase.MoveToInternDesk()
+            rospy.loginfo("wait for 15 sec!")
+            rospy.sleep(15)
+            return res
         else:
             return True
 
@@ -415,8 +420,6 @@ class Demo:
 
     def releaseObjectRoutine(self, release_pose):
 
-        print self.release_pose
-
         ### UPDATE_PR2_STATE
         rospy.loginfo("Updating PR2's state!")
         self.StateMachineRequest.command = "Set"
@@ -512,10 +515,10 @@ class Demo:
     def runDemo(self):
 
         ### INITIALIZATION
-        if(not self.STATIONARY):
-            rospy.loginfo("Initialize PR2 pose")
-            self.MoveBase.InitializePosePR2()
-            rospy.sleep(1)
+#         if(not self.STATIONARY):
+#             rospy.loginfo("Initialize PR2 pose")
+#             self.MoveBase.InitializePosePR2()
+#             rospy.sleep(1)
 
         ### MOVE_ARM_TO_WIDE + CLOSE_GRIPPER
         rospy.loginfo("Moving arms to wide open")
@@ -526,7 +529,9 @@ class Demo:
 
         ### WAIT_FOR_WEB
         rospy.loginfo("Waiting for user's object selection!")
-        requested_object = self.PerchClient.getRequestedObjectNameSpin()
+#         requested_object = self.PerchClient.getRequestedObjectNameSpin()
+        requested_object = "010_potted_meat_can"    # hard-coded
+        self.PerchClient.setRequestedObjectName(requested_object)
         self.StateMachineRequest.command = "Set"
         self.StateMachineRequest.request_key = "requested_object"
         self.StateMachineRequest.request_value = requested_object
@@ -553,9 +558,11 @@ class Demo:
         initialized = True
         if (not self.moveToWorkstationRoutine()):
             rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+            rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
             rospy.sleep(30)
             if (not self.moveToWorkstationRoutine()):
                 rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+                rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
                 rospy.sleep(30)
                 if (not self.moveToWorkstationRoutine()):
                     rospy.logerr("Falied to moveToWorkstationRoutine() again! Exiting from the pipeline!")
@@ -572,9 +579,11 @@ class Demo:
             ### MOVE_BASE_TO_DESK
             if (not self.moveToInternDeskRoutine()):
                 rospy.logerr("Falied to moveToInternDeskRoutine()! Will retry to move to the intern desk once again after 30 seconds!")
+                rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
                 rospy.sleep(30)
                 if (not self.moveToInternDeskRoutine()):
                     rospy.logerr("Falied to moveToInternDeskRoutine()! Will retry to move to the intern desk once again after 30 seconds!")
+                    rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
                     rospy.sleep(30)
                     if (not self.moveToInternDeskRoutine()):
                         rospy.logerr("Falied to moveToInternDeskRoutine() again! Exiting from the pipeline!")
@@ -630,9 +639,11 @@ class Demo:
             ### MOVE_BASE_TO_TABLE
             if (not self.moveToWorkstationRoutine()):
                 rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+                rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
                 rospy.sleep(30)
                 if (not self.moveToWorkstationRoutine()):
                     rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+                    rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
                     rospy.sleep(30)
                     if (not self.moveToWorkstationRoutine()):
                         rospy.logerr("Falied to moveToWorkstationRoutine() again! Exiting from the pipeline!")

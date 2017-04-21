@@ -240,6 +240,8 @@ class PerchClient:
     def getRequestedObjectName(self):
         return self.requested_object
 
+    def setRequestedObjectName(self, requested_object):
+        self.requested_object = requested_object
 
     def resetRequestedObjectName(self):
         self.requested_object = ""

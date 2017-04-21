@@ -275,7 +275,9 @@ class MoveBase:
 # #         pose.position.y = 0.4828
 #         pose.position.z = 0.0
         pose.position.x = 0.3489
-        pose.position.y = 0.4028
+#         pose.position.y = 0.4028
+#         pose.position.y = 0.4328
+        pose.position.y = 0.5328
         pose.position.z = 0.0
         pose.orientation.x = 0.002
         pose.orientation.y = 0.0003
@@ -458,14 +460,35 @@ class MoveitMoveArm:
     def MoveRightToShortExtend(self, release_pose):
         return self.MoveToPose(release_pose, "base_footprint")
 
+#     def MoveLeftToExtend(self, release_pose):
+#         return self.MoveToPose(release_pose, "base_footprint")
+#
+#     def MoveLeftToShortExtend(self, release_pose):
+#         return self.MoveToPose(release_pose, "base_footprint")
+#
+    # hard-coded release pose
     def MoveLeftToExtend(self, release_pose):
+        release_pose.position.x = 0.570212716415
+        release_pose.position.y = 0.427063007244
+        release_pose.position.z = 0.9882137459
+        release_pose.orientation.x = 0.659906741331
+        release_pose.orientation.y = -0.300090039643
+        release_pose.orientation.z = -0.609382718567
+        release_pose.orientation.w = -0.321125774682
         return self.MoveToPose(release_pose, "base_footprint")
 
+    # hard-coded release pose
     def MoveLeftToShortExtend(self, release_pose):
+        release_pose.position.x = 0.570212716415
+        release_pose.position.y = 0.427063007244
+        release_pose.position.z = 1.0882137459
+        release_pose.orientation.x = 0.659906741331
+        release_pose.orientation.y = -0.300090039643
+        release_pose.orientation.z = -0.609382718567
+        release_pose.orientation.w = -0.321125774682
         return self.MoveToPose(release_pose, "base_footprint")
 
     def MoveArmInUseToExtend(self, release_pose):
-        print self.release_pose
         release_pose_rev = copy.deepcopy(release_pose)
 
         # HACK assuming that we picked up the object from table and put it down on desk
@@ -476,7 +499,6 @@ class MoveitMoveArm:
         # HACK to allow more margin with desk
         release_pose_rev.position.z += 0.005
 
-        print self.release_pose_rev
         if self.LARM_IN_USE:
             return self.MoveLeftToExtend(release_pose_rev)
         else:
@@ -603,7 +625,8 @@ class MoveitMoveArm:
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
         pose_in_map.pose.position.x = -0.75+0.25
-        pose_in_map.pose.position.y = 0.90
+#         pose_in_map.pose.position.y = 0.90
+        pose_in_map.pose.position.y = 1.10
         pose_in_map.pose.position.z = 0.70
         pose_in_map.pose.orientation.x = 0
         pose_in_map.pose.orientation.y = 0
