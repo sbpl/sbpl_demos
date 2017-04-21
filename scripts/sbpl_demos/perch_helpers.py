@@ -241,6 +241,10 @@ class PerchClient:
         return self.requested_object
 
 
+    def resetRequestedObjectName(self):
+        self.requested_object = ""
+
+
     def getRequestedObjectNameSpin(self):
 
         self.locked = False

@@ -270,8 +270,12 @@ class MoveBase:
 #         pose.orientation.w = 0.7122
 
         # (lower) workstation
-        pose.position.x = 0.2889
-        pose.position.y = 0.4328
+#         pose.position.x = 0.2889
+#         pose.position.y = 0.4328
+# #         pose.position.y = 0.4828
+#         pose.position.z = 0.0
+        pose.position.x = 0.3489
+        pose.position.y = 0.4028
         pose.position.z = 0.0
         pose.orientation.x = 0.002
         pose.orientation.y = 0.0003
@@ -461,6 +465,7 @@ class MoveitMoveArm:
         return self.MoveToPose(release_pose, "base_footprint")
 
     def MoveArmInUseToExtend(self, release_pose):
+        print self.release_pose
         release_pose_rev = copy.deepcopy(release_pose)
 
         # HACK assuming that we picked up the object from table and put it down on desk
@@ -471,6 +476,7 @@ class MoveitMoveArm:
         # HACK to allow more margin with desk
         release_pose_rev.position.z += 0.005
 
+        print self.release_pose_rev
         if self.LARM_IN_USE:
             return self.MoveLeftToExtend(release_pose_rev)
         else:
@@ -590,6 +596,24 @@ class MoveitMoveArm:
 #         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.30))
         rospy.loginfo("Added table object %s", name)
+        self.inserted_tables.append(name)
+
+    def AddRomanCollisionObjectInMap(self):
+        # THIS IS ROMAN
+        pose_in_map = PoseStamped()
+        pose_in_map.header.frame_id = "map"
+        pose_in_map.pose.position.x = -0.75+0.25
+        pose_in_map.pose.position.y = 0.90
+        pose_in_map.pose.position.z = 0.70
+        pose_in_map.pose.orientation.x = 0
+        pose_in_map.pose.orientation.y = 0
+        pose_in_map.pose.orientation.z = 0
+        pose_in_map.pose.orientation.w = 1
+        name = "table_1"
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.50, 0.50, 1.40))
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.050, 0.50, 1.40))
+        rospy.loginfo("Added Roman collision object %s", name)
         self.inserted_tables.append(name)
 
     def removeDeskObjects(self):

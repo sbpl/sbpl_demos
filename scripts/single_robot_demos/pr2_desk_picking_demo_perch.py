@@ -62,6 +62,7 @@ class Demo:
         res = self.StateMachineClient(self.StateMachineRequest)
         rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
 
+        res = False
         if (not self.STATIONARY):
             rospy.loginfo('Commanding torso go up')
             self.TorsoCommand.MoveTorso(0.2)
@@ -71,9 +72,28 @@ class Demo:
             res = self.MoveBase.MoveToWorkstation()
             rospy.loginfo('Commanding torso go down')
             self.TorsoCommand.MoveTorso(0.0)
-            return res
         else:
-            return True
+            res = True
+
+
+        # wait for a while to make Perch use the lastest/static observation
+        rospy.loginfo('Commanding torso go down')
+        self.TorsoCommand.MoveTorso(0.0)
+        # look at the object
+        rospy.loginfo("Move head to look left")
+        self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
+        rospy.loginfo("20 sec left!")
+        rospy.sleep(10)
+        rospy.loginfo("10 sec left!")
+        rospy.sleep(10)
+        rospy.loginfo('Asking PERCH to detect the object')
+
+
+        ### OPEN_GRIPPER
+        rospy.loginfo('Commanding gripper open')
+        self.GripperCommand.CommandGripperInUse(1) #open grigger
+
+        return res
 
 
     def moveToInternDeskRoutine(self):
@@ -172,9 +192,10 @@ class Demo:
 
 
     def addCollisionModelsInMap(self):
-        if (not self.STATIONARY):
+#         if (not self.STATIONARY):
             self.MoveitMoveArm.AddDeskCollisionObjectInMap()
             self.MoveitMoveArm.AddTableCollisionObjectInMap()
+            self.MoveitMoveArm.AddRomanCollisionObjectInMap()
 
 
     def compensateMoveItOdomToBaseError(self, odom_to_des_pose):
@@ -276,6 +297,11 @@ class Demo:
         grasp_pose_stamped.pose = grasp_pose
         release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
         self.release_pose = release_pose_stamped.pose
+        print self.release_pose
+        # for visualization
+        self.tfbroadcaster.sendTransform((self.release_pose.position.x, self.release_pose.position.y, self.release_pose.position.z),
+            (self.release_pose.orientation.x, self.release_pose.orientation.y, self.release_pose.orientation.z, self.release_pose.orientation.w),
+            rospy.Time.now(), "release_pose", "base_footprint")
 
         return (grasp_pose, interp_pose)
 
@@ -289,24 +315,6 @@ class Demo:
         self.StateMachineRequest.request_value = "MOVE_ARM"
         res = self.StateMachineClient(self.StateMachineRequest)
         rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
-
-
-        # wait for a while to make Perch use the lastest/static observation
-        rospy.loginfo('Commanding torso go down')
-        self.TorsoCommand.MoveTorso(0.0)
-        # look at the object
-        rospy.loginfo("Move head to look left")
-        self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
-        rospy.loginfo("20 sec left!")
-        rospy.sleep(10)
-        rospy.loginfo("10 sec left!")
-        rospy.sleep(10)
-        rospy.loginfo('Asking PERCH to detect the object')
-
-
-        ### OPEN_GRIPPER
-        rospy.loginfo('Commanding gripper open')
-        self.GripperCommand.CommandGripperInUse(1) #open grigger
 
 
         ### DETECT_OBJECT
@@ -406,6 +414,8 @@ class Demo:
 
 
     def releaseObjectRoutine(self, release_pose):
+
+        print self.release_pose
 
         ### UPDATE_PR2_STATE
         rospy.loginfo("Updating PR2's state!")
@@ -542,11 +552,14 @@ class Demo:
         ### MOVE_BASE_TO_TABLE
         initialized = True
         if (not self.moveToWorkstationRoutine()):
-            rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 5 seconds!")
-            rospy.sleep(5)
+            rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+            rospy.sleep(30)
             if (not self.moveToWorkstationRoutine()):
-                rospy.logerr("Falied to moveToWorkstationRoutine() again! Exiting from the pipeline!")
-                initialized = False
+                rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+                rospy.sleep(30)
+                if (not self.moveToWorkstationRoutine()):
+                    rospy.logerr("Falied to moveToWorkstationRoutine() again! Exiting from the pipeline!")
+                    initialized = False
 
         while initialized and (not rospy.is_shutdown()):
 
@@ -558,11 +571,14 @@ class Demo:
 
             ### MOVE_BASE_TO_DESK
             if (not self.moveToInternDeskRoutine()):
-                rospy.logerr("Falied to moveToInternDeskRoutine()! Will retry to move to the intern desk once again after 5 seconds!")
-                rospy.sleep(5)
+                rospy.logerr("Falied to moveToInternDeskRoutine()! Will retry to move to the intern desk once again after 30 seconds!")
+                rospy.sleep(30)
                 if (not self.moveToInternDeskRoutine()):
-                    rospy.logerr("Falied to moveToInternDeskRoutine() again! Exiting from the pipeline!")
-                    break
+                    rospy.logerr("Falied to moveToInternDeskRoutine()! Will retry to move to the intern desk once again after 30 seconds!")
+                    rospy.sleep(30)
+                    if (not self.moveToInternDeskRoutine()):
+                        rospy.logerr("Falied to moveToInternDeskRoutine() again! Exiting from the pipeline!")
+                        break
 
             ### MOVE_ARM_TO_RELEASE + OPEN_GRIPPER + MOVE_ARM_TO_POSTRELEASE + MOVE_ARM_TO_WIDE + CLOSE_GRIPPER
             if (not self.releaseObjectRoutine(self.release_pose)):
@@ -571,6 +587,7 @@ class Demo:
 
             ### UPDATE_OBJECT_STATE
             rospy.loginfo("Resetting for user's object selection!")
+            self.PerchClient.resetRequestedObjectName()
             self.StateMachineRequest.command = "Set"
             self.StateMachineRequest.request_key = "requested_object"
             self.StateMachineRequest.request_value = ""
@@ -612,11 +629,14 @@ class Demo:
 
             ### MOVE_BASE_TO_TABLE
             if (not self.moveToWorkstationRoutine()):
-                rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 5 seconds!")
-                rospy.sleep(5)
+                rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+                rospy.sleep(30)
                 if (not self.moveToWorkstationRoutine()):
-                    rospy.logerr("Falied to moveToWorkstationRoutine() again! Exiting from the pipeline!")
-                    break
+                    rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+                    rospy.sleep(30)
+                    if (not self.moveToWorkstationRoutine()):
+                        rospy.logerr("Falied to moveToWorkstationRoutine() again! Exiting from the pipeline!")
+                        break
 
 
         ### DESTRUCTION
