@@ -489,7 +489,6 @@ class MoveitMoveArm:
         # retract along the x-axis of the r/l_wrist_roll_link frame
         factor_wrist_x = -0.15
         if self.LARM_IN_USE:
-            rospy.logwarn("It doesn't make to MoveRightToShortExtend() when LARM_IN_USE is True, but I will just proceed...")
             (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "l_wrist_roll_link", rospy.Time())
         else:
             (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "r_wrist_roll_link", rospy.Time())
