@@ -1,33 +1,51 @@
-to run the Demos, you need to run the follow scripts:
+# Instructions how to run sbpl_demos
 
-On the PR2:
-  after 'robot start' and pr2_dashboard, you need to bring up the 2D nav and map packages
+On a local computer (which runs ROS Indigo), prepare three terminal tabs for the following machines:
+* alan1 (c1 of PR2)
+* alan2 (c2 of PR2)
+* the local computer
 
-  To use with pre-defined map of SBPL:
 
-  Terminal 1) roslaunch pr2_2dnav pr2_2dnav.launch
-  Terminal 2) roscd sbpl_demos/data
-  Terminal 2) rosrun map_server map_server sbpl_full_lab.yaml
-  
-  To use kinect sensor:
+## On alan1 tab
 
-  Terminal 3) roslaunch sbpl_demos pr2_openni_head.launch
+First of all, connect to alan1.
+```
+ssh demos@alan1
+```
 
- On the local computer:
+Then, open a new screen with the following commands.
+```
+roscd sbpl_demos
+screen -c screen_config/screenrc_alan1
+```
 
- Setup chrony by syncing your computer to alanbase
+Each tab of screen should have the required command to run on alan1.
 
- Add "server alanbase minpoll 0 maxpoll 5 maxdelay 0.05" to your /etc/chrony/chrony.conf
- restart chrony with "invoke-rc.d chrony restart"
+Check for additional comments on each screen tab, and run the commands in the order of screen tabs.
 
- Check time offset with 
- "ntpdate -q alanbase"
 
-On Local machine:
+## On alan2 tab
 
-For now, source with pr2master
+Do the same things but for alan2.
+```
+ssh demos@alan2
+roscd sbpl_demos
+screen -c screen_config/screenrc_alan2
+```
 
-1) roslaunch groovy_indigo_moveit_wrapper i2g_pr2_follow_trajectory_wrappers.launch
-2) roslaunch pr2_moveit_config bringup_pr2.launch 
-3) roslaunch sbpl_demos pr2_indiv.launch
-4) To run demos, "rosrun sbpl_demos pr2_simple_grasping_demo"
+
+## On the local computer tab
+
+Open a new screen with the following commands.
+```
+roscd sbpl_demos
+screen -c screen_config/screenrc_tatooine
+```
+
+As a side note, set up the sytem time to California loal time (PST or PDT), just like PR2, to avoid any issues related to tf buffer.
+
+You can also use `chrony` to syncing your computer to alanbase.
+* Add `server alanbase minpoll 0 maxpoll 5 maxdelay 0.05` to your `/etc/chrony/chrony.conf`
+* Restart `chrony` with `invoke-rc.d chrony restart`
+* Check time offset with `ntpdate -q alanbase`
+

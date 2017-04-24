@@ -1,8 +1,8 @@
 source screenrc.common
 
-# screen -t bash
-# #stuff "roscore^M"
-# stuff "pr2master"
+screen -t rviz
+stuff "pr2master; ^M"
+stuff "rviz"
 
 screen -t multimaster
 stuff "pr2master; roslaunch sbpl_multimaster dagobah_gateway.launch; "
@@ -10,19 +10,15 @@ stuff "pr2master; roslaunch sbpl_multimaster dagobah_gateway.launch; "
 screen -t state_machine
 stuff "pr2master; rosrun sbpl_demos state_machine.py"
 
-screen -t rviz
+screen -t web
 stuff "pr2master; ^M"
-stuff "rviz"
+stuff "roslaunch rosbridge_server rosbridge_websocket.launch;  ^M"
+stuff "# run 'sudo /etc/init.d/apache2 start' if apache2 is not running"
 
 screen -t perch
 stuff "pr2master; ^M"
 stuff "source ~/ros/perch_ws/devel/setup.bash; ^M"
 stuff "roslaunch object_recognition_node pr2_object_recognition.launch"
-
-screen -t web
-stuff "pr2master; ^M"
-stuff "roslaunch rosbridge_server rosbridge_websocket.launch;  ^M"
-stuff "# run 'sudo /etc/init.d/apache2 start' if apache2 is not running"
 
 #screen -t ar_track
 #stuff "pr2master; ^M"
@@ -49,4 +45,7 @@ stuff "rosservice call /state_machine \"Set\" \"ROMAN_STATE\" \"DONE\""
 screen -t octomap_clear
 stuff "pr2master; ^M"
 stuff "rosrun sbpl_demos path_octomap_clearer.py"
+
+screen -t sound_play
+stuff "rosrun sound_play say.py \"Here is your spam\""
 

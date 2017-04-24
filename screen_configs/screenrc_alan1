@@ -1,26 +1,23 @@
 source screenrc.common
 
-# screen -t bash
-# #stuff "roscore^M"
+screen -t robot
+stuff "robot start;  "
+stuff "# robot claim; robot start; [do something]; robot stop; robot release"
 
 screen -t dash
 stuff "rosrun pr2_dashboard pr2_dashboard"
 
-screen -t multimaster
-stuff "roslaunch sbpl_multimaster alan1_gateway.launch"
-
 screen -t teleop
-stuff "roslaunch pr2_teleop teleop_keyboard.launch"
+stuff "roslaunch pr2_teleop teleop_keyboard.launch;  "
+stuff "# use this command when you need to move PR2 manually"
 
-screen -t tuckarm
-stuff "rosrun pr2_tuckarm tuck_arms.py b"
+# screen -t tuckarm
+# stuff "rosrun pr2_tuckarm tuck_arms.py b"
 
 screen -t kinect
-stuff "roslaunch sbpl_demos alan1_kinect_setup.launch;  "
-stuff "# make sure to kill kinect before (re-)launching alan1_3dnav_setup.launch"
+stuff "roslaunch sbpl_demos alan1_kinect_setup.launch"
 
-screen -t sound_play
-stuff "rosrun sound_play say.py ‘Here is your spam'"
+screen -t multimaster
+stuff "roslaunch sbpl_multimaster alan1_gateway.launch;  "
+stuff "# run this command after 'roslaunch sbpl_multimaster dagobah_gateway.launch' on dagobah which is the hub of rocon"
 
-screen -t htop
-stuff "htop "
