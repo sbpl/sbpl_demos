@@ -42,14 +42,38 @@ class Demo:
         self.StateMachineClient = rospy.ServiceProxy('state_machine', StateMachine)
         self.StateMachineRequest = StateMachineRequest()
 
-#         signal.signal(signal.SIGINT, self.signal_handler)
-#         print('Press Ctrl+C')
-#         signal.pause()
-
         rospy.sleep(1.0)
         rospy.loginfo('All Action clients connected!')
         rospy.loginfo("Move head to look forward")
         self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
+
+
+    def __sigint_handler__(self, signal, frame):
+
+        ### DESTRUCTION
+        self.MoveitMoveArm.Cleanup()
+        print('Successfully cleaned up moveit_commander!')
+
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "requested_object"
+        self.StateMachineRequest.request_value = ""
+        res = self.StateMachineClient(self.StateMachineRequest)
+        print("Successfully reset 'requested_object' on /state_machine!")
+
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "ROMAN_STATE"
+        self.StateMachineRequest.request_value = "IDLE"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        print("Successfully reset 'ROMAN_STATE' on /state_machine!")
+
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "IDLE"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        print("Successfully reset 'PR2_STATE' on /state_machine!")
+
+        print('Shutting down...')
+        sys.exit(0)
 
 
     def moveToWorkstationRoutine(self):
@@ -528,11 +552,6 @@ class Demo:
         return True
 
 
-#     def signal_handler(signal, frame):
-#         print('You pressed Ctrl+C!')
-#         sys.exit(0)
-
-
     def runDemo(self):
 
         ### INITIALIZATION
@@ -673,23 +692,14 @@ class Demo:
 
 
         ### DESTRUCTION
-        self.MoveitMoveArm.Cleanup()
-
-        self.StateMachineRequest.command = "Set"
-        self.StateMachineRequest.request_key = "requested_object"
-        self.StateMachineRequest.request_value = ""
-        res = self.StateMachineClient(self.StateMachineRequest)
-
-        self.StateMachineRequest.command = "Set"
-        self.StateMachineRequest.request_key = "ROMAN_STATE"
-        self.StateMachineRequest.request_value = "IDLE"
-        res = self.StateMachineClient(self.StateMachineRequest)
-
-        print('Shutting down...')
+        # NOTE this is done in self.__sigint_handler__()
 
 
 if __name__ == "__main__":
     rospy.init_node('pr2_grasp_test')
+
     demo = Demo()
+    signal.signal(signal.SIGINT, demo.__sigint_handler__)
+
     demo.runDemo()
 
