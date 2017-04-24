@@ -554,7 +554,8 @@ class Demo:
 
     def runDemo(self):
 
-        ### INITIALIZATION
+        # NOTE this is done by 'rosrun sbpl_demos demo_initializer.py' in alan2
+#         ### INITIALIZATION
 #         if(not self.STATIONARY):
 #             rospy.loginfo("Initialize PR2 pose")
 #             self.MoveBase.InitializePosePR2()
@@ -563,8 +564,8 @@ class Demo:
         ### MOVE_ARM_TO_WIDE + CLOSE_GRIPPER
         rospy.loginfo("Moving arms to wide open")
         self.ArmJointCommand.MoveArmInUseToWide()
-#         self.ArmJointCommand.MoveArmNotInUseToSide()
-        self.ArmJointCommand.MoveArmNotInUseToWide()
+        self.ArmJointCommand.MoveArmNotInUseToSide()
+#         self.ArmJointCommand.MoveArmNotInUseToWide()
         self.GripperCommand.CommandGripperInUse(0) #close grigger
         self.GripperCommand.CommandGripperNotInUse(0) #close grigger
 

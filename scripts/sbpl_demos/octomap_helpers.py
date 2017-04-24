@@ -42,7 +42,8 @@ class OctomapClient:
         min_in_base.z =  0.0
 
         max_in_base = Point()
-        max_in_base.x =  1.0
+#         max_in_base.x =  1.0
+        max_in_base.x =  0.668/2.0 + 0.10
         max_in_base.y =  1.0
         max_in_base.z =  2.0
 

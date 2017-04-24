@@ -360,10 +360,8 @@ class MoveitMoveArm:
         input_ps.header.frame_id = reference_frame
         if reference_frame != 'odom_combined':
             correct_ps = self.tflistener.transformPose("odom_combined", input_ps )
-            rospy.logwarn("different tf")
         else:
             correct_ps = input_ps
-            rospy.logwarn("same tf")
 
         self.moveit_planning_group.set_start_state_to_current_state()
 
