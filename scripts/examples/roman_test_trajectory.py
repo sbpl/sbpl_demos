@@ -38,23 +38,14 @@ class RomanMove:
         #pose.orientation.y = 0.48864
         #pose.orientation.z = 0.34858
         #pose.orientation.w = 0.6782
-        """pose.position.x = 0.9174
+        pose.position.x = 0.9174
         pose.position.y = -0.2263
         pose.position.z = 0.4823
         pose.orientation.w = 0.7576
         pose.orientation.x = 0.4476
         pose.orientation.y = 0.4109
         pose.orientation.z = 0.2385
-	self.RMAC.MoveToPose(pose, "base_footprint")"""
-	pose.position.x = 0.568
-        pose.position.y = -0.667
-        pose.position.z = 1.070
-        quat = quaternion_from_euler(-math.pi/2,0,0)
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
-        self.RMAC.MoveFromPre(pose, "base_footprint")
+        self.RMAC.MoveToPose(pose, "base_footprint")
 
     def moveToPreGrasp(self):
         pose = Pose()
@@ -77,21 +68,14 @@ class RomanMove:
 
     def moveToTable(self):
         pose = Pose()
-        """pose.position.x = 0.45613
-        pose.position.y = -0.99926
-        pose.position.z = 0.9072
-        pose.orientation.w = 0.596323
-        pose.orientation.x = 0.608277
-        pose.orientation.y = -0.230372
-        pose.orientation.z = -0.470453"""
-	pose.position.x = 0.45613
+        pose.position.x = 0.45613
         pose.position.y = -0.99926
         pose.position.z = 0.9072
         pose.orientation.w = 0.596323
         pose.orientation.x = 0.608277
         pose.orientation.y = -0.230372
         pose.orientation.z = -0.470453
-        self.RMAC.MoveFromPre(pose, "base_footprint")
+        self.RMAC.MoveToPose(pose, "base_footprint")
  
     def moveToPreTable(self):
         pose = Pose()
@@ -110,38 +94,14 @@ if __name__ == "__main__":
     rospy.init_node('roman_move_to_home')
     test = RomanMove()
     #test.RMAC.addcollisiontable()
-
-    testGoal = PoseStamped()
-    testGoal.pose.position.x = 0.45613
-    testGoal.pose.position.y = -0.99926
-    testGoal.pose.position.z = 0.9072
-    testGoal.pose.orientation.w = 0.596323
-    testGoal.pose.orientation.x = 0.608277
-    testGoal.pose.orientation.y = -0.230372
-    testGoal.pose.orientation.z = -0.470453
-    testGoal.header.frame_id = "base_footprint"
-    testGoal.header.stamp = rospy.Time.now()
-    sol = test.RMAC.GenerateIK(testGoal.pose, reference_frame="base_footprint")
-
-    
-    jvals = {}
-    for i in range(len(sol.solution.joint_state.name)):
-        jvals[sol.solution.joint_state.name[i]] = sol.solution.joint_state.position[i]
-
-    joint_names = ['limb_right_joint1', 'limb_right_joint2', 'limb_right_joint3', 'limb_right_joint4', 'limb_right_joint5', 'limb_right_joint6', 'limb_right_joint7', 'torso_joint1']
-    joint_values = []
-    for joint_name in joint_names:
-	joint_values.append(jvals[joint_name])
    
     #test.RMAC.MoveToHome()
-    #test.RMAC.moveToHome_jointgoal()
-    #test.moveToGrasp()
     #test.RCG.Open()
     #test.moveToPreGrasp()
     #test.moveToGrasp()
     #test.RCG.Close()
-    #test.moveToPreGrasp()
-    #test.moveToPreTable()
+    test.moveToPreGrasp()
+    test.moveToPreTable()
     #test.moveToTable()
     #test.RCG.Open()
     #test.moveToPreTable()

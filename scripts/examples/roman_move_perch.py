@@ -220,7 +220,7 @@ if __name__ == "__main__":
         print "Detecting object with perch"
         T_w_p = test.computeTransformWithPerch(obj)
         print "T_w_p"+str(T_w_p)
-        REDO = raw_input("Retry? Y")
+        REDO = raw_input("Enter Y to retry perch detection:")
 
     print "Moving to pregrasp location"
     test.moveToPreGrasp(T_w_p)
