@@ -37,14 +37,21 @@ class OctomapClient:
     def clearOctomapWorkspacePR2(self):
         # hard-coded bounding box to be cleared in /base_footprint frame
         min_in_base = Point()
-        min_in_base.x = -0.5
-        min_in_base.y = -1.0
-        min_in_base.z =  0.0
-
         max_in_base = Point()
+
+#         min_in_base.x = -0.5
+#         min_in_base.y = -1.0
+#         min_in_base.z =  0.0
 #         max_in_base.x =  1.0
+#         max_in_base.y =  1.0
+#         max_in_base.z =  2.0
+
+        # tighter bound
+        min_in_base.x = -0.5
+        min_in_base.y = -0.9
+        min_in_base.z =  0.0
         max_in_base.x =  0.668/2.0 + 0.10
-        max_in_base.y =  1.0
+        max_in_base.y =  0.9
         max_in_base.z =  2.0
 
         rospy.sleep(1)  # to void tf.ExtrapolationException

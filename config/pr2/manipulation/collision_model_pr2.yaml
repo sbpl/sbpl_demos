@@ -1,34 +1,9 @@
 world_collision_model:
+
   # NOTE this frame only affects visualization; actual collision world grid is with respect to the parent frame of (virtual) world_joint, which is usually /odom_combined!
+  frame: odom_combined    # not to cause any confusion, just let this to odom_combined
+
   # WARN for this demo, we assume that 'robot start' was executed when PR2 is at its initialization pose (in front of intern desk)!
-
-  # intern desk pose in map (around the right marker)
-# pose.position.x = -1.06836
-# pose.position.y = -1.14624
-# pose.position.z = -1e-05
-# pose.orientation.x = -0.0017
-# pose.orientation.y = -0.0002
-# pose.orientation.z = -0.70305
-# pose.orientation.w = 0.71114
-
-  frame: map
-  size_x: 10.0
-  size_y: 10.0
-#   size_x: 7.0
-#   size_y: 7.0
-  size_z: 2.0
-  origin_x: -3.5
-  origin_y: -3.5
-  origin_z: 0.0
-# frame: map
-# size_x: 3.0
-# size_y: 4.0
-# size_z: 2.0
-# origin_x: -2.0
-# origin_y: -2.5
-# origin_z: 0.0
-
-#   frame: odom_combined
 #   size_x: 3.0
 #   size_y: 4.0
 #   size_z: 2.0
@@ -36,10 +11,20 @@ world_collision_model:
 #   origin_y: -0.93164
 #   origin_z: 0.0
 
+  # big enough boundary for any odom_combined, but definitely wasting system's memory
+  size_x: 10.0
+  size_y: 10.0
+  size_z: 2.0
+  origin_x: -3.5
+  origin_y: -3.5
+  origin_z: 0.0
+
+  # WARN set the grid size properly! any collision model added to the moveit planning scene will be voxelized and get bigger in the grid world than its original geometry!
+  # but too small grid size will require a lot of memory!
 #   res_m: 0.02
   res_m: 0.05
-#   res_m: 0.10
   max_distance_m: 0.6
+
 
 self_collision_model:
   frame: base_footprint

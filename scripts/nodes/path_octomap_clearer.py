@@ -85,6 +85,7 @@ class OctomapClient:
 
         self.clearOctomapWorkspace(min_in_map, max_in_map)
 
+
     def clearOctomapPath(self):
         # hard-coded bounding box to be cleared in /base_footprint frame
         min_in_map = Point()
@@ -111,6 +112,7 @@ class OctomapClient:
         max_in_map2.z =  2.0
 
         self.clearOctomapWorkspace(min_in_map1, max_in_map2)
+
 
     def clearOctomapWorkspace(self, min_in_map, max_in_map):
         request = BoundingBoxQueryRequest()
@@ -153,6 +155,6 @@ if __name__ == "__main__":
 #     rospy.loginfo("Clearing partial octomap in front of PR2!")
 #     octomap_client.clearOctomapWorkspacePR2()
 
-    rospy.loginfo("Clearing partial octomap in front of PR2!")
+    rospy.loginfo("Clearing partial octomap along the pathway for PR2!")
     octomap_client.clearOctomapPath()
 

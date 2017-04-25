@@ -36,9 +36,9 @@ class Demo:
             self.MoveBase = pr2_helpers.MoveBase()
         self.ArmJointCommand = pr2_helpers.ArmJointCommand(self.LARM_IN_USE)
 
-        print "waiting for state_machine server..."
+        rospy.loginfo("waiting for state_machine server...")
         rospy.wait_for_service('state_machine')
-        print ("Connected.")
+        rospy.loginfo("Connected.")
         self.StateMachineClient = rospy.ServiceProxy('state_machine', StateMachine)
         self.StateMachineRequest = StateMachineRequest()
 
@@ -100,20 +100,19 @@ class Demo:
             res = True
 
 
-        # wait for a while to make Perch use the lastest/static observation
-        # look at the object
-        rospy.loginfo("Move head to look left")
-        self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
-#         rospy.loginfo("20 sec left!")
-#         rospy.sleep(10)
-        rospy.loginfo("10 sec left!")
-        rospy.sleep(10)
-        rospy.loginfo('Asking PERCH to detect the object')
+        if (res):
+            # wait for a while to make Perch use the lastest/static observation
+            # look at the object
+            rospy.loginfo("Move head to look left")
+            self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
+            rospy.loginfo("Waiting for 10 secs!")
+            rospy.sleep(10)
+            rospy.loginfo('Asking PERCH to detect the object')
 
 
-        ### OPEN_GRIPPER
-        rospy.loginfo('Commanding gripper open')
-        self.GripperCommand.CommandGripperInUse(1) #open grigger
+            ### OPEN_GRIPPER
+            rospy.loginfo('Commanding gripper open')
+            self.GripperCommand.CommandGripperInUse(1) #open grigger
 
         return res
 
@@ -327,11 +326,11 @@ class Demo:
         grasp_pose_stamped.pose = copy.deepcopy(grasp_pose)
         release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
         self.release_pose = release_pose_stamped.pose
-        print self.release_pose
+        #print self.release_pose
         # for visualization
         self.tfbroadcaster.sendTransform((self.release_pose.position.x, self.release_pose.position.y, self.release_pose.position.z),
             (self.release_pose.orientation.x, self.release_pose.orientation.y, self.release_pose.orientation.z, self.release_pose.orientation.w),
-            rospy.Time.now(), "release_pose", "base_footprint")
+            rospy.Time.now(), "release_pose_tf", "base_footprint")
 
         return (grasp_pose, interp_pose)
 
