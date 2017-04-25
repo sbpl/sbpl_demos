@@ -48,5 +48,6 @@ stuff "pr2master; ^M"
 stuff "rosrun sbpl_demos path_octomap_clearer.py"
 
 screen -t sound_play
+stuff "pr2master; ^M"
 stuff "rosrun sound_play say.py \"Here is your spam\""
 

@@ -70,7 +70,7 @@ class PerchClient:
         distances_to_grasp = []
 
 
-        # NOTE hard-coded grasp data; to be replaced by an interface function for getting grasp database
+        # local variables
         interp_matrices_in_local = []
         grasp_matrices_in_local = []
         interp_pos_in_local = ()
@@ -78,7 +78,7 @@ class PerchClient:
         grasp_pos_in_local = ()
         grasp_quat_in_local = ()
 
-        #String to hold parameter parent
+        # String to hold parameter parent
         object_grasp = "/grasps/"+self.requested_object
         num_grasps = rospy.get_param(object_grasp+"/num_grasps")
 
@@ -94,51 +94,6 @@ class PerchClient:
             # add to the database
             interp_matrices_in_local.append(interp_matrix_in_local)
             grasp_matrices_in_local.append(grasp_matrix_in_local)
-
-        # if self.requested_object == "003_cracker_box":
-        #     for idx_grasp in range(0,2):
-        #         # hard-coded grasp data for multiple grasp poses
-        #         if idx_grasp == 0:
-        #             interp_pos_in_local = (0.0, 0.33, 0.0)
-        #             interp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
-        #             grasp_pos_in_local = (0.0, 0.23, 0.0)
-        #             grasp_quat_in_local = quaternion_from_euler(0, 0, -math.pi/2.0)
-        #         elif idx_grasp == 1:
-        #             interp_pos_in_local = (0.0, -0.33, 0.0)
-        #             interp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
-        #             grasp_pos_in_local = (0.0, -0.23, 0.0)
-        #             grasp_quat_in_local = quaternion_from_euler(0, 0, math.pi/2.0)
-
-        #         # transformation matrix of grasp pose in object local frame
-        #         interp_matrix_in_local = self.tflistener.fromTranslationRotation(interp_pos_in_local, interp_quat_in_local)
-        #         grasp_matrix_in_local = self.tflistener.fromTranslationRotation(grasp_pos_in_local, grasp_quat_in_local)
-
-        #         # add to the database
-        #         interp_matrices_in_local.append(interp_matrix_in_local)
-        #         grasp_matrices_in_local.append(grasp_matrix_in_local)
-
-        # elif self.requested_object == "006_mustard_bottle":
-        #     for idx_grasp in range(0,2):
-        #         # hard-coded grasp data for multiple grasp poses
-        #         if idx_grasp == 0:
-        #             interp_pos_in_local = (-0.23743967, 0.10060774, -0.01100586)
-        #             interp_quat_in_local = (0.00853756, 0.01887509, -0.20440426, 0.97866733)
-        #             grasp_pos_in_local = (-0.17370368, 0.08040001, -0.01967883)
-        #             grasp_quat_in_local = (-0.00593715, 0.00969645, -0.21896115, 0.97566733)
-        #         elif idx_grasp == 1:
-        #             interp_pos_in_local = (0.21092159, -0.07302159, 0.00767459)
-        #             interp_quat_in_local = (-0.04094911, -0.00174438, 0.98468821, 0.16943806)
-        #             grasp_pos_in_local = (0.16134278, -0.06030286, 0.00066045)
-        #             grasp_quat_in_local = (-0.0273408, 0.00288966, 0.98149227, 0.18951796)
-
-        #         # transformation matrix of grasp pose in object local frame
-        #         interp_matrix_in_local = self.tflistener.fromTranslationRotation(interp_pos_in_local, interp_quat_in_local)
-        #         grasp_matrix_in_local = self.tflistener.fromTranslationRotation(grasp_pos_in_local, grasp_quat_in_local)
-
-        #         # add to the database
-        #         interp_matrices_in_local.append(interp_matrix_in_local)
-        #         grasp_matrices_in_local.append(grasp_matrix_in_local)
-
 
         # check for data validity
         if len(grasp_matrices_in_local) != len(interp_matrices_in_local):
@@ -191,14 +146,9 @@ class PerchClient:
 
         self.locked = True
 
-#         self.requested_object = "006_mustard_bottle"
-#         self.requested_object = "011_banana"
-#         self.requested_object = "019_pitcher_base"
-#         self.requested_object = "024_bowl"
-
         self.requested_object = requested_object
-
         self.send_request()
+
         tic = rospy.Time.now()
         rospy.loginfo("Sent object recognition request...")
 
@@ -280,7 +230,7 @@ class PerchClient:
         if self.locked:
 
             self.perch_pose = data
-            # print self.perch_pose
+            #print self.perch_pose
             self.locked = False
 
 

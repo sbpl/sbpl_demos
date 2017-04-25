@@ -87,19 +87,18 @@ class OctomapClient:
 
 
     def clearOctomapPath(self):
-        # hard-coded bounding box to be cleared in /base_footprint frame
-        min_in_map = Point()
-        min_in_map.x = -0.4
-        min_in_map.y = -1.8
-        min_in_map.z =  0.0
+        # hard-coded bounding boxes to be cleared in /map frame
+        min_in_map0 = Point()
+        min_in_map0.x = -0.4
+        min_in_map0.y = -1.8
+        min_in_map0.z =  0.0
 
-        max_in_map = Point()
-        max_in_map.x = 0.8
-        max_in_map.y = 0.8
-        max_in_map.z = 2.0
+        max_in_map0 = Point()
+        max_in_map0.x = 0.8
+        max_in_map0.y = 0.8
+        max_in_map0.z = 2.0
 
-        self.clearOctomapWorkspace(min_in_map, max_in_map)
-
+        self.clearOctomapWorkspace(min_in_map0, max_in_map0)
 
         min_in_map1 = Point()
         min_in_map1.x = -1.6

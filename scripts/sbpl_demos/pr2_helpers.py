@@ -147,10 +147,13 @@ class GripperCommand:
 
         goal = GripperCommandGoal()
 
-#         if open == 1:
-#             goal.command.position = 0.09
-#         else:
-#             goal.command.position = 0.0
+        # 1) open/close only
+        # if open == 1:
+        #     goal.command.position = 0.09
+        # else:
+        #     goal.command.position = 0.0
+
+        # 2) continuous value command
         if open > 1.0:
             rospy.logwarn("GripperCommand.Command() only accepts value from 0 (close) to 1 (open)")
             open = 1.0
@@ -210,7 +213,12 @@ class MoveBase:
         self.OctomapClient.clearOctomapCouch()
 
     def MoveToPose(self, frame, input_pose):
+
+        # clear octomap in front of PR2 that is created during manipulation
         self.OctomapClient.clearOctomapWorkspacePR2()
+
+        # clear octomap along the navigation path of PR2 that is possibly created when sudden drop of control happened during previous navigation
+        self.OctomapClient.clearOctomapPath()
 
         goal = MoveBaseGoal()
         goal.target_pose.header.stamp = rospy.Time.now()
@@ -219,17 +227,18 @@ class MoveBase:
 
         self.client.send_goal(goal)
         if self.client.wait_for_result(rospy.Duration(120.0)):
+            rospy.logwarn("Arrived to the goal!")
             return True
         else:
             self.client.cancel_all_goals()
+            rospy.logwarn("Aborted! 120 seconds has passed after setting a goal for navigation...")
             return False
 
     def MoveToInternDesk(self):
         pose = geometry_msgs.msg.Pose()
 
-        # intern desk (around the right marker)
+        # HACK intern desk (around the right marker)
         pose.position.x = -1.06836
-#         pose.position.y = -1.14624
         pose.position.y = -1.24624
         pose.position.z = -1e-05
         pose.orientation.x = -0.0017
@@ -242,41 +251,8 @@ class MoveBase:
     def MoveToWorkstation(self):
         pose = geometry_msgs.msg.Pose()
 
-        # intern desk (around the left marker)
-#         pose.position.x = -0.56836
-#         pose.position.y = -1.14624
-#         pose.position.z = -1e-05
-#         pose.orientation.x = -0.0017
-#         pose.orientation.y = -0.0002
-#         pose.orientation.z = -0.70305
-#         pose.orientation.w = 0.71114
-
-        # round table
-#         pose.position.x = 0.30435
-#         pose.position.y = 0.25051
-#         pose.position.z = 0.0
-#         pose.orientation.x = 0.002
-#         pose.orientation.y = 0.002
-#         pose.orientation.z = 0.91104
-#         pose.orientation.w = 0.41228
-
-        # round table (a little to the right)
-#         pose.position.x = 0.368
-#         pose.position.y = 0.2744
-#         pose.position.z = 0.0
-#         pose.orientation.x = 0.002
-#         pose.orientation.y = 0.002
-#         pose.orientation.z = 0.70195
-#         pose.orientation.w = 0.7122
-
-        # (lower) workstation
-#         pose.position.x = 0.2889
-#         pose.position.y = 0.4328
-# #         pose.position.y = 0.4828
-#         pose.position.z = 0.0
+        # HACK (lower) workstation
         pose.position.x = 0.3489
-#         pose.position.y = 0.4028
-#         pose.position.y = 0.4328
         pose.position.y = 0.5328
         pose.position.z = 0.0
         pose.orientation.x = 0.002
@@ -302,26 +278,32 @@ class MoveitMoveArm:
         else:
             self.moveit_planning_group = moveit_commander.MoveGroupCommander("right_arm")
 
+
+        ############### MOTION PLANNER OPTIONS ###############
+
         # NOTE to switch the planner to ompl, need to set the parameter 'use_sbpl_pipeline' to 'false' in launch/pr2/tatooine_moveit_setup.launch
         # NOTE also make sure to execute 'rosparam delete /move_group' to prevent any possible confusion
-#         use_sbpl_pipeline = False
+
+        #use_sbpl_pipeline = False
         use_sbpl_pipeline = True
+
+        ######################################################
+
 
         if use_sbpl_pipeline:
             if self.LARM_IN_USE:
                 self.moveit_planning_group.set_planner_id("left_arm[arastar_bfs_manip]")  # slow; robust but sometimes rotating the wrist; initial plan can be found within a second, so just reduce allowed_planning_time
             else:
                 self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_manip]")  # slow; robust but sometimes rotating the wrist; initial plan can be found within a second, so just reduce allowed_planning_time
-#                 self.moveit_planning_group.set_planner_id("right_arm[larastar_bfs_manip]")  # not faster; similar motion
-#                 self.moveit_planning_group.set_planner_id("right_arm[mhastar_bfs_manip]")  # not faster; similar motion
-#                 self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_workspace]")   # faster; weird suboptimal path
-#                 self.moveit_planning_group.set_planner_id("right_arm[arastar_euclid_workspace]")  # slow; wrist orientation converges early
-#                 self.moveit_planning_group.set_planner_id("right_arm[larastar_euclid_workspace]")   # not faster, abrupt motions!
+                # self.moveit_planning_group.set_planner_id("right_arm[larastar_bfs_manip]")  # not faster; similar motion
+                # self.moveit_planning_group.set_planner_id("right_arm[mhastar_bfs_manip]")  # not faster; similar motion
+                # self.moveit_planning_group.set_planner_id("right_arm[arastar_bfs_workspace]")   # faster; weird suboptimal path
+                # self.moveit_planning_group.set_planner_id("right_arm[arastar_euclid_workspace]")  # slow; wrist orientation converges early
+                # self.moveit_planning_group.set_planner_id("right_arm[larastar_euclid_workspace]")   # not faster, abrupt motions!
 
             self.moveit_planning_group.set_planning_time(rospy.get_param("move_group/allowed_planning_time"))
             self.moveit_planning_group.allow_replanning(True)
 
-            # TODO need to convert the reference frame of this workspace from /base_footprint to /odom_combined (or don't need to do it due to moveit's but?)
             workspace_frame = rospy.get_param("move_group/workspace_frame")
             min_x = rospy.get_param("move_group/workspace_min/x")
             min_y = rospy.get_param("move_group/workspace_min/y")
@@ -330,7 +312,7 @@ class MoveitMoveArm:
             max_y = rospy.get_param("move_group/workspace_max/y")
             max_z = rospy.get_param("move_group/workspace_max/z")
             workspace = [min_x, min_y, min_z, max_x, max_y, max_z]
-            self.moveit_planning_group.set_workspace(workspace)    # CHECK header.frame_id is set to /odom_combined?
+            self.moveit_planning_group.set_workspace(workspace)
 
             self.moveit_planning_group.set_goal_position_tolerance(rospy.get_param("move_group/tolerance/position"))
             self.moveit_planning_group.set_goal_orientation_tolerance(rospy.get_param("move_group/tolerance/orientation"))
@@ -366,7 +348,7 @@ class MoveitMoveArm:
         self.moveit_planning_group.set_start_state_to_current_state()
 
         self.moveit_planning_group.set_pose_target(correct_ps.pose)
-        #self.moveit_planning_group.set_pose_reference_frame(reference_frame) # DOES NOT WORK
+        #self.moveit_planning_group.set_pose_reference_frame(reference_frame) # does not work
         plan=self.moveit_planning_group.plan()
         if not plan.joint_trajectory.points:
             return False
@@ -458,19 +440,27 @@ class MoveitMoveArm:
         else:
             return self.MoveRightToCarry()
 
+
+# 1) place an object as the same as it was picked up
+    # def MoveRightToExtend(self, release_pose):
+    #     return self.MoveToPose(release_pose, "base_footprint")
+
+    # def MoveRightToShortExtend(self, release_pose):
+    #     return self.MoveToPose(release_pose, "base_footprint")
+
+    # def MoveLeftToExtend(self, release_pose):
+    #     return self.MoveToPose(release_pose, "base_footprint")
+
+    # def MoveLeftToShortExtend(self, release_pose):
+    #     return self.MoveToPose(release_pose, "base_footprint")
+
+# 2) place an object at a pre-defined pose
     def MoveRightToExtend(self, release_pose):
         return self.MoveToPose(release_pose, "base_footprint")
 
     def MoveRightToShortExtend(self, release_pose):
         return self.MoveToPose(release_pose, "base_footprint")
 
-#     def MoveLeftToExtend(self, release_pose):
-#         return self.MoveToPose(release_pose, "base_footprint")
-#
-#     def MoveLeftToShortExtend(self, release_pose):
-#         return self.MoveToPose(release_pose, "base_footprint")
-#
-    # hard-coded release pose
     def MoveLeftToExtend(self, release_pose):
         release_pose.position.x = 0.570212716415
         release_pose.position.y = 0.427063007244
@@ -481,7 +471,6 @@ class MoveitMoveArm:
         release_pose.orientation.w = -0.321125774682
         return self.MoveToPose(release_pose, "base_footprint")
 
-    # hard-coded release pose
     def MoveLeftToShortExtend(self, release_pose):
         release_pose.position.x = 0.570212716415
         release_pose.position.y = 0.427063007244
@@ -491,6 +480,7 @@ class MoveitMoveArm:
         release_pose.orientation.z = -0.609382718567
         release_pose.orientation.w = -0.321125774682
         return self.MoveToPose(release_pose, "base_footprint")
+
 
     def MoveArmInUseToExtend(self, release_pose):
         release_pose_rev = copy.deepcopy(release_pose)
@@ -540,26 +530,12 @@ class MoveitMoveArm:
         self.moveit_planning_scene.add_box(name, posestamped, size=input_size)
         self.inserted_objects.append(name)
 
-#     def AddDeskCollisionObject(self, name, posestamped):
-#         posestamped.pose.position.y -= 0.35
-#         posestamped.pose.position.z = 0.35
-#         self.moveit_planning_scene.add_box(name, posestamped, size=(.67,1.52, .7) )
-#         rospy.loginfo("Added desk object %s", name)
-#         self.inserted_desks.append(name)
-
     def AddDeskCollisionObject(self, name, pose_in_map):
 
         # adjust offset of marker on the desk
         pose_in_map.pose.position.x += -0.44
         pose_in_map.pose.position.y += -0.30
         pose_in_map.pose.position.z = 0.35
-
-        # constrain desk orientation
-#         pose_in_map.pose.orientation.x = 0
-#         pose_in_map.pose.orientation.y = 0
-#         pose_in_map.pose.orientation.z = 0
-#         pose_in_map.pose.orientation.w = 1
-#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.7))
 
         pose_in_map.pose.orientation.x = 0
         pose_in_map.pose.orientation.y = 0
@@ -568,7 +544,6 @@ class MoveitMoveArm:
         quat_norm = math.sqrt(quat_z**2 + quat_w**2)
         pose_in_map.pose.orientation.z = quat_z / quat_norm
         pose_in_map.pose.orientation.w = quat_w / quat_norm
-#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 1.52, 0.7))
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 0.52, 0.7))
 
         rospy.loginfo("Added desk object %s", name)
@@ -586,7 +561,6 @@ class MoveitMoveArm:
         quat_norm = math.sqrt(quat_z**2 + quat_w**2)
         pose_in_map.pose.orientation.z = quat_z / quat_norm
         pose_in_map.pose.orientation.w = quat_w / quat_norm
-#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.90, 0.90, 0.72))    # round table
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))      # (lower) workstation
 
         rospy.loginfo("Added table object %s", name)
@@ -603,7 +577,6 @@ class MoveitMoveArm:
         pose_in_map.pose.orientation.z = 0
         pose_in_map.pose.orientation.w = 1
         name = "desk_0"
-#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.7))
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.60))
         rospy.loginfo("Added desk object %s", name)
         self.inserted_desks.append(name)
@@ -619,26 +592,21 @@ class MoveitMoveArm:
         pose_in_map.pose.orientation.z = 0
         pose_in_map.pose.orientation.w = 1
         name = "table_0"
-#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.30))
         rospy.loginfo("Added table object %s", name)
         self.inserted_tables.append(name)
 
     def AddRomanCollisionObjectInMap(self):
-        # THIS IS ROMAN
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
         pose_in_map.pose.position.x = -0.75+0.25
-#         pose_in_map.pose.position.y = 0.90
         pose_in_map.pose.position.y = 1.10
         pose_in_map.pose.position.z = 0.70
         pose_in_map.pose.orientation.x = 0
         pose_in_map.pose.orientation.y = 0
         pose_in_map.pose.orientation.z = 0
         pose_in_map.pose.orientation.w = 1
-        name = "table_1"
-#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))
-#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.50, 0.50, 1.40))
+        name = "table_1"    # this is Roman
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.050, 0.50, 1.40))
         rospy.loginfo("Added Roman collision object %s", name)
         self.inserted_tables.append(name)
@@ -665,8 +633,6 @@ class MoveitMoveArm:
         self.removeAllObjects()
         self.removeDeskObjects()
         self.removeTableObjects()
-
-
 
 
 class RoconMoveArm:
@@ -747,8 +713,7 @@ class ArmJointCommand:
     # NOTE current joint values can be read from 'rostopic echo /[r/l]_arm_controller/state'
 
     def MoveRightArmToWide(self):
-#         self.RightArmJointCommand.MoveArmToJoint([-1.6583625690312713, 0.6874497663917372, -0.3591542852171954, -2.0396477595207805, 4.633907864244298, -1.2780054373789036, 2.9439450216806975])
-        self.RightArmJointCommand.MoveArmToJoint([-1.903766156407949, 0.33815732889344396, -0.9407612404607727, -2.1215879821638572, -1.6462611305433035, -0.6481703100171754, -3.101335781467295])
+        self.RightArmJointCommand.MoveArmToJoint([-1.6583625690312713, 0.6874497663917372, -0.3591542852171954, -2.0396477595207805, 4.633907864244298, -1.2780054373789036, 2.9439450216806975])
 
     def MoveRightArmToSide(self):
         self.RightArmJointCommand.MoveArmToJoint([-2.134992712216583, 1.046132240354625, -2.2202324000660947, -1.9038528322430315, -2.7226797245193337, -0.10465688013304186, 4.67507793460336])
@@ -784,12 +749,12 @@ class ArmJointCommand:
             self.MoveLeftArmToSide()
 
     def MoveRightArmToPreRelease(self):
-        rospy.logerr("MoveRightArmToPreRelease() is not yet supported!")
         # self.RightArmJointCommand.MoveArmToJoint([])
+        rospy.logerr("MoveRightArmToPreRelease() is not yet supported!")
 
     def MoveRightArmToRelease(self):
-        rospy.logerr("MoveRightArmToRelease() is not yet supported!")
         # self.RightArmJointCommand.MoveArmToJoint([])
+        rospy.logerr("MoveRightArmToRelease() is not yet supported!")
 
     def MoveLeftArmToPreRelease(self):
         self.LeftArmJointCommand.MoveArmToJoint([0.3728037940530639, -0.03705736014372039, 1.45603048774742, -0.4882848163348973, 7.963510974467809, -1.5628833458204952, -6.2780816196848725])

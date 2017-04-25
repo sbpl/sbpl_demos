@@ -39,6 +39,7 @@ class OctomapClient:
         min_in_base = Point()
         max_in_base = Point()
 
+        # looser bound
 #         min_in_base.x = -0.5
 #         min_in_base.y = -1.0
 #         min_in_base.z =  0.0
@@ -93,6 +94,34 @@ class OctomapClient:
         max_in_map.z =  2.0
 
         self.clearOctomapWorkspace(min_in_map, max_in_map)
+
+
+    def clearOctomapPath(self):
+        # hard-coded bounding boxes to be cleared in /map frame
+        min_in_map0 = Point()
+        min_in_map0.x = -0.4
+        min_in_map0.y = -1.8
+        min_in_map0.z =  0.0
+
+        max_in_map0 = Point()
+        max_in_map0.x = 0.8
+        max_in_map0.y = 0.8
+        max_in_map0.z = 2.0
+
+        self.clearOctomapWorkspace(min_in_map0, max_in_map0)
+
+        min_in_map1 = Point()
+        min_in_map1.x = -1.6
+        min_in_map1.y = -1.8
+        min_in_map1.z =  0.0
+
+        max_in_map2 = Point()
+        max_in_map2.x =  0.0
+        max_in_map2.y = -0.4
+        max_in_map2.z =  2.0
+
+        self.clearOctomapWorkspace(min_in_map1, max_in_map2)
+
 
     def clearOctomapWorkspace(self, min_in_map, max_in_map):
         request = BoundingBoxQueryRequest()
