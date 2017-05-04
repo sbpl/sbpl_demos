@@ -1,0 +1,6 @@
+string command
+string request_key
+string request_value
+---
+bool result
+string result_value

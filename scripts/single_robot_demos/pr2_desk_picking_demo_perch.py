@@ -6,238 +6,180 @@ import rospy
 import actionlib
 import tf
 import numpy
+import signal
 from geometry_msgs.msg import Pose, PoseStamped
 from sbpl_demos import perception_helpers
 from sbpl_demos import perch_helpers
 from sbpl_demos import grasping_helpers
 from sbpl_demos import pr2_helpers
-from sbpl_demos.perception_helpers import AR_TYPES
+from sbpl_demos.srv import StateMachine, StateMachineRequest
 
 class Demo:
     def __init__(self):
-        self.STATIONARY = True
-#         self.STATIONARY = False
+
+
+        ############### DEMONSTRATION OPTIONS ###############
+
+        # self.STATIONARY = True
+        self.STATIONARY = False
+
+        # self.LARM_IN_USE = False    # manipulation with right arm
+        self.LARM_IN_USE = True    # manipulation with left arm
+
+        #####################################################
+
+
         self.tflistener = tf.TransformListener()
         self.tfbroadcaster = tf.TransformBroadcaster()
-        self.GripperCommand = pr2_helpers.GripperCommand()
+        self.GripperCommand = pr2_helpers.GripperCommand(self.LARM_IN_USE)
         self.PointHead = pr2_helpers.PointHead()
-        self.ARTagListener = perception_helpers.ARTagListener()
-        self.PerchClient = perch_helpers.PerchClient()
-#         self.PR2ARGrasping = grasping_helpers.PR2ARGrasping()
-        self.MoveitMoveArm = pr2_helpers.MoveitMoveArm()
+        self.PerchClient = perch_helpers.PerchClient(self.LARM_IN_USE)
+        self.MoveitMoveArm = pr2_helpers.MoveitMoveArm(self.LARM_IN_USE)
         self.TorsoCommand = pr2_helpers.TorsoCommand()
-#         self.TuckArms = pr2_helpers.TuckArms()
         if(not self.STATIONARY):
             self.MoveBase = pr2_helpers.MoveBase()
-        self.ArmJointCommand = pr2_helpers.ArmJointCommand()
+        self.ArmJointCommand = pr2_helpers.ArmJointCommand(self.LARM_IN_USE)
+
+        rospy.loginfo("waiting for state_machine server...")
+        rospy.wait_for_service('state_machine')
+        rospy.loginfo("Connected.")
+        self.StateMachineClient = rospy.ServiceProxy('state_machine', StateMachine)
+        self.StateMachineRequest = StateMachineRequest()
 
         rospy.sleep(1.0)
         rospy.loginfo('All Action clients connected!')
-        #rospy.loginfo('Commanding Untucking')
-        #self.TuckArms.UntuckArms()
-        self.PointHead.LookAt("base_footprint", 1.25, 0, 0)
-        rospy.loginfo('Commanding torso')
-        self.TorsoCommand.MoveTorso(0.2)
+        rospy.loginfo("Move head to look forward")
+        self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
 
-#     def computeObjectPoseRoutine(self, name, artype, ee_position, markers):
-#         if artype is not AR_TYPES.GENERAL_OBJ:
-#
-#             obj_markers = self.ARTagListener.getMarkersByType(markers, artype)
-#             cnt = 0
-#             for obj in obj_markers.markers:
-#                 valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(obj.pose.pose, artype)
-#                 if(valid_poses_candidates):
-#                     self.valid_poses.append(valid_poses_candidates)
-#                     (best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
-#                     if(best_candidate):
-#                         self.best_poses.append(best_candidate)
-#                         self.best_distances.append(best_distance)
-#                         self.best_poses_object.append(obj.pose.pose)
-#
-#                 # place a collision object at the marker
-#                 obj.pose.header.stamp = rospy.Time.now()
-#                 obj.pose.header.frame_id = "odom_combined"
-#                 size = (0,0,0)
-#                 if(artype == AR_TYPES.CUBOID_EDGE):
-#                     size = (0.2, 0.05, 0.05)
-#                 elif(artype == AR_TYPES.CYLINDER):
-#                     size = (0.02, 0.02, 0.3)
-#                 elif(artype == AR_TYPES.ROD_END):
-#                     size = (0.07, 0.07, 0.15)
-#                 elif(artype == AR_TYPES.CUBE):
-#                     size = (0.07, 0.07, 0.07)
-#                 self.MoveitMoveArm.AddCollisionObject("object_"+name+"_"+ str(cnt), obj.pose, size )
-#                 rospy.sleep(2.0)
-#                 cnt+=1
-#
-#         else:
-#             print("AR_TYPE.GENERAL_OBJ is not currently supported!")
-# #             grasp_pose_perch = self.PerchClient.getGraspPose(name)
-# #             print grasp_pose_perch
-# #             valid_poses_candidates = self.PR2ARGrasping.getValidPosesByType(grasp_pose_perch, AR_TYPES.ROD_END)
-# #             if(valid_poses_candidates):
-# #                 self.valid_poses.append(valid_poses_candidates)
-# #                 (best_candidate, best_distance) = self.PR2ARGrasping.getBestPoseAmongValid(valid_poses_candidates, ee_position)
-# #                 if(best_candidate):
-# #                     self.best_poses.append(best_candidate)
-# #                     self.best_distances.append(best_distance)
-# #                     self.best_poses_object.append(obj.pose.pose)
-# #                     print best_candidate
+
+    def __sigint_handler__(self, signal, frame):
+
+        ### DESTRUCTION
+        self.MoveitMoveArm.Cleanup()
+        print('Successfully cleaned up moveit_commander!')
+
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "requested_object"
+        self.StateMachineRequest.request_value = ""
+        res = self.StateMachineClient(self.StateMachineRequest)
+        print("Successfully reset 'requested_object' on /state_machine!")
+
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "ROMAN_STATE"
+        self.StateMachineRequest.request_value = "IDLE"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        print("Successfully reset 'ROMAN_STATE' on /state_machine!")
+
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "IDLE"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        print("Successfully reset 'PR2_STATE' on /state_machine!")
+
+        print('Shutting down...')
+        sys.exit(0)
 
 
     def moveToWorkstationRoutine(self):
-        if(not self.STATIONARY):
-                #optionally move to alternate location
-# HACK XXX
-#                 rospy.loginfo('Tucking arms')
-#                 self.TuckArms.TuckLeftArm()
 
-# HACK XXX
-#                 rospy.loginfo("Moving to wide pose")
-#                 self.MoveitMoveArm.MoveRightToCarry()
+        ### UPDATE_PR2_STATE
+        rospy.loginfo("Updating PR2's state!")
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "MOVE_BASE"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
 
-                rospy.loginfo('Commanding base to Workstation')
-                self.MoveBase.MoveToWorkstation()
-# HACK XXX
-#                 rospy.loginfo('Untucking arms')
-#                 self.TuckArms.UntuckRightArms()
+        res = False
+        if (not self.STATIONARY):
+            rospy.loginfo("Move head to look forward")
+            self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
+            rospy.loginfo('Commanding torso go down')
+            self.TorsoCommand.MoveTorso(0.0)
+            rospy.loginfo("wait for 10 sec!")
+            rospy.sleep(10)
+            rospy.loginfo("Move to round table")
+            res = self.MoveBase.MoveToWorkstation()
+        else:
+            res = True
+
+
+        if (res):
+            rospy.loginfo("Successfully arrived at round table!")
+            # wait for a while to make Perch use the lastest/static observation
+            # look at the object
+            rospy.loginfo("Move head to look left")
+            self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
+            rospy.loginfo("Waiting for 10 secs!")
+            rospy.sleep(10)
+            rospy.loginfo('Asking PERCH to detect the object')
+
+
+            ### OPEN_GRIPPER
+            rospy.loginfo('Commanding gripper open')
+            self.GripperCommand.CommandGripperInUse(1) #open grigger
+
+        return res
+
 
     def moveToInternDeskRoutine(self):
-        if(not self.STATIONARY):
-            rospy.loginfo('Commanding Tuckarms')
-#             self.GripperCommand.Command('l', 0) #Close gripper
-# HACK XXX
-#             self.TuckArms.TuckArms()
 
-            rospy.loginfo('Commanding base to intern desk...')
-            self.MoveBase.MoveToInternDesk()
+        ### UPDATE_PR2_STATE
+        rospy.loginfo("Updating PR2's state!")
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "MOVE_BASE"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
 
-            rospy.loginfo('Commanding Untucking')
-# HACK XXX
-#             self.TuckArms.UntuckRightArms()
+        res = False
+        if (not self.STATIONARY):
+            rospy.loginfo("Move head to look forward")
+            self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
+            rospy.loginfo('Commanding torso go down')
+            self.TorsoCommand.MoveTorso(0.0)
+            rospy.loginfo("wait for 10 sec!")
+            rospy.sleep(10)
+            rospy.loginfo("Move to intern desk")
+            res = self.MoveBase.MoveToInternDesk()
+        else:
+            res = True
 
-#     def pickingRoutine(self):
-#         self.valid_poses = [] # all IK-valid poses
-#         self.best_poses = [] # the best poses, one per item
-#         self.best_distances = [] # the best distances, one per item corresponding to best_poses
-#         self.best_poses_object = [] #TODO should be a map between pose -> object (AR) pose
-#
-#         rospy.loginfo('Commanding right gripper open')
-#         self.GripperCommand.Command('r', 1) #open grigger
-#         ## AR TAG PICKING
-#         # get current EE position
-#         (ee_position, ee_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
-#
-#         #want to latch it at this time
-#         (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
-#         rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
-#             n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
-#
-#         if(n_desks > 0):
-#             rospy.loginfo("Inserting Desk Collision objects")
-#             desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
-#             cnt = 0
-#             for desk in desk_markers.markers:
-#                 desk.pose.header.frame_id = "odom_combined"
-#                 desk.pose.header.stamp = rospy.Time.now()
-#                 print desk
-#                 self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk.pose)
-#                 cnt+=1
-#
-#         if(n_cylinders >0):
-#             rospy.loginfo("Computing poses for CYLINDERS")
-#             self.computeObjectPoseRoutine("cylinder", AR_TYPES.CYLINDER, ee_position, markers)
-#
-#         if(n_cubes >0):
-#             rospy.loginfo("Computing poses for CUBES")
-#             self.computeObjectPoseRoutine("cubes", AR_TYPES.CUBE, ee_position, markers)
-#
-#         if(n_cuboid_edges >0):
-#             rospy.loginfo("Computing poses for CUBOID_EDGE")
-#             self.computeObjectPoseRoutine("cuboid_edge", AR_TYPES.CUBOID_EDGE, ee_position, markers)            
-#
-#         if(n_rod_ends >0):
-#             rospy.loginfo("Computing poses for ROD_END")
-#             self.computeObjectPoseRoutine("rod_end", AR_TYPES.ROD_END, ee_position, markers)
+        if (res):
+            rospy.loginfo("Successfully arrived intern desk!")
+            rospy.loginfo('Commanding torso go up')
+            self.TorsoCommand.MoveTorso(0.2)
+            rospy.loginfo("wait for 15 sec!")
+            rospy.sleep(15)
 
-#     def pickingRoutinePerch(self, object_name):
-#         rospy.loginfo('Commanding right gripper open')
-#         self.GripperCommand.Command('r', 1) #open grigger
-#
-#         # get grasp and pre-grasp poses
-#         (grasp_poses_perch, interp_poses_perch, distances_to_grasp) = self.PerchClient.getGraspPoses(object_name)
-#         print grasp_poses_perch
-#         print interp_poses_perch
-#         print distances_to_grasp
-#
-#         # add collision model
-#         (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
-#         rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
-#             n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
-#         if(n_desks > 0):
-#             rospy.loginfo("Inserting Desk Collision objects")
-#             desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
-#             cnt = 0
-#             for desk_marker in desk_markers.markers:
-#                 try:
-#                     desk_marker.pose.header.frame_id = "odom_combined"
-#                     #desk_marker.pose.header.stamp = rospy.Time.now()
-#                     desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
-#                     print desk_marker_in_map
-#                     self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
-#                     cnt+=1
-#                 except (tf.LookupException):
-#                     print "tf.LookupException: Desk collision model will not be added!"
-#                     continue
-#                 except (tf.ConnectivityException):
-#                     print "tf.ConnectivityException"
-#                     continue
-#                 except (tf.ExtrapolationException):
-#                     print "tf.ExtrapolationException"
-#                     continue
-#
-#         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
+        return res
 
-    def pickingRoutinePerchSpin(self):
-        rospy.loginfo('Commanding right gripper open')
-        self.GripperCommand.Command('r', 1) #open grigger
 
+    def getGraspPosesPerch(self, object_name):
+        # get grasp and pre-grasp poses
+        (grasp_poses_perch, interp_poses_perch, distances_to_grasp) = self.PerchClient.getGraspPoses(object_name)
+        #print grasp_poses_perch
+        #print interp_poses_perch
+        #print distances_to_grasp
+        return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
+
+
+    def getGraspPosesPerchSpin(self):
         # get grasp and pre-grasp poses
         rospy.logwarn("Waiting for user's object selection from tablet...")
         (grasp_poses_perch, interp_poses_perch, distances_to_grasp) = self.PerchClient.getGraspPosesSpin()
-#         print grasp_poses_perch
-#         print interp_poses_perch
-#         print distances_to_grasp
-        print("distances_to_grasp: ", distances_to_grasp)
-
-        # add collision model
-        (markers, n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges) = self.ARTagListener.getMarkersAndCounts() 
-        rospy.loginfo(" Discovered %d desks, %d cylinders, %d cubes, %d rod_ends, %d cuboid_flats, %d cuboid_edges", 
-            n_desks, n_cylinders, n_cubes, n_rod_ends, n_cuboid_flats, n_cuboid_edges)
-        if(n_desks > 0):
-            rospy.loginfo("Inserting Desk Collision objects")
-            desk_markers = self.ARTagListener.getMarkersByType(markers, AR_TYPES.DESK)
-            cnt = 0
-            for desk_marker in desk_markers.markers:
-                try:
-                    desk_marker.pose.header.frame_id = "odom_combined"
-                    #desk_marker.pose.header.stamp = rospy.Time.now()
-                    desk_marker_in_map = self.tflistener.transformPose("map", desk_marker.pose)
-                    print "desk_marker_in_map"
-                    print desk_marker_in_map
-                    self.MoveitMoveArm.AddDeskCollisionObject("desk_"+str(cnt), desk_marker_in_map)
-                    cnt+=1
-                except (tf.LookupException):
-                    print "tf.LookupException: Cannot find transform between /map and /odom_combined. Desk collision model will not be added!"
-                    continue
-                except (tf.ConnectivityException):
-                    print "tf.ConnectivityException"
-                    continue
-                except (tf.ExtrapolationException):
-                    print "tf.ExtrapolationException"
-                    continue
-
+        #print grasp_poses_perch
+        #print interp_poses_perch
+        #print distances_to_grasp
+        #print("distances_to_grasp: ", distances_to_grasp)
         return (grasp_poses_perch, interp_poses_perch, distances_to_grasp)
+
+
+    def addCollisionModelsInMap(self):
+        # if (not self.STATIONARY):
+            self.MoveitMoveArm.AddDeskCollisionObjectInMap()
+            self.MoveitMoveArm.AddTableCollisionObjectInMap()
+            self.MoveitMoveArm.AddRomanCollisionObjectInMap()
 
 
     def compensateMoveItOdomToBaseError(self, odom_to_des_pose):
@@ -297,205 +239,414 @@ class Demo:
         return odom_to_desrev_pose
 
 
-    def dropOffObjectRoutine(self, release_pose):
-        rospy.loginfo("Moving to extend pose")
-        self.MoveitMoveArm.MoveRightToExtend(release_pose)
-        rospy.loginfo("Commanding right gripper open")
-        self.GripperCommand.Command('r', 1) #open gripper
-        self.MoveitMoveArm.MoveRightToShortExtend(release_pose)
-# HACK XXX
-#         rospy.loginfo('Commanding Tuckarms')
-#         self.TuckArms.TuckLeftArm()
+    def selectGraspPose(self, grasp_poses, interp_poses, distances_to_grasp):
+
+        # select the best desired grasp among the candidates
+        best_index = min(xrange(len(distances_to_grasp)), key=distances_to_grasp.__getitem__)
+        grasp_pose = grasp_poses[best_index]
+        interp_pose = interp_poses[best_index]
+        # for visualization
+        #self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
+        #    (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
+        #    rospy.Time.now(), "interp_pose_best", "odom_combined")
+        #self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
+        #    (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
+        #    rospy.Time.now(), "grasp_pose_best", "odom_combined")
+
+        # compensate transformation error from /odom_combined to /base_footprint of MoveIt's Scene Robot
+        interp_pose = self.compensateMoveItOdomToBaseError(interp_pose)
+        grasp_pose = self.compensateMoveItOdomToBaseError(grasp_pose)
+        # for visualization
+        #self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
+        #    (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
+        #    rospy.Time.now(), "interp_pose_best_rev", "odom_combined")
+        #self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
+        #    (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
+        #    rospy.Time.now(), "grasp_pose_best_rev", "odom_combined")
+
+        # compensate Kinect calibration error
+        interp_pose = self.compensateKinectCalibrationError(interp_pose)
+        grasp_pose = self.compensateKinectCalibrationError(grasp_pose)
+        # for visualization
+        self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
+            (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
+            rospy.Time.now(), "interp_pose_best_rev2", "odom_combined")
+        self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
+            (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
+            rospy.Time.now(), "grasp_pose_best_rev2", "odom_combined")
+
+        # compute and save a release pose in base_footprint frame
+        grasp_pose_stamped = PoseStamped()
+        grasp_pose_stamped.header.frame_id = "odom_combined"
+        grasp_pose_stamped.pose = copy.deepcopy(grasp_pose)
+        release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
+        self.release_pose = release_pose_stamped.pose
+        # for visualization
+        #self.tfbroadcaster.sendTransform((self.release_pose.position.x, self.release_pose.position.y, self.release_pose.position.z),
+        #    (self.release_pose.orientation.x, self.release_pose.orientation.y, self.release_pose.orientation.z, self.release_pose.orientation.w),
+        #    rospy.Time.now(), "release_pose_tf", "base_footprint")
+
+        return (grasp_pose, interp_pose)
+
+
+    def graspObjectRoutine(self):
+
+        ### UPDATE_PR2_STATE
+        rospy.loginfo("Updating PR2's state!")
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "MOVE_ARM"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
+
+
+        ### DETECT_OBJECT
+        # get candidate grasp poses
+        # (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerchSpin()   # PR2-alone
+        (grasp_poses, interp_poses, distances_to_grasp) = self.getGraspPosesPerch(self.PerchClient.getRequestedObjectName())     # PR2 + ROMAN
+        if not len(grasp_poses) > 0:
+            rospy.logwarn("No grasp poses found")
+            self.MoveitMoveArm.removeAllObjectsAndDesks()
+            return False
+        # add collision models for detected AR markers
+        self.addCollisionModelsInMap()
+
+
+        ### SELECT_GRASP_POSE
+        rospy.loginfo('Selecting the best grasp pose')
+        (grasp_pose, interp_pose) = self.selectGraspPose(grasp_poses, interp_poses, distances_to_grasp)
+
+
+        ### OPEN_GRIPPER
+        rospy.loginfo('Commanding gripper open')
+        self.GripperCommand.CommandGripperInUse(1) #open grigger
+
+
+        ### MOVE_ARM_TO_PREGRASP
+        rospy.loginfo("Moving to pregrasp pose")
+        success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
+        if not success:
+            rospy.logwarn("Could not move to pregrasp pose, now moving back to wide pose")
+            success = self.MoveitMoveArm.MoveArmInUseToWide()
+            if not success:
+                rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+                self.ArmJointCommand.MoveArmInUseToWide()
+            self.MoveitMoveArm.removeAllObjectsAndDesks()
+            return False
+
+
+        ### MOVE_ARM_TO_GRASP
+        #rospy.loginfo("Removing collision objects and moving to final grasp pose")
+        #self.MoveitMoveArm.removeAllObjects()   # CHECK is it safe to do this?
+        rospy.loginfo("Moving to grasp pose")
+        success = self.MoveitMoveArm.MoveToPose(grasp_pose, "odom_combined")
+        if not success:
+            rospy.logwarn("Could not move to grasp pose, now moving back to wide pose")
+            success = self.MoveitMoveArm.MoveArmInUseToWide()
+            if not success:
+                rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+                self.ArmJointCommand.MoveArmInUseToWide()
+            self.MoveitMoveArm.removeAllObjectsAndDesks()
+            return False
+
+
+        ### CLOSE_GRIPPER
+        if self.PerchClient.getRequestedObjectName() == "003_cracker_box":      # which is a deformable object
+            rospy.loginfo('Commanding gripper close')
+            grip_success = self.GripperCommand.CommandGripperInUse(0.55) #close Gripper   # HACK for 003_cracker_box
+            rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
+        else:
+            rospy.loginfo('Commanding gripper close')
+            # grip_success: True when completely closed, False when grasped something
+            grip_success = self.GripperCommand.CommandGripperInUse(0) #close Gripper
+            if grip_success:
+                rospy.loginfo("Failed to grasp, now moving back to wide pose")
+                success = self.MoveitMoveArm.MoveArmInUseToWide()
+                if not success:
+                    rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+                    self.ArmJointCommand.MoveArmInUseToWide()
+                self.MoveitMoveArm.removeAllObjectsAndDesks()
+                return False
+            rospy.loginfo("Succeeded to grasp.")
+
+
+        ### MOVE_ARM_TO_PREGRASP
+        rospy.loginfo("Moving back to pregrasp pose")
+        interp_pose.position.z += 0.15
+        success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
+        if not success:
+            rospy.logwarn("Could not move to pregrasp pose, retrying")
+            interp_pose.position.z -= 0.12
+            success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
+            if not success:
+                rospy.logwarn("Could not move to pregrasp pose, now moving back to wide pose")
+                success = self.MoveitMoveArm.MoveArmInUseToWide()
+                if not success:
+                    rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+                    self.ArmJointCommand.MoveArmInUseToWide()
+                    # NOTE we won't return False and just proceed to the next step
+
+
+        ### MOVE_ARM_TO_WIDE
+        rospy.loginfo("Moving back to wide pose")
+        success = self.MoveitMoveArm.MoveArmInUseToWide()
+        if not success:
+            rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+            self.ArmJointCommand.MoveArmInUseToWide()
+            # NOTE we won't return False and just proceed to the next step
+
+        # remove all collision models
+        self.MoveitMoveArm.removeAllObjectsAndDesks()
+
+        return True
+
+
+    def releaseObjectRoutine(self, release_pose):
+
+        ### UPDATE_PR2_STATE
+        rospy.loginfo("Updating PR2's state!")
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "PR2_STATE"
+        self.StateMachineRequest.request_value = "MOVE_ARM"
+        res = self.StateMachineClient(self.StateMachineRequest)
+        rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
+
+
+        ### MOVE_ARM_TO_RELEASE
+        self.addCollisionModelsInMap()
+        rospy.sleep(1)
+        rospy.loginfo("Moving to release pose")
+        success_release = self.MoveitMoveArm.MoveArmInUseToExtend(release_pose)
+        if not success_release:
+            # 1) giving-up policy
+            # rospy.logwarn("Could not move to release pose, now moving back to wide pose")
+            # success = self.MoveitMoveArm.MoveArmInUseToWide()
+            # if not success:
+            #     rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+            #     self.ArmJointCommand.MoveArmInUseToWide()
+            # self.MoveitMoveArm.removeAllObjectsAndDesks()
+            #
+            # # escape from this state
+            # rospy.logerr("I got stuck...")
+            # rospy.logerr("Let me drop the object after 5 seconds!!!")
+            # rospy.sleep(1)
+            # rospy.logerr("Let me drop the object after 4 seconds!!!")
+            # rospy.sleep(1)
+            # rospy.logerr("Let me drop the object after 3 seconds!!!")
+            # rospy.sleep(1)
+            # rospy.logerr("Let me drop the object after 2 seconds!!!")
+            # rospy.sleep(1)
+            # rospy.logerr("Let me drop the object after 1 second!!!!")
+            # rospy.sleep(1)
+            # rospy.loginfo("Commanding gripper open")
+            # self.GripperCommand.CommandGripperInUse(1) #open gripper
+            # return False
+
+            # 2) force-release policy
+            rospy.logwarn("Could not move to release pose, now move to pre-release pose forcefully!")
+            self.ArmJointCommand.MoveArmInUseToPreRelease()
+            rospy.sleep(10)
+            rospy.logwarn("And now move to release pose forcefully!")
+            self.ArmJointCommand.MoveArmInUseToPreRelease()
+            rospy.sleep(5)
+            # NOTE we won't return False and just proceed to the next step
+
+
+        ### OPEN_GRIPPER
+        rospy.loginfo("Commanding gripper open")
+        self.GripperCommand.CommandGripperInUse(1) #open gripper
+
+
+        ### MOVE_ARM_TO_POSTRELEASE
+        if success_release:
+            rospy.loginfo("Moving to post-release")
+            success = self.MoveitMoveArm.MoveArmInUseToShortExtend(release_pose)
+            if not success:
+                rospy.logwarn("Could not move to post-release pose, now moving back to wide pose")
+                success = self.MoveitMoveArm.MoveArmInUseToWide()
+                if not success:
+                    rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+                    self.ArmJointCommand.MoveArmInUseToWide()
+                    # NOTE we won't return False and just proceed to the next step
+        else:
+            rospy.logwarn("And now move to post-release pose forcefully!")
+            self.ArmJointCommand.MoveArmInUseToPreRelease()
+            rospy.sleep(5)
+
+
+        ### MOVE_ARM_TO_WIDE
         rospy.loginfo("Moving to wide open")
-        self.MoveitMoveArm.MoveRightToWide()
+        success = self.MoveitMoveArm.MoveArmInUseToWide()
+        if not success:
+            rospy.logwarn("Could not move to wide pose, now do it forcefully!")
+            self.ArmJointCommand.MoveArmInUseToWide()
+            # NOTE we won't return False and just proceed to the next step
+
+
+        ### CLOSE_GRIPPER
+        rospy.loginfo('Commanding gripper close')
+        grip_success = self.GripperCommand.CommandGripperInUse(0) #close Gripper
+
+        # remove all collision models
+        self.MoveitMoveArm.removeAllObjectsAndDesks()
+
+        return True
+
 
     def runDemo(self):
-#         rospy.loginfo('Untucking arms')
-#         self.TuckArms.UntuckRightArms()
-#         self.moveToInternDeskRoutine()
 
-#         rospy.loginfo("Moving to wide open")
-#         self.MoveitMoveArm.MoveRightToWide()
+        # NOTE this is done by 'rosrun sbpl_demos demo_initializer.py' in alan2
+        # ### INITIALIZATION
+        # if(not self.STATIONARY):
+        #     rospy.loginfo("Initialize PR2 pose")
+        #     self.MoveBase.InitializePosePR2()
+        #     rospy.sleep(1)
 
+        ### MOVE_ARM_TO_WIDE + CLOSE_GRIPPER
         rospy.loginfo("Moving arms to wide open")
-        self.ArmJointCommand.MoveRightArmToWide()
-        self.ArmJointCommand.MoveLeftArmToWide()
+        self.ArmJointCommand.MoveArmInUseToWide()
+        self.ArmJointCommand.MoveArmNotInUseToSide()
+        # self.ArmJointCommand.MoveArmNotInUseToWide()
+        self.GripperCommand.CommandGripperInUse(0) #close grigger
+        self.GripperCommand.CommandGripperNotInUse(0) #close grigger
 
+        ### WAIT_FOR_WEB
+        rospy.loginfo("Waiting for user's object selection!")
+
+        # 1) waiting for user's object selection from the web interface
+        #requested_object = self.PerchClient.getRequestedObjectNameSpin()
+
+        # 2) HACK hard-coded requested_object (no need for web interface)
+        requested_object = "010_potted_meat_can"    # hard-coded
+        self.PerchClient.setRequestedObjectName(requested_object)
+
+        self.StateMachineRequest.command = "Set"
+        self.StateMachineRequest.request_key = "requested_object"
+        self.StateMachineRequest.request_value = requested_object
+        res = self.StateMachineClient(self.StateMachineRequest)
+        rospy.loginfo("Updated 'requested_object' on /state_machine!")
+
+        ### WAIT_FOR_ROMAN
+        rospy.loginfo("Waiting for Roman!")
         while not rospy.is_shutdown():
-
-#             self.pickingRoutine()
-#
-#             if not len(self.best_poses) > 0:
-#                 rospy.logwarn("No poses found, retrying")
-#                 self.MoveitMoveArm.removeAllObjectsAndDesks()
-#                 rospy.sleep(1)
-#                 continue
-#
-#             # select the best desired grasp among the candidates
-#             best_index = min(xrange(len(self.best_distances)), key=self.best_distances.__getitem__)
-#             grasp_pose = self.best_poses[best_index]
-#             object_pose = self.best_poses_object[best_index]
-#             interp_pose = self.PR2ARGrasping.getInterpolatedPose(grasp_pose, object_pose)
-#
-#             # correction for offset of interp_pose
-#             factor_arm_x = -0.04
-#             factor_arm_y = -0.01
-#             (arm_trans, arm_quat) = self.tflistener.lookupTransform("odom_combined", "base_footprint", rospy.Time())
-#             arm_matrix = self.tflistener.fromTranslationRotation(arm_trans, arm_quat)
-#
-#             arm_offset_x = arm_matrix[:3,0] * factor_arm_x
-#             arm_offset_y = arm_matrix[:3,1] * factor_arm_y
-#             interp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
-#             interp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
-#             interp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
-#
-#             # correction for offset of grasp_pose
-#             grasp_pose.position.x += arm_offset_x[0] + arm_offset_y[0]
-#             grasp_pose.position.y += arm_offset_x[1] + arm_offset_y[1]
-#             grasp_pose.position.z += arm_offset_x[2] + arm_offset_y[2]
-#
-#             factor_wrist_x = 0.02
-#             (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("odom_combined", "r_wrist_roll_link", rospy.Time())
-#             wrist_matrix = self.tflistener.fromTranslationRotation(wrist_trans, wrist_quat)
-#
-#             wrist_offset_x = wrist_matrix[:3,0] * factor_wrist_x
-#             grasp_pose.position.x += wrist_offset_x[0] + 0.2
-#             grasp_pose.position.y += wrist_offset_x[1] + 0.2 
-#             grasp_pose.position.z += wrist_offset_x[2] + 0.2
-#
-#             import pdb; pdb.set_trace()
-#             #just for visualization
-#             self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
-#                 (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
-#                 rospy.Time.now(), "desired_grasp", "odom_combined")
-
-
-            ## PERCH INSTEAD OF AR TAGS
-
-#             object_name = "003_cracker_box"
-#             (grasp_poses, interp_poses, distances_to_grasp) = self.pickingRoutinePerch(object_name)
-
-            (grasp_poses, interp_poses, distances_to_grasp) = self.pickingRoutinePerchSpin()
-
-            if not len(grasp_poses) > 0:
-                rospy.logwarn("No poses found, retrying")
-                self.MoveitMoveArm.removeAllObjectsAndDesks()
+            self.StateMachineRequest.command = "Get"
+            self.StateMachineRequest.request_key = "ROMAN_STATE"
+            self.StateMachineRequest.request_value = ""
+            res = self.StateMachineClient(self.StateMachineRequest)
+            if res.result_value == "DONE":
+                rospy.loginfo("Was told that Roman is done!")
+                break
+            else:
                 rospy.sleep(1)
+
+
+        #################### THE BEGINNING OF ONE CYCLE ####################
+
+        ### MOVE_BASE_TO_TABLE
+        initialized = True
+        if (not self.moveToWorkstationRoutine()):
+            rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+            rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
+            rospy.sleep(30)
+            if (not self.moveToWorkstationRoutine()):
+                rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+                rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
+                rospy.sleep(30)
+                if (not self.moveToWorkstationRoutine()):
+                    rospy.logerr("Falied to moveToWorkstationRoutine() again! Exiting from the pipeline!")
+                    initialized = False
+
+        while initialized and (not rospy.is_shutdown()):
+
+            ### OPEN_GRIPPER + DETECT_OBJECT + SELECT_GRASP_POSE + MOVE_ARM_TO_PREGRASP + MOVE_ARM_TO_GRASP + CLOSE_GRIPPER + MOVE_ARM_TO_PREGRASP + MOVE_ARM_TO_WIDE
+            if (not self.graspObjectRoutine()):
+                rospy.logerr("Falied to graspObjectRoutine()! Restart from object detection again after 3 seconds!")
+                rospy.sleep(3)
                 continue
 
-            # select the best desired grasp among the candidates
-            best_index = min(xrange(len(distances_to_grasp)), key=distances_to_grasp.__getitem__)
-            grasp_pose = grasp_poses[best_index]
-            interp_pose = interp_poses[best_index]
+            ### MOVE_BASE_TO_DESK
+            if (not self.moveToInternDeskRoutine()):
+                rospy.logerr("Falied to moveToInternDeskRoutine()! Will retry to move to the intern desk once again after 30 seconds!")
+                rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
+                rospy.sleep(30)
+                if (not self.moveToInternDeskRoutine()):
+                    rospy.logerr("Falied to moveToInternDeskRoutine()! Will retry to move to the intern desk once again after 30 seconds!")
+                    rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
+                    rospy.sleep(30)
+                    if (not self.moveToInternDeskRoutine()):
+                        rospy.logerr("Falied to moveToInternDeskRoutine() again! Exiting from the pipeline!")
+                        break
 
-            # just for visualization
-            #self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
-            #    (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
-            #    rospy.Time.now(), "interp_pose_best", "odom_combined")
-            #self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
-            #    (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
-            #    rospy.Time.now(), "grasp_pose_best", "odom_combined")
+            ### MOVE_ARM_TO_RELEASE + OPEN_GRIPPER + MOVE_ARM_TO_POSTRELEASE + MOVE_ARM_TO_WIDE + CLOSE_GRIPPER
+            if (not self.releaseObjectRoutine(self.release_pose)):
+                rospy.logerr("Falied to releaseObjectRoutine()! Restart from moving to round table again after 3 seconds!")
+                rospy.sleep(3)
 
+            ### UPDATE_OBJECT_STATE
+            rospy.loginfo("Resetting for user's object selection!")
+            self.PerchClient.resetRequestedObjectName()
+            self.StateMachineRequest.command = "Set"
+            self.StateMachineRequest.request_key = "requested_object"
+            self.StateMachineRequest.request_value = ""
+            res = self.StateMachineClient(self.StateMachineRequest)
+            rospy.loginfo("Updated 'requested_object' on /state_machine!")
 
-            # compensate transformation error from /odom_combined to /base_footprint of MoveIt's Scene Robot
-            interp_pose = self.compensateMoveItOdomToBaseError(interp_pose)
-            grasp_pose = self.compensateMoveItOdomToBaseError(grasp_pose)
+            ### UPDATE_PR2_STATE
+            rospy.loginfo("Updating PR2's state!")
+            self.StateMachineRequest.command = "Set"
+            self.StateMachineRequest.request_key = "PR2_STATE"
+            self.StateMachineRequest.request_value = "IDLE"
+            res = self.StateMachineClient(self.StateMachineRequest)
+            rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
 
-            # just for visualization
-            #self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
-            #    (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
-            #    rospy.Time.now(), "interp_pose_best_rev", "odom_combined")
-            #self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
-            #    (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
-            #    rospy.Time.now(), "grasp_pose_best_rev", "odom_combined")
-
-
-            # compensate Kinect calibration error
-            #interp_pose = self.compensateKinectCalibrationError(interp_pose)
-            #grasp_pose = self.compensateKinectCalibrationError(grasp_pose)
-
-            # just for visualization
-            self.tfbroadcaster.sendTransform((interp_pose.position.x, interp_pose.position.y, interp_pose.position.z),
-                (interp_pose.orientation.x, interp_pose.orientation.y, interp_pose.orientation.z, interp_pose.orientation.w),
-                rospy.Time.now(), "interp_pose_best_rev2", "odom_combined")
-            self.tfbroadcaster.sendTransform((grasp_pose.position.x, grasp_pose.position.y, grasp_pose.position.z),
-                (grasp_pose.orientation.x, grasp_pose.orientation.y, grasp_pose.orientation.z, grasp_pose.orientation.w),
-                rospy.Time.now(), "grasp_pose_best_rev2", "odom_combined")
+        ####################### THE END OF ONE CYCLE #######################
 
 
-            # Execute grasp plan
-            rospy.loginfo("Moving to interpolated pose")
-            success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
-            if not success:
-                rospy.logwarn("could not move to interpolated pose, retrying")
-                self.MoveitMoveArm.MoveRightToWide()
-                self.MoveitMoveArm.removeAllObjectsAndDesks()
-                rospy.sleep(1)
-                continue
+            ### WAIT_FOR_WEB
+            rospy.loginfo("Waiting for user's object selection!")
+            requested_object = self.PerchClient.getRequestedObjectNameSpin()
+            self.StateMachineRequest.command = "Set"
+            self.StateMachineRequest.request_key = "requested_object"
+            self.StateMachineRequest.request_value = requested_object
+            res = self.StateMachineClient(self.StateMachineRequest)
+            rospy.loginfo("Updated 'requested_object' on /state_machine!")
 
-            rospy.loginfo("Removing collision objects and moving to final grasp pose")
-            self.MoveitMoveArm.removeAllObjects()
-            success = self.MoveitMoveArm.MoveToPose(grasp_pose, "odom_combined")
-            if not success:
-                rospy.logwarn("could not move to interpolated pose, retrying")
-                self.MoveitMoveArm.MoveRightToWide()
-                self.MoveitMoveArm.removeAllObjectsAndDesks()
-                rospy.sleep(1)
-                continue
-
-            # grip_success: True when completely closed, False when grasped something
-#             grip_success = self.GripperCommand.Command('r', 0) #Close Gripper
-#             if grip_success:
-#                 rospy.loginfo("Failed to grasp. Going back to identifying object location.")
-#                 self.MoveitMoveArm.MoveRightToWide()
-#                 continue
-#             rospy.loginfo("Succeeded to grasp.")
-            grip_success = self.GripperCommand.Command('r', 0.55) #Close Gripper   # HACK for 003_cracker_box
-            rospy.loginfo("GripperCommand returned %d, but assuming succeeded to grasp...", int(grip_success))
-
-            # retract to interpolate pose
-            rospy.loginfo("Moving back to interpolated pose")
-            interp_pose.position.z += 0.15
-            success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
-            if not success:
-                rospy.logwarn("could not move to interpolated pose, retrying")
-                interp_pose.position.z -= 0.12
-                success = self.MoveitMoveArm.MoveToPose(interp_pose, "odom_combined")
-                if not success:
-                    rospy.logwarn("could not move to interpolated pose, aborted")
-                    self.MoveitMoveArm.MoveRightToWide()
-                    self.MoveitMoveArm.removeAllObjectsAndDesks()
+            ### WAIT_FOR_ROMAN
+            rospy.loginfo("Waiting for Roman!")
+            while not rospy.is_shutdown():
+                self.StateMachineRequest.command = "Get"
+                self.StateMachineRequest.request_key = "ROMAN_STATE"
+                self.StateMachineRequest.request_value = ""
+                res = self.StateMachineClient(self.StateMachineRequest)
+                if res.result_value == "DONE":
+                    rospy.loginfo("Was told that Roman is done!")
+                    break
+                else:
                     rospy.sleep(1)
-                    continue
 
-            rospy.loginfo("Moving to carry pose")
-            self.MoveitMoveArm.MoveRightToWide()
+            ### MOVE_BASE_TO_TABLE
+            if (not self.moveToWorkstationRoutine()):
+                rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+                rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
+                rospy.sleep(30)
+                if (not self.moveToWorkstationRoutine()):
+                    rospy.logerr("Falied to moveToWorkstationRoutine()! Will retry to move to the round table once again after 30 seconds!")
+                    rospy.logwarn("If the navigation planner seems to get stuck, try to relaunch it while I am waiting...")
+                    rospy.sleep(30)
+                    if (not self.moveToWorkstationRoutine()):
+                        rospy.logerr("Falied to moveToWorkstationRoutine() again! Exiting from the pipeline!")
+                        break
 
-            # compute release pose in base_footprint frame
-            grasp_pose_stamped = PoseStamped()
-            grasp_pose_stamped.header.frame_id = "odom_combined"
-            grasp_pose_stamped.pose = grasp_pose
-            release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
-            release_pose = release_pose_stamped.pose
 
-            # self.moveToWayPointRoutine()
-            self.moveToWorkstationRoutine()
-            #TODO clear desks, get AR poses for desk, and insert new Desk collision object
-
-            # release the object
-            self.dropOffObjectRoutine(release_pose)
-
-#             self.GripperCommand.Command('r', 0) #Close Gripper
-            self.MoveitMoveArm.removeAllObjectsAndDesks()
-
-            self.moveToInternDeskRoutine()
-
-        self.MoveitMoveArm.Cleanup()
-        print('shutting down...')    
+        ### DESTRUCTION
+        # NOTE this is done in self.__sigint_handler__()
 
 
 if __name__ == "__main__":
     rospy.init_node('pr2_grasp_test')
+
     demo = Demo()
+    signal.signal(signal.SIGINT, demo.__sigint_handler__)
+
     demo.runDemo()
 

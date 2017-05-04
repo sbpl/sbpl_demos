@@ -1,28 +1,23 @@
 source screenrc.common
 
-screen -t bash
-#stuff "roscore^M"
+screen -t robot
+stuff "robot start;  "
+stuff "# robot claim; robot start; [do something]; robot stop; robot release"
 
 screen -t dash
 stuff "rosrun pr2_dashboard pr2_dashboard"
 
 screen -t teleop
-stuff "roslaunch pr2_teleop teleop_keyboard.launch"
+stuff "roslaunch pr2_teleop teleop_keyboard.launch;  "
+stuff "# use this command when you need to move PR2 manually"
 
-screen -t tuckarm
-stuff "rosrun pr2_tuckarm tuck_arms.py b"
+# screen -t tuckarm
+# stuff "rosrun pr2_tuckarm tuck_arms.py b"
 
-# screen -t 2dmap
-# stuff "roslaunch sbpl_demos alan1_2dmap_setup.launch"
-screen -t 3dmap
-stuff "roslaunch sbpl_demos alan1_3dmap_setup.launch"
-
-# screen -t 2dnav
-# stuff "roslaunch sbpl_demos alan1_2dnav_setup.launch"
-screen -t 3dnav@alan2
-stuff "ssh demos@alan2;  # roslaunch sbpl_demos alan2_3dnav_setup.launch"
- 
 screen -t kinect
-stuff "roslaunch sbpl_demos alan1_kinect_setup.launch;  "
-stuff "# make sure to kill kinect before (re-)launching alan1_3dnav_setup.launch"
+stuff "roslaunch sbpl_demos alan1_kinect_setup.launch"
+
+screen -t multimaster
+stuff "roslaunch sbpl_multimaster alan1_gateway.launch;  "
+stuff "# run this command after 'roslaunch sbpl_multimaster dagobah_gateway.launch' on dagobah which is the hub of rocon"
 

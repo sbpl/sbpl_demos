@@ -1,0 +1,15 @@
+source screenrc.common
+
+# NOTE in the current launch and config setting, alan2 will run move_base_node only!
+
+screen -t amcl
+stuff "roslaunch sbpl_demos alan1_amcl_setup.launch"
+
+screen -t octomap
+stuff "rosrun sbpl_demos demo_initializer.py; "
+stuff "roslaunch sbpl_demos alan1_3dmap_setup.launch;  "
+stuff "# NOTE octomap will be published for visualization when kinect is running"
+
+screen -t 3dnav@alan2
+stuff "roslaunch sbpl_demos alan2_3dnav_setup.launch"
+

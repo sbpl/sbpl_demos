@@ -16,7 +16,8 @@
   <arg name="max_safe_path_cost" default="1"/>
   <arg name="jiggle_fraction" default="0.05"/>
   <arg name="publish_monitored_planning_scene" default="true"/>
-  <arg name="moveit_octomap_sensor_params_file" default="$(find pr2_moveit_config)/config/sensors_kinect.yaml" />
+<!--   <arg name="moveit_octomap_sensor_params_file" default="$(find pr2_moveit_config)/config/sensors_kinect.yaml" /> -->
+  <arg name="moveit_octomap_sensor_params_file" default="$(find sbpl_demos)/config/pr2/manipulation/pr2_moveit_sensor_params.yaml" />
 
 
     <param name="collision_detector" value="collision_detection/CollisionPluginSBPL"/>

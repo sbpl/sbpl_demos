@@ -20,6 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
+catkin_install_python(PROGRAMS scripts/examples/roman_move_to_home.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
@@ -31,8 +33,6 @@ add_message_files(
 add_service_files(
   FILES 
   PoseUpsample.srv 
-  ReturnJointStates.srv
-  StateMachine.srv
 )
 add_action_files(
   FILES
