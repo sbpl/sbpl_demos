@@ -21,6 +21,10 @@
     local-name: roman_model
     uri: https://github.com/aurone/roman_model.git
 - git:
+    local-name: robotiq
+    uri: https://github.com/ros-industrial/robotiq.git
+	version: indigo-devel
+- git:
     local-name: sbpl_geometry_utils
     uri: https://github.com/sbpl/sbpl_geometry_utils.git
 - git:

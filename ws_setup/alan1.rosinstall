@@ -1,0 +1,12 @@
+- git:
+    local-name: sbpl_multimaster
+    uri: https://github.com/sbpl/sbpl_multimaster.git
+    version: master
+- git:
+    local-name: rocon_groovy
+    uri: https://github.com/abrinkmacmu/rocon_groovy.git
+    version: master
+- git:
+    local-name: full-body-nav-groovy
+    uri: https://sbpl.pc.cs.cmu.edu/redmine/full-body-nav-groovy.git
+    version: master

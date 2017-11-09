@@ -1,0 +1,24 @@
+- git:
+    local-name: sbpl_multimaster
+    uri: https://github.com/sbpl/sbpl_multimaster.git
+    version: master
+- git:
+    local-name: sbpl_manipulation
+    uri: https://github.com/aurone/sbpl_manipulation.git
+    version: 9821537c627c1fddda2501ab19919ace11ba8593
+- git:
+    local-name: moveit_planners_sbpl
+    uri: https://github.com/aurone/moveit_planners_sbpl.git
+    version: 20b77df0ea475b8aa4614cb433401e3daa83c9a6
+- git:
+    local-name: pr2_sbpl_interface_config
+    uri: https://github.com/aurone/pr2_sbpl_interface_config.git
+    version: e886f3ef7a4776265ab012ffd25f5ceae63722be
+- git:
+    local-name: leatherman
+    uri: https://github.com/aurone/leatherman.git
+    version: 22d4b54d832aa2cbf60234984b1968baab4cdc23
+- git:
+    local-name: sbpl_geometry_utils
+    uri: https://github.com/sbpl/sbpl_geometry_utils.git
+    version: d25dfdc6dde77996500e89c53b534d1922a6b39b
