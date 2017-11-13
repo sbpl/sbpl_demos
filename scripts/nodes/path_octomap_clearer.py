@@ -34,15 +34,24 @@ class OctomapClient:
 
 
     def clearOctomapWorkspacePR2(self):
-        # hard-coded bounding box to be cleared in /base_footprint frame
+        # HACK hard-coded bounding box to be cleared in /base_footprint frame
         min_in_base = Point()
-        min_in_base.x = -0.5
-        min_in_base.y = -1.0
-        min_in_base.z =  0.0
-
         max_in_base = Point()
-        max_in_base.x =  1.5
-        max_in_base.y =  1.0
+
+        # looser bound
+#         min_in_base.x = -0.5
+#         min_in_base.y = -1.0
+#         min_in_base.z =  0.0
+#         max_in_base.x =  1.0
+#         max_in_base.y =  1.0
+#         max_in_base.z =  2.0
+
+        # tighter bound
+        min_in_base.x = -0.5
+        min_in_base.y = -0.9
+        min_in_base.z =  0.0
+        max_in_base.x =  0.668/2.0 + 0.10
+        max_in_base.y =  0.9
         max_in_base.z =  2.0
 
         rospy.sleep(1)  # to void tf.ExtrapolationException
@@ -72,7 +81,7 @@ class OctomapClient:
 
 
     def clearOctomapCouch(self):
-        # hard-coded bounding box to be cleared in /base_footprint frame
+        # HACK hard-coded bounding box to be cleared in /base_footprint frame
         min_in_map = Point()
         min_in_map.x = -3.0
         min_in_map.y =  0.5
@@ -87,29 +96,48 @@ class OctomapClient:
 
 
     def clearOctomapPath(self):
-        # hard-coded bounding boxes to be cleared in /map frame
+        # HACK hard-coded bounding boxes to be cleared in /map frame
+
+		# National Robotics Week
+#         min_in_map0 = Point()
+#         min_in_map0.x = -0.4
+#         min_in_map0.y = -1.8
+#         min_in_map0.z =  0.0
+#         max_in_map0 = Point()
+#         max_in_map0.x = 0.8
+#         max_in_map0.y = 0.8
+#         max_in_map0.z = 2.0
+#         self.clearOctomapWorkspace(min_in_map0, max_in_map0)
+#
+#         min_in_map1 = Point()
+#         min_in_map1.x = -1.6
+#         min_in_map1.y = -1.8
+#         min_in_map1.z =  0.0
+#         max_in_map2 = Point()
+#         max_in_map2.x =  0.0
+#         max_in_map2.y = -0.4
+#         max_in_map2.z =  2.0
+#         self.clearOctomapWorkspace(min_in_map1, max_in_map2)
+
+		# RCTA Demo
         min_in_map0 = Point()
-        min_in_map0.x = -0.4
+        min_in_map0.x = -1.45
         min_in_map0.y = -1.8
         min_in_map0.z =  0.0
-
         max_in_map0 = Point()
-        max_in_map0.x = 0.8
-        max_in_map0.y = 0.8
+        max_in_map0.x = -0.25
+        max_in_map0.y = 1.5
         max_in_map0.z = 2.0
-
         self.clearOctomapWorkspace(min_in_map0, max_in_map0)
 
         min_in_map1 = Point()
         min_in_map1.x = -1.6
         min_in_map1.y = -1.8
         min_in_map1.z =  0.0
-
         max_in_map2 = Point()
         max_in_map2.x =  0.0
         max_in_map2.y = -0.4
         max_in_map2.z =  2.0
-
         self.clearOctomapWorkspace(min_in_map1, max_in_map2)
 
 

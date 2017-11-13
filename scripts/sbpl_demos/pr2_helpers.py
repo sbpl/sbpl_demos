@@ -252,13 +252,26 @@ class MoveBase:
         pose = geometry_msgs.msg.Pose()
 
         # HACK (lower) workstation
-        pose.position.x = 0.3489
-        pose.position.y = 0.5328
+
+		# National Robotics Week
+#         pose.position.x = 0.3489
+#         pose.position.y = 0.5328
+#         pose.position.z = 0.0
+#         pose.orientation.x = 0.002
+#         pose.orientation.y = 0.0003
+#         pose.orientation.z = 0.69345
+#         pose.orientation.w = 0.72049
+
+		# RCTA Demo
+#         pose.position.x = -0.5134
+#         pose.position.x = -0.6134
+        pose.position.x = -0.5634
+        pose.position.y = 0.1364
         pose.position.z = 0.0
         pose.orientation.x = 0.002
         pose.orientation.y = 0.0003
-        pose.orientation.z = 0.69345
-        pose.orientation.w = 0.72049
+        pose.orientation.z = -0.01074
+        pose.orientation.w = 0.99994
 
         return self.MoveToPose("map", pose)
 
@@ -531,6 +544,7 @@ class MoveitMoveArm:
         self.inserted_objects.append(name)
 
     def AddDeskCollisionObject(self, name, pose_in_map):
+		# HACK hard-coded
 
         # adjust offset of marker on the desk
         pose_in_map.pose.position.x += -0.44
@@ -550,6 +564,7 @@ class MoveitMoveArm:
         self.inserted_desks.append(name)
 
     def AddTableCollisionObject(self, name, pose_in_map):
+		# HACK hard-coded
 
         # adjust offset of marker on the table
         pose_in_map.pose.position.z = 0.36
@@ -566,9 +581,21 @@ class MoveitMoveArm:
         rospy.loginfo("Added table object %s", name)
         self.inserted_tables.append(name)
 
-    def AddDeskCollisionObjectInMap(self):
+    def AddDeskCollisionObjectInMap(self):  # intern desk
+		# HACK hard-coded
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
+
+		# National Robotics Week
+#         pose_in_map.pose.position.x = -0.75
+#         pose_in_map.pose.position.y = -2.20
+#         pose_in_map.pose.position.z = 0.35
+#         pose_in_map.pose.orientation.x = 0
+#         pose_in_map.pose.orientation.y = 0
+#         pose_in_map.pose.orientation.z = 0
+#         pose_in_map.pose.orientation.w = 1
+
+		# RCTA Demo
         pose_in_map.pose.position.x = -0.75
         pose_in_map.pose.position.y = -2.20
         pose_in_map.pose.position.z = 0.35
@@ -576,29 +603,48 @@ class MoveitMoveArm:
         pose_in_map.pose.orientation.y = 0
         pose_in_map.pose.orientation.z = 0
         pose_in_map.pose.orientation.w = 1
+
         name = "desk_0"
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.60))
         rospy.loginfo("Added desk object %s", name)
         self.inserted_desks.append(name)
 
-    def AddTableCollisionObjectInMap(self):
+    def AddTableCollisionObjectInMap(self):  # workstation
+		# HACK hard-coded
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
-        pose_in_map.pose.position.x = 0.0
-        pose_in_map.pose.position.y = 1.40
+        name = "table_0"
+
+		# National Robotics Week
+#         pose_in_map.pose.position.x = 0.0
+#         pose_in_map.pose.position.y = 1.40
+#         pose_in_map.pose.position.z = 0.195
+#         pose_in_map.pose.orientation.x = 0
+#         pose_in_map.pose.orientation.y = 0
+#         pose_in_map.pose.orientation.z = 0
+#         pose_in_map.pose.orientation.w = 1
+#         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.30))
+
+		# RCTA Demo
+        pose_in_map.pose.position.x = 0.25
+#         pose_in_map.pose.position.y = 0.39
+        pose_in_map.pose.position.y = 0.10
         pose_in_map.pose.position.z = 0.195
         pose_in_map.pose.orientation.x = 0
         pose_in_map.pose.orientation.y = 0
         pose_in_map.pose.orientation.z = 0
         pose_in_map.pose.orientation.w = 1
-        name = "table_0"
-        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.30))
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.77, 0.92, 0.30))
+
         rospy.loginfo("Added table object %s", name)
         self.inserted_tables.append(name)
 
     def AddRomanCollisionObjectInMap(self):
+		# HACK hard-coded
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
+
+		# National Robotics Week
         pose_in_map.pose.position.x = -0.75+0.25
         pose_in_map.pose.position.y = 1.10
         pose_in_map.pose.position.z = 0.70
@@ -606,6 +652,7 @@ class MoveitMoveArm:
         pose_in_map.pose.orientation.y = 0
         pose_in_map.pose.orientation.z = 0
         pose_in_map.pose.orientation.w = 1
+
         name = "table_1"    # this is Roman
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.050, 0.50, 1.40))
         rospy.loginfo("Added Roman collision object %s", name)
@@ -757,10 +804,16 @@ class ArmJointCommand:
         rospy.logerr("MoveRightArmToRelease() is not yet supported!")
 
     def MoveLeftArmToPreRelease(self):
-        self.LeftArmJointCommand.MoveArmToJoint([0.3728037940530639, -0.03705736014372039, 1.45603048774742, -0.4882848163348973, 7.963510974467809, -1.5628833458204952, -6.2780816196848725])
+		# National Robotics Week
+#         self.LeftArmJointCommand.MoveArmToJoint([0.3728037940530639, -0.03705736014372039, 1.45603048774742, -0.4882848163348973, 7.963510974467809, -1.5628833458204952, -6.2780816196848725])
+		# RCTA Demo
+        self.LeftArmJointCommand.MoveArmToJoint([0.37172600802742317, -0.07038775984687563, 1.3067401443970559, -1.2629528929481542, 1.5492524321288084, -1.7704100174655357, 0.03470862632335847])
 
     def MoveLeftArmToRelease(self):
-        self.LeftArmJointCommand.MoveArmToJoint([0.42014347256390283, 0.06462573742783409, 1.4170642649395377, -0.5162255636319181, 7.971956649162592, -1.5152845872315392, -6.2752100309583])
+		# National Robotics Week
+#         self.LeftArmJointCommand.MoveArmToJoint([0.42014347256390283, 0.06462573742783409, 1.4170642649395377, -0.5162255636319181, 7.971956649162592, -1.5152845872315392, -6.2752100309583])
+		# RCTA Demo
+        self.LeftArmJointCommand.MoveArmToJoint([0.3807628293193347, 0.11825891867605831, 1.3785791066107649, -1.3063841063632124, 1.7470894694997257, -1.6744293397258303, 0.02487561038085051])
 
     def MoveArmInUseToPreRelease(self):
         if self.LARM_IN_USE:

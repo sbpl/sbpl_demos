@@ -179,7 +179,7 @@ class Demo:
         # if (not self.STATIONARY):
             self.MoveitMoveArm.AddDeskCollisionObjectInMap()
             self.MoveitMoveArm.AddTableCollisionObjectInMap()
-            self.MoveitMoveArm.AddRomanCollisionObjectInMap()
+            # self.MoveitMoveArm.AddRomanCollisionObjectInMap()
 
 
     def compensateMoveItOdomToBaseError(self, odom_to_des_pose):
@@ -276,11 +276,18 @@ class Demo:
             rospy.Time.now(), "grasp_pose_best_rev2", "odom_combined")
 
         # compute and save a release pose in base_footprint frame
+        # NOTE release the object at the same relative pose to the robot base as grasped
         grasp_pose_stamped = PoseStamped()
         grasp_pose_stamped.header.frame_id = "odom_combined"
         grasp_pose_stamped.pose = copy.deepcopy(grasp_pose)
         release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
         self.release_pose = release_pose_stamped.pose
+        # RCTA Demo
+        # HACK hard-coded offset
+        if(self.LARM_IN_USE):
+            self.release_pose.position.x -= 0.20
+        else:
+            self.release_pose.position.x += 0.20
         # for visualization
         #self.tfbroadcaster.sendTransform((self.release_pose.position.x, self.release_pose.position.y, self.release_pose.position.z),
         #    (self.release_pose.orientation.x, self.release_pose.orientation.y, self.release_pose.orientation.z, self.release_pose.orientation.w),
