@@ -1,5 +1,6 @@
 # image: sbpl_full_clean.pgm
-image: sbpl_full_clean_cropped.pgm
+# image: sbpl_full_clean_cropped.pgm
+image: sbpl_full_clean_cropped_without_roman.pgm
 resolution: 0.050000
 # origin: [-50.000000, -50.000000, 0.000000]
 origin: [-5.0, -5.0, 0.0]
