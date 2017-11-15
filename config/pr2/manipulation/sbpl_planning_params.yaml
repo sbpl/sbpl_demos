@@ -1,6 +1,7 @@
 move_group:
 #     allowed_planning_time: 15.0
-    allowed_planning_time: 5.0
+#     allowed_planning_time: 5.0
+    allowed_planning_time: 3.0
 #     tip_link: r_wrist_roll_link
     tip_link: l_wrist_roll_link
     workspace_frame: base_footprint

@@ -20,11 +20,13 @@ class Demo:
 
         ############### DEMONSTRATION OPTIONS ###############
 
-        # self.STATIONARY = True
-        self.STATIONARY = False
+        # RCTA Demo - with navigation
+#         self.STATIONARY = False    # pr2 starts from intern desk
+#         self.LARM_IN_USE = True    # manipulation with left arm
 
-        # self.LARM_IN_USE = False    # manipulation with right arm
-        self.LARM_IN_USE = True    # manipulation with left arm
+        # RCTA Demo - without navigation
+        self.STATIONARY = True       # pr2 starts from next to the workstation
+        self.LARM_IN_USE = False     # manipulation with right arm
 
         #####################################################
 
@@ -91,13 +93,13 @@ class Demo:
         rospy.loginfo("Updated 'PR2_STATE' on /state_machine!")
 
         res = False
+        rospy.loginfo("Move head to look forward")
+        self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
+        rospy.loginfo('Commanding torso go down')
+        self.TorsoCommand.MoveTorso(0.0)
+        rospy.loginfo("wait for 10 sec!")
+        rospy.sleep(10)
         if (not self.STATIONARY):
-            rospy.loginfo("Move head to look forward")
-            self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
-            rospy.loginfo('Commanding torso go down')
-            self.TorsoCommand.MoveTorso(0.0)
-            rospy.loginfo("wait for 10 sec!")
-            rospy.sleep(10)
             rospy.loginfo("Move to round table")
             res = self.MoveBase.MoveToWorkstation()
         else:
@@ -107,11 +109,15 @@ class Demo:
         if (res):
             rospy.loginfo("Successfully arrived at round table!")
             # wait for a while to make Perch use the lastest/static observation
-            # look at the object
-            rospy.loginfo("Move head to look left")
-            self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
-            rospy.loginfo("Waiting for 10 secs!")
-            rospy.sleep(10)
+            # HACK look at the hard-coded position
+            if(self.LARM_IN_USE):
+                rospy.loginfo("Move head to look left")
+                self.PointHead.LookAt("base_footprint", 1.25, 0.5, 0)
+            else:
+                rospy.loginfo("Move head to look forward")
+                self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
+            rospy.loginfo("Waiting for 5 sec!")
+            rospy.sleep(5)
             rospy.loginfo('Asking PERCH to detect the object')
 
 
@@ -135,6 +141,7 @@ class Demo:
         res = False
         if (not self.STATIONARY):
             rospy.loginfo("Move head to look forward")
+            # HACK look at the hard-coded position
             self.PointHead.LookAt("base_footprint", 1.25, 0.0, 0)
             rospy.loginfo('Commanding torso go down')
             self.TorsoCommand.MoveTorso(0.0)
@@ -143,14 +150,18 @@ class Demo:
             rospy.loginfo("Move to intern desk")
             res = self.MoveBase.MoveToInternDesk()
         else:
+            # HACK look at the hard-coded position
+            if(not self.LARM_IN_USE):
+                rospy.loginfo("Move head to look right")
+                self.PointHead.LookAt("base_footprint", 0.5, -1.0, 0)
             res = True
 
         if (res):
             rospy.loginfo("Successfully arrived intern desk!")
             rospy.loginfo('Commanding torso go up')
             self.TorsoCommand.MoveTorso(0.2)
-            rospy.loginfo("wait for 15 sec!")
-            rospy.sleep(15)
+            rospy.loginfo("wait for 10 sec!")
+            rospy.sleep(10)
 
         return res
 
@@ -176,9 +187,13 @@ class Demo:
 
 
     def addCollisionModelsInMap(self):
-        # if (not self.STATIONARY):
-            self.MoveitMoveArm.AddDeskCollisionObjectInMap()
-            self.MoveitMoveArm.AddTableCollisionObjectInMap()
+        if (not self.STATIONARY):
+            self.MoveitMoveArm.AddDeskCollisionObjectInMap()    # intern desk (at original place)
+            self.MoveitMoveArm.AddTableCollisionObjectInMap()   # workstation
+            # self.MoveitMoveArm.AddRomanCollisionObjectInMap()
+        else:
+            self.MoveitMoveArm.AddDeskCollisionObjectInMapStationary()    # intern desk (next to the workstation)
+            self.MoveitMoveArm.AddTableCollisionObjectInMap()   # workstation
             # self.MoveitMoveArm.AddRomanCollisionObjectInMap()
 
 
@@ -283,11 +298,18 @@ class Demo:
         release_pose_stamped = self.tflistener.transformPose("base_footprint", grasp_pose_stamped)
         self.release_pose = release_pose_stamped.pose
         # RCTA Demo
-        # HACK hard-coded offset
+        # HACK hard-coded relative offset
         if(self.LARM_IN_USE):
-            self.release_pose.position.x -= 0.20
+            self.release_pose.position.y -= 0.20
         else:
-            self.release_pose.position.x += 0.20
+            if(self.STATIONARY):  # to intern desk (next to the workstation)
+                #self.release_pose.position.x -= 0.60
+                #self.release_pose.position.y -= 0.80
+                # HACK hard-coded release pose in /base_footprint
+                self.release_pose.position.x = 0.145
+                self.release_pose.position.y = -0.892
+            else:
+                self.release_pose.position.y += 0.20
         # for visualization
         #self.tfbroadcaster.sendTransform((self.release_pose.position.x, self.release_pose.position.y, self.release_pose.position.z),
         #    (self.release_pose.orientation.x, self.release_pose.orientation.y, self.release_pose.orientation.z, self.release_pose.orientation.w),
@@ -455,7 +477,20 @@ class Demo:
             rospy.sleep(10)
             rospy.logwarn("And now move to release pose forcefully!")
             self.ArmJointCommand.MoveArmInUseToPreRelease()
-            rospy.sleep(5)
+            # escape from this state
+            rospy.logerr("I got stuck...")
+            rospy.logerr("Let me drop the object after 5 seconds!!!")
+            rospy.sleep(1)
+            rospy.logerr("Let me drop the object after 4 seconds!!!")
+            rospy.sleep(1)
+            rospy.logerr("Let me drop the object after 3 seconds!!!")
+            rospy.sleep(1)
+            rospy.logerr("Let me drop the object after 2 seconds!!!")
+            rospy.sleep(1)
+            rospy.logerr("Let me drop the object after 1 second!!!!")
+            rospy.sleep(1)
+            rospy.loginfo("Commanding gripper open")
+            self.GripperCommand.CommandGripperInUse(1) #open gripper
             # NOTE we won't return False and just proceed to the next step
 
 
@@ -521,10 +556,10 @@ class Demo:
         rospy.loginfo("Waiting for user's object selection!")
 
         # 1) waiting for user's object selection from the web interface
-        #requested_object = self.PerchClient.getRequestedObjectNameSpin()
+        requested_object = self.PerchClient.getRequestedObjectNameSpin()
 
         # 2) HACK hard-coded requested_object (no need for web interface)
-        requested_object = "010_potted_meat_can"    # hard-coded
+        # requested_object = "010_potted_meat_can"    # hard-coded
         self.PerchClient.setRequestedObjectName(requested_object)
 
         self.StateMachineRequest.command = "Set"

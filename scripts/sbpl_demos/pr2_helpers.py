@@ -253,7 +253,7 @@ class MoveBase:
 
         # HACK (lower) workstation
 
-		# National Robotics Week
+        # National Robotics Week
 #         pose.position.x = 0.3489
 #         pose.position.y = 0.5328
 #         pose.position.z = 0.0
@@ -262,7 +262,7 @@ class MoveBase:
 #         pose.orientation.z = 0.69345
 #         pose.orientation.w = 0.72049
 
-		# RCTA Demo
+        # RCTA Demo
 #         pose.position.x = -0.5134
 #         pose.position.x = -0.6134
         pose.position.x = -0.5634
@@ -396,13 +396,26 @@ class MoveitMoveArm:
 
     def MoveRightToWide(self):
         pose = geometry_msgs.msg.Pose()
-        pose.position.x = 0
-        pose.position.y = -0.64
+
+        # original
+#         pose.position.x = 0
+#         pose.position.y = -0.64
+#         pose.position.z = 1.05
+#         pose.orientation.x = 0.0
+#         pose.orientation.y = 0.0
+#         pose.orientation.z = 0.0
+#         pose.orientation.w = 1.0
+
+        # RCTA demo
+        # HACK XXX won't collide with nearby desk, but the gripper might be visible to kinect
+        pose.position.x = 0.30
+        pose.position.y = -0.34
         pose.position.z = 1.05
         pose.orientation.x = 0.0
         pose.orientation.y = 0.0
         pose.orientation.z = 0.0
         pose.orientation.w = 1.0
+
         return self.MoveToPose(pose, "base_footprint")
 
     def MoveRightToCarry(self):
@@ -455,11 +468,11 @@ class MoveitMoveArm:
 
 
 # 1) place an object as the same as it was picked up
-    # def MoveRightToExtend(self, release_pose):
-    #     return self.MoveToPose(release_pose, "base_footprint")
+    def MoveRightToExtend(self, release_pose):
+        return self.MoveToPose(release_pose, "base_footprint")
 
-    # def MoveRightToShortExtend(self, release_pose):
-    #     return self.MoveToPose(release_pose, "base_footprint")
+    def MoveRightToShortExtend(self, release_pose):
+        return self.MoveToPose(release_pose, "base_footprint")
 
     # def MoveLeftToExtend(self, release_pose):
     #     return self.MoveToPose(release_pose, "base_footprint")
@@ -468,13 +481,14 @@ class MoveitMoveArm:
     #     return self.MoveToPose(release_pose, "base_footprint")
 
 # 2) place an object at a pre-defined pose
-    def MoveRightToExtend(self, release_pose):
-        return self.MoveToPose(release_pose, "base_footprint")
+    # def MoveRightToExtend(self, release_pose):
+        # return self.MoveToPose(release_pose, "base_footprint")
 
-    def MoveRightToShortExtend(self, release_pose):
-        return self.MoveToPose(release_pose, "base_footprint")
+    # def MoveRightToShortExtend(self, release_pose):
+        # return self.MoveToPose(release_pose, "base_footprint")
 
     def MoveLeftToExtend(self, release_pose):
+        # HACK hard-coded
         release_pose.position.x = 0.570212716415
         release_pose.position.y = 0.427063007244
         release_pose.position.z = 0.9882137459
@@ -485,6 +499,7 @@ class MoveitMoveArm:
         return self.MoveToPose(release_pose, "base_footprint")
 
     def MoveLeftToShortExtend(self, release_pose):
+        # HACK hard-coded
         release_pose.position.x = 0.570212716415
         release_pose.position.y = 0.427063007244
         release_pose.position.z = 1.0882137459
@@ -499,7 +514,7 @@ class MoveitMoveArm:
         release_pose_rev = copy.deepcopy(release_pose)
 
         # HACK assuming that we picked up the object from table and put it down on desk
-        table_height = 0.39
+        table_height = 0.32
         desk_height = 0.70
         release_pose_rev.position.z += desk_height - table_height
 
@@ -515,14 +530,14 @@ class MoveitMoveArm:
         release_pose_rev = copy.deepcopy(release_pose)
 
         # HACK assuming that we picked up the object from table and put it down on desk
-        table_height = 0.39
+        table_height = 0.32
         desk_height = 0.70
         release_pose_rev.position.z += desk_height - table_height
 
         # HACK to allow more margin with desk
         release_pose_rev.position.z += 0.005
 
-        # retract along the x-axis of the r/l_wrist_roll_link frame
+        # HACK retract along the x-axis of the r/l_wrist_roll_link frame
         factor_wrist_x = -0.15
         if self.LARM_IN_USE:
             (wrist_trans, wrist_quat) = self.tflistener.lookupTransform("base_footprint", "l_wrist_roll_link", rospy.Time())
@@ -544,7 +559,7 @@ class MoveitMoveArm:
         self.inserted_objects.append(name)
 
     def AddDeskCollisionObject(self, name, pose_in_map):
-		# HACK hard-coded
+        # HACK hard-coded
 
         # adjust offset of marker on the desk
         pose_in_map.pose.position.x += -0.44
@@ -558,13 +573,14 @@ class MoveitMoveArm:
         quat_norm = math.sqrt(quat_z**2 + quat_w**2)
         pose_in_map.pose.orientation.z = quat_z / quat_norm
         pose_in_map.pose.orientation.w = quat_w / quat_norm
+        # WARN voxelized collision model for planner may be larger than this size!
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.67, 0.52, 0.7))
 
         rospy.loginfo("Added desk object %s", name)
         self.inserted_desks.append(name)
 
     def AddTableCollisionObject(self, name, pose_in_map):
-		# HACK hard-coded
+        # HACK hard-coded
 
         # adjust offset of marker on the table
         pose_in_map.pose.position.z = 0.36
@@ -576,17 +592,18 @@ class MoveitMoveArm:
         quat_norm = math.sqrt(quat_z**2 + quat_w**2)
         pose_in_map.pose.orientation.z = quat_z / quat_norm
         pose_in_map.pose.orientation.w = quat_w / quat_norm
+        # WARN voxelized collision model for planner may be larger than this size!
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.39))      # (lower) workstation
 
         rospy.loginfo("Added table object %s", name)
         self.inserted_tables.append(name)
 
-    def AddDeskCollisionObjectInMap(self):  # intern desk
-		# HACK hard-coded
+    def AddDeskCollisionObjectInMap(self):  # intern desk (at original place)
+        # HACK hard-coded
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
 
-		# National Robotics Week
+        # National Robotics Week
 #         pose_in_map.pose.position.x = -0.75
 #         pose_in_map.pose.position.y = -2.20
 #         pose_in_map.pose.position.z = 0.35
@@ -595,7 +612,7 @@ class MoveitMoveArm:
 #         pose_in_map.pose.orientation.z = 0
 #         pose_in_map.pose.orientation.w = 1
 
-		# RCTA Demo
+        # RCTA Demo
         pose_in_map.pose.position.x = -0.75
         pose_in_map.pose.position.y = -2.20
         pose_in_map.pose.position.z = 0.35
@@ -605,17 +622,38 @@ class MoveitMoveArm:
         pose_in_map.pose.orientation.w = 1
 
         name = "desk_0"
+        # WARN voxelized collision model for planner may be larger than this size!
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(1.52, 0.67, 0.60))
         rospy.loginfo("Added desk object %s", name)
         self.inserted_desks.append(name)
 
+    def AddDeskCollisionObjectInMapStationary(self):  # intern desk (next to the workstation)
+        # HACK hard-coded
+        pose_in_map = PoseStamped()
+        pose_in_map.header.frame_id = "map"
+
+        # RCTA Demo
+        pose_in_map.pose.position.x = -0.65
+        pose_in_map.pose.position.y = -0.45
+        pose_in_map.pose.position.z = 0.715/2.0
+        pose_in_map.pose.orientation.x = -0.0017
+        pose_in_map.pose.orientation.y = -0.0002
+        pose_in_map.pose.orientation.z = -0.70305
+        pose_in_map.pose.orientation.w = 0.71114
+
+        name = "desk_0"
+        # WARN voxelized collision model for planner may be larger than this size!
+        self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.91, 0.91, 0.70))
+        rospy.loginfo("Added desk object %s", name)
+        self.inserted_desks.append(name)
+
     def AddTableCollisionObjectInMap(self):  # workstation
-		# HACK hard-coded
+        # HACK hard-coded
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
         name = "table_0"
 
-		# National Robotics Week
+        # National Robotics Week
 #         pose_in_map.pose.position.x = 0.0
 #         pose_in_map.pose.position.y = 1.40
 #         pose_in_map.pose.position.z = 0.195
@@ -623,28 +661,34 @@ class MoveitMoveArm:
 #         pose_in_map.pose.orientation.y = 0
 #         pose_in_map.pose.orientation.z = 0
 #         pose_in_map.pose.orientation.w = 1
+#         # WARN voxelized collision model for planner may be larger than this size!
 #         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.92, 0.77, 0.30))
 
-		# RCTA Demo
+        # RCTA Demo
         pose_in_map.pose.position.x = 0.25
 #         pose_in_map.pose.position.y = 0.39
-        pose_in_map.pose.position.y = 0.10
+        pose_in_map.pose.position.y = 0.45
         pose_in_map.pose.position.z = 0.195
+#         pose_in_map.pose.orientation.x = 0
+#         pose_in_map.pose.orientation.y = 0
+#         pose_in_map.pose.orientation.z = 0
+#         pose_in_map.pose.orientation.w = 1
         pose_in_map.pose.orientation.x = 0
         pose_in_map.pose.orientation.y = 0
-        pose_in_map.pose.orientation.z = 0
-        pose_in_map.pose.orientation.w = 1
+        pose_in_map.pose.orientation.z = -0.070
+        pose_in_map.pose.orientation.w = 0.998
+        # WARN voxelized collision model for planner may be larger than this size!
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.77, 0.92, 0.30))
 
         rospy.loginfo("Added table object %s", name)
         self.inserted_tables.append(name)
 
     def AddRomanCollisionObjectInMap(self):
-		# HACK hard-coded
+        # HACK hard-coded
         pose_in_map = PoseStamped()
         pose_in_map.header.frame_id = "map"
 
-		# National Robotics Week
+        # National Robotics Week
         pose_in_map.pose.position.x = -0.75+0.25
         pose_in_map.pose.position.y = 1.10
         pose_in_map.pose.position.z = 0.70
@@ -654,6 +698,7 @@ class MoveitMoveArm:
         pose_in_map.pose.orientation.w = 1
 
         name = "table_1"    # this is Roman
+        # WARN voxelized collision model for planner may be larger than this size!
         self.moveit_planning_scene.add_box(name, pose_in_map, size=(0.050, 0.50, 1.40))
         rospy.loginfo("Added Roman collision object %s", name)
         self.inserted_tables.append(name)
@@ -762,22 +807,35 @@ class ArmJointCommand:
     def MoveRightArmToWide(self):
         self.RightArmJointCommand.MoveArmToJoint([-1.6583625690312713, 0.6874497663917372, -0.3591542852171954, -2.0396477595207805, 4.633907864244298, -1.2780054373789036, 2.9439450216806975])
 
+    def MoveRightArmToMiddle(self):
+        self.RightArmJointCommand.MoveArmToJoint([-1.5590404414376025, 1.0836077912898985, -1.0852409390200402, -2.0560068499071193, -2.230748097091767, -0.6395664210674809, -3.351435931429788])
+
     def MoveRightArmToSide(self):
         self.RightArmJointCommand.MoveArmToJoint([-2.134992712216583, 1.046132240354625, -2.2202324000660947, -1.9038528322430315, -2.7226797245193337, -0.10465688013304186, 4.67507793460336])
 
     def MoveLeftArmToWide(self):
         self.LeftArmJointCommand.MoveArmToJoint([1.6327356580271766, 0.16224827869037478, 0.13903629877154455, -1.794550945148468, 1.5893983104724974, -1.3209737500667504, -0.03455158539307579])
 
+    def MoveLeftArmToWide(self):
+        # self.LeftArmJointCommand.MoveArmToJoint([])
+        rospy.logerr("MoveLeftArmToWide() is not yet supported!")
+
     def MoveLeftArmToSide(self):
         self.LeftArmJointCommand.MoveArmToJoint([2.050585009506385, 1.168843268710281, 2.0143859931673638, -1.691908510777547, 1.264066293462545, -0.09850362202844609, 0.00586820137944688])
 
-    def MoveArmInUseToWide(self):
+    def MoveArmInUseToWide(self):   # high height, far from the body
         if self.LARM_IN_USE:
             self.MoveLeftArmToWide()
         else:
             self.MoveRightArmToWide()
 
-    def MoveArmInUseToSide(self):
+    def MoveArmInUseToMiddle(self): # middle height, moderately close to the body
+        if self.LARM_IN_USE:
+            self.MoveLeftArmToMiddle()
+        else:
+            self.MoveRightArmToMiddle()
+
+    def MoveArmInUseToSide(self):   # low height, close to the body
         if self.LARM_IN_USE:
             self.MoveLeftArmToSide()
         else:
@@ -804,15 +862,15 @@ class ArmJointCommand:
         rospy.logerr("MoveRightArmToRelease() is not yet supported!")
 
     def MoveLeftArmToPreRelease(self):
-		# National Robotics Week
+        # National Robotics Week
 #         self.LeftArmJointCommand.MoveArmToJoint([0.3728037940530639, -0.03705736014372039, 1.45603048774742, -0.4882848163348973, 7.963510974467809, -1.5628833458204952, -6.2780816196848725])
-		# RCTA Demo
+        # RCTA Demo
         self.LeftArmJointCommand.MoveArmToJoint([0.37172600802742317, -0.07038775984687563, 1.3067401443970559, -1.2629528929481542, 1.5492524321288084, -1.7704100174655357, 0.03470862632335847])
 
     def MoveLeftArmToRelease(self):
-		# National Robotics Week
+        # National Robotics Week
 #         self.LeftArmJointCommand.MoveArmToJoint([0.42014347256390283, 0.06462573742783409, 1.4170642649395377, -0.5162255636319181, 7.971956649162592, -1.5152845872315392, -6.2752100309583])
-		# RCTA Demo
+        # RCTA Demo
         self.LeftArmJointCommand.MoveArmToJoint([0.3807628293193347, 0.11825891867605831, 1.3785791066107649, -1.3063841063632124, 1.7470894694997257, -1.6744293397258303, 0.02487561038085051])
 
     def MoveArmInUseToPreRelease(self):
