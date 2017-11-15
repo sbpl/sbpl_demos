@@ -1,19 +1,17 @@
 source screenrc.common
 
-screen -t bash
+screen -t core
+stuff "roscore"
 
-screen -t multimaster
-stuff "roslaunch sbpl_multimaster tatooine_gateway.launch"
+#screen -t multimaster
+#stuff "roslaunch sbpl_multimaster tatooine_gateway.launch"
 
-screen -t rcon_acts
-stuff "rosrun sbpl_demos roman_rocon_actions_node.py; "
-stuff "# Run this only if you want to expose the roman actions over rocon ^M"
-
-screen -t bash
+#screen -t rcon_acts
+#stuff "rosrun sbpl_demos roman_rocon_actions_node.py # Run this only if you want to expose the roman actions over rocon"
 
 screen -t rom_view
-stuff "cd ~/rs_limb_dist/sbin; ^M"
-stuff "source run_env.sh; ^M"
+stuff "cd $RS_LIMB_ROOT/sbin^M"
+stuff "source run_env.sh^M"
 stuff "./start_roman_viewer.sh"
 
 screen -t ctrl
@@ -25,13 +23,9 @@ stuff "roslaunch rcta move_arm_node.launch live:=true fake:=false --screen"
 screen -t map
 stuff "roslaunch sbpl_demos roman_map_setup.launch"
 
-screen -t am4
-stuff "ssh rcta@am4_sbpl; ^M"
-stuff "# roslaunch openni2_launch asus.launch^M"
-
-screen -t AR
-stuff "roslaunch sbpl_demos roman_asus_indiv.launch; "
-stuff "# roslaunch sbpl_demos roman_asus_indiv_no_kinect.launch"
+#screen -t AR
+#stuff "roslaunch sbpl_demos roman_asus_indiv.launch; "
+#stuff "# roslaunch sbpl_demos roman_asus_indiv_no_kinect.launch"
 
 screen -t asus_tilt
 stuff "rostopic pub -1 pan_tilt_0/command std_msgs/Float64 -- 1.2; ^M"
@@ -39,8 +33,9 @@ stuff "# tilt values: ^M"
 stuff "# 0.68-> looking down 90deg ^M"
 stuff "# 2.25 -> looking straight 0deg ^M"
 
-screen -t pose_node
-stuff "rosrun sbpl_demos pose_upsample_node"
+#screen -t pose_node
+#stuff "rosrun sbpl_demos pose_upsample_node"
 
 screen -t demo
-stuff "rosrun sbpl_demos roman_grasp_demo.py"
+#stuff "rosrun sbpl_demos roman_grasp_demo.py"
+stuff "rosrun sbpl_demos roman_move_perch.py"
