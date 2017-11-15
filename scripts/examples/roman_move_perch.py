@@ -20,7 +20,10 @@ import os
 from sbpl_demos.srv import StateMachine, StateMachineRequest
 pkg = RosPack()
 db_file = os.path.join(pkg.get_path("sbpl_demos"), "data/grasp_database/roman_grasp_db.json")
+
 obj = "010_potted_meat_can"
+#obj = "006_mustard_bottle"
+
 class RomanMove:
     def __init__(self):
         self.perch = PerchClient()
@@ -136,9 +139,11 @@ class RomanMove:
         self.RMAC.MoveToPose(pose, "base_footprint")
 
     def moveToTable(self):
+        adj_x = 0.04
+        adj_y = -0.01
         pose = Pose()
-        pose.position.x = 0.64353
-        pose.position.y = -0.8327
+        pose.position.x = 0.64353 + adj_x
+        pose.position.y = -0.8327 + adj_y
         pose.position.z = 0.7388
         pose.orientation.w = 0.63323
         pose.orientation.x = -0.25537
@@ -150,9 +155,11 @@ class RomanMove:
  
 
     def moveToPreTable(self):
+        adj_x = 0.00
+        adj_y = -0.00
         pose = Pose()
-        pose.position.x = 0.64353
-        pose.position.y = -0.8327
+        pose.position.x = 0.64353 + adj_x
+        pose.position.y = -0.8327 + adj_y
         pose.position.z = 0.7888
         pose.orientation.w = 0.63323
         pose.orientation.x = -0.25537
@@ -172,7 +179,7 @@ class RomanMove:
         transforms = self.computeEEPosesFromDatabase(obj,T_w_p)
         T_w_g = transforms[0]["grasp"]
         print "T_w_g"+ str(T_w_g)
-        pregrasp = np.array([[1,0,0, -.10], [0, 1, 0, 0], [0,0,1,0], [0,0,0,1]])
+        pregrasp = np.array([[1,0,0, -.14], [0, 1, 0, 0], [0,0,1,0], [0,0,0,1]])
         pregrasp_tform = np.dot(T_w_g,pregrasp)
         print "T_w_pg" + str(pregrasp_tform)
         return (pregrasp_tform[:3,3], tr.quaternion_from_matrix(pregrasp_tform)) 
