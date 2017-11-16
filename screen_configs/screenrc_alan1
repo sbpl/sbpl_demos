@@ -8,14 +8,16 @@ screen -t dash
 stuff "rosrun pr2_dashboard pr2_dashboard"
 
 screen -t teleop
-stuff "roslaunch pr2_teleop teleop_keyboard.launch;  "
+# stuff "roslaunch pr2_teleop teleop_keyboard.launch;  "
+stuff "roslaunch pr2_teleop teleop_joystick.launch;  "
 stuff "# use this command when you need to move PR2 manually"
 
 # screen -t tuckarm
 # stuff "rosrun pr2_tuckarm tuck_arms.py b"
 
 screen -t kinect
-stuff "roslaunch sbpl_demos alan1_kinect_setup.launch"
+stuff "roslaunch sbpl_demos alan1_kinect_setup.launch;  "
+stuff "# NOTE if kinect is running, you may not able to start any other roslaunch!"
 
 screen -t multimaster
 stuff "roslaunch sbpl_multimaster alan1_gateway.launch;  "

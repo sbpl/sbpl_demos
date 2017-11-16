@@ -46,14 +46,25 @@ def PoseInitializer_setInitialPosePR2():
         initial_pose = PoseWithCovarianceStamped()
         initial_pose.header.stamp = rospy.Time.now()
         initial_pose.header.frame_id = "map"
+
         # pose in front of intern desk (around the right marker)
-        initial_pose.pose.pose.position.x = -1.06836
-        initial_pose.pose.pose.position.y = -1.14624
+#         initial_pose.pose.pose.position.x = -1.06836
+#         initial_pose.pose.pose.position.y = -1.14624
+#         initial_pose.pose.pose.position.z = -1e-05
+#         initial_pose.pose.pose.orientation.x = -0.0017
+#         initial_pose.pose.pose.orientation.y = -0.0002
+#         initial_pose.pose.pose.orientation.z = -0.70305
+#         initial_pose.pose.pose.orientation.w = 0.71114
+
+        # pose next to the workstation (for pr2_static demonstration)
+        initial_pose.pose.pose.position.x = -0.4805
+        initial_pose.pose.pose.position.y = 0.8371
         initial_pose.pose.pose.position.z = -1e-05
         initial_pose.pose.pose.orientation.x = -0.0017
         initial_pose.pose.pose.orientation.y = -0.0002
-        initial_pose.pose.pose.orientation.z = -0.70305
-        initial_pose.pose.pose.orientation.w = 0.71114
+        initial_pose.pose.pose.orientation.z = -0.16441
+        initial_pose.pose.pose.orientation.w = 0.98638
+
 #         initial_pose.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891945200942]
         initial_pose.pose.covariance = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         publisher.publish(initial_pose)

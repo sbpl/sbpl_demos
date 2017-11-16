@@ -9,7 +9,8 @@
 <!--   <arg name="3dmap_file" default="$(find sbpl_demos)/data/lab_octomap_20170406.bt" /> -->
 <!--   <arg name="3dmap_file" default="$(find sbpl_demos)/data/lab_octomap_20170418.bt" /> -->
   <arg name="3dmap_file" default="$(find sbpl_demos)/data/lab_octomap_20171113.bt" />
-  <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" args="$(arg 3dmap_file)" respawn="false" >
+<!--   <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" args="$(arg 3dmap_file)" respawn="false" > -->
+  <node name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" args="$(arg 3dmap_file)" respawn="false" machine="c2" >
 
     <param name="resolution" value="0.04" />
     <param name="sensor_model/range" value="4.0" />
