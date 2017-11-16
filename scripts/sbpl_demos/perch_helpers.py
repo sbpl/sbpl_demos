@@ -14,8 +14,8 @@ from sbpl_demos import grasp_return
 
 class PerchClient:
 
-    def __init__(self, LARM_IN_USE):
-
+    def __init__(self, LARM_IN_USE = False):
+        # NOTE: Hopefully this is PR2-specific and doesn't affect the Roman
         self.LARM_IN_USE = LARM_IN_USE    # True: manipulation with left arm, False: with right arm
 
         self.locked = True
